@@ -1,0 +1,162 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "environment_spp": {
+      "type": "string"
+    },
+
+    "adminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Admin password on all VMs."
+      }
+    },
+
+    "omsWorkspaceId": {
+      "type": "string"
+    },
+    "vmSkuJumpbox": {
+      "type": "string"
+    }
+  },
+  "variables": {
+    "solutionname": "spp-servicefabric",
+    "clusterName": "[concat('spp-cluster', '-', parameters('environment_spp'))]",
+
+    "defaultvmSku": "Standard_D3_v2",
+    "vmSku": "[if(equals(parameters('vmSkuJumpbox'),'default'),variables('defaultvmSku'),parameters('vmSkuJumpbox'))]",
+
+    "adminUsername": "clusteradmin",
+    "namingInfix": "[toLower(substring(concat('sf-', parameters('environment_spp')), 0, 9))]",
+    "longNamingInfix": "[toLower(variables('clusterName'))]",
+    "jumpBoxName": "[concat(variables('namingInfix'), '-jbox')]",
+    "jumpBoxIPConfigName": "[concat(variables('jumpBoxName'), 'ipconfig')]",
+    "jumpBoxNicName": "[concat(variables('jumpBoxName'), '-nic')]",
+    "storageAccountType": "Standard_LRS",
+
+    "virtualNetworkName": "[concat(variables('solutionname'), '-','VNET', '-', parameters('environment_spp'))]",
+    "subnetName": "JumpboxSubnet",
+    "vnetID": "[resourceId(resourceGroup().name, 'Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
+    "subnetRef": "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]",
+
+    "publicIPAddressName": "[concat(variables('namingInfix'), '-pip')]",
+    "publicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]",
+    "nicName": "[concat(variables('namingInfix'), '-nic')]",
+    "ipConfigName": "[concat(variables('namingInfix'), 'ipconfig')]",
+    "osType": {
+      "publisher": "MicrosoftWindowsServer",
+      "offer": "WindowsServer",
+      "sku": "2016-Datacenter",
+      "version": "latest"
+    },
+    "imageReference": "[variables('osType')]",
+    "computeApiVersion": "2017-03-30",
+    "networkApiVersion": "2017-04-01",
+    "storageApiVersion": "2015-06-15",
+
+    "omsWorkspaceName": "[concat('spp-default-oms-', parameters('environment_spp'))]",
+    "omsWorkspaceId": "[resourceId(subscription().subscriptionId, concat('spp-default-', parameters('environment_spp')), 'Microsoft.OperationalInsights/workspaces', variables('omsWorkspaceName'))]"
+
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('publicIPAddressName')]",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2017-04-01",
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic",
+        "dnsSettings": {
+          "domainNameLabel": "[variables('longNamingInfix')]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[variables('jumpBoxNicName')]",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2017-04-01",
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "[variables('jumpBoxIPConfigName')]",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
+              },
+              "subnet": {
+                "id": "[variables('subnetRef')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[variables('jumpBoxName')]",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2017-03-30",
+      "dependsOn": [
+        "[concat('Microsoft.Network/networkInterfaces/', variables('jumpBoxNicName'))]"
+      ],
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[variables('vmSku')]"
+        },
+        "osProfile": {
+          "computerName": "[variables('jumpBoxName')]",
+          "adminUsername": "[variables('adminUsername')]",
+          "adminPassword": "[parameters('adminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": "[variables('imageReference')]",
+          "osDisk": {
+            "caching": "ReadWrite",
+            "managedDisk": {
+              "storageAccountType": "[variables('storageAccountType')]"
+            },
+            "createOption": "FromImage"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('jumpBoxNicName'))]"
+            }
+          ]
+        }
+      },
+      "resources": [
+        {
+          "type": "extensions",
+          "name": "OMSExtension",
+          "apiVersion": "2015-06-15",
+          "location": "[resourceGroup().location]",
+          "dependsOn": [
+            "[concat('Microsoft.Compute/virtualMachines/', variables('jumpBoxName'))]"
+          ],
+          "properties": {
+            "publisher": "Microsoft.EnterpriseCloud.Monitoring",
+            "type": "MicrosoftMonitoringAgent",
+            "typeHandlerVersion": "1.0",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+              "workspaceId": "[parameters('omsWorkspaceId')]"
+            },
+            "protectedSettings": {
+              "workspaceKey": "[listKeys(variables('omsWorkspaceId'), '2015-11-01-preview').primarySharedKey]"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "outputs": {
+  }
+}

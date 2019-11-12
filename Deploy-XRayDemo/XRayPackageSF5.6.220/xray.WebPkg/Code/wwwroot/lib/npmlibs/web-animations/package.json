@@ -1,0 +1,103 @@
+{
+  "_args": [
+    [
+      "web-animations-js@2.2.1",
+      "C:\\Code\\service-fabric-xray\\src\\xray.Web"
+    ]
+  ],
+  "_from": "web-animations-js@2.2.1",
+  "_id": "web-animations-js@2.2.1",
+  "_inCache": true,
+  "_location": "/web-animations-js",
+  "_nodeVersion": "4.4.1",
+  "_npmOperationalInternal": {
+    "host": "packages-16-east.internal.npmjs.com",
+    "tmp": "tmp/web-animations-js-2.2.1.tgz_1461889199249_0.5681390126701444"
+  },
+  "_npmUser": {
+    "email": "alancutter@chromium.org",
+    "name": "alancutter"
+  },
+  "_npmVersion": "2.14.20",
+  "_phantomChildren": {},
+  "_requested": {
+    "name": "web-animations-js",
+    "raw": "web-animations-js@2.2.1",
+    "rawSpec": "2.2.1",
+    "scope": null,
+    "spec": "2.2.1",
+    "type": "version"
+  },
+  "_requiredBy": [
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/web-animations-js/-/web-animations-js-2.2.1.tgz",
+  "_shasum": "5b2b8419409fb100f938094b0c2b5f3da7092d56",
+  "_shrinkwrap": null,
+  "_spec": "web-animations-js@2.2.1",
+  "_where": "C:\\Code\\service-fabric-xray\\src\\xray.Web",
+  "bugs": {
+    "url": "https://github.com/web-animations/web-animations-js/issues"
+  },
+  "dependencies": {},
+  "description": "JavaScript implementation of the Web Animations API",
+  "devDependencies": {
+    "chai": "^1.9.1",
+    "grunt": "~0.4.5",
+    "grunt-checkrepo": "~0.1.0",
+    "grunt-contrib-uglify": "^0.4.0",
+    "grunt-git-status": "~1.0.0",
+    "grunt-gjslint": "^0.1.4",
+    "grunt-karma": "^0.8.2",
+    "grunt-saucelabs": "~4.0.2",
+    "grunt-template": "~0.2.3",
+    "karma": "^0.12.14",
+    "karma-chai": "^0.1.0",
+    "karma-chrome-launcher": "~0.1.4",
+    "karma-firefox-launcher": "~0.1.3",
+    "karma-ie-launcher": "~0.1.5",
+    "karma-mocha": "^0.1.3",
+    "karma-safari-launcher": "~0.1.1",
+    "karma-sauce-launcher": "~0.2.3",
+    "mocha": "1.21.4",
+    "source-map": "~0.1.40"
+  },
+  "directories": {},
+  "dist": {
+    "shasum": "5b2b8419409fb100f938094b0c2b5f3da7092d56",
+    "tarball": "https://registry.npmjs.org/web-animations-js/-/web-animations-js-2.2.1.tgz"
+  },
+  "files": [
+    "*.min.js",
+    "*.min.js.map"
+  ],
+  "gitHead": "45d8e40300e82ff02ccfbbc78c89500de0f5616f",
+  "homepage": "https://github.com/web-animations",
+  "installable": true,
+  "keywords": [
+    "animations",
+    "polyfill"
+  ],
+  "license": "Apache2",
+  "main": "web-animations.min.js",
+  "maintainers": [
+    {
+      "name": "alancutter",
+      "email": "alancutter@chromium.org"
+    },
+    {
+      "name": "samthor",
+      "email": "sam.thorogood@gmail.com"
+    }
+  ],
+  "name": "web-animations-js",
+  "optionalDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/web-animations/web-animations-js.git"
+  },
+  "scripts": {
+    "test": "grunt test gjslint git-status checkrepo"
+  },
+  "version": "2.2.1"
+}

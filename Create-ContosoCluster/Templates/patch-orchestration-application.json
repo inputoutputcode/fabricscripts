@@ -1,0 +1,155 @@
+﻿{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "environmentName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of environment"
+      }
+    },
+    "appPackageUrl": {
+      "type": "string",
+      "metadata": {
+        "description": "Download link for application package"
+      }
+    },
+    "windowsUpdateFrequency": {
+      "type": "string",
+      "defaultValue": "Weekly,Wednesday,7:00:00",
+      "metadata": {
+        "description": "The frequency for installing Windows Updates."
+      }
+    },
+    "placementConstraint": {
+      "type": "string",
+      "defaultValue": "(NodeType == backend)",
+      "metadata": {
+        "description": "NodeType where the POA should run"
+      }
+    }
+  },
+  "variables": {
+    "clusterName": "[concat('', parameters('environmentName'))]",
+    "applicationTypeName": "PatchOrchestrationApplicationType",
+    "applicationTypeVersion": "1.2.2",
+    "applicationName": "PatchOrchestrationApplication",
+    "serviceName": "PatchOrchestrationApplication~NodeAgentService",
+    "serviceTypeName": "NodeAgentServiceType",
+    "serviceName2": "PatchOrchestrationApplication~CoordinatorService",
+    "serviceTypeName2": "CoordinatorServiceType",
+    "clusterLocation": "[resourcegroup().location]"
+  },
+  "resources": [
+    {
+      "apiVersion": "2017-07-01-preview",
+      "type": "Microsoft.ServiceFabric/clusters/applicationTypes",
+      "name": "[concat(variables('clusterName'), '/', variables('applicationTypeName'))]",
+      "location": "[variables('clusterLocation')]",
+      "dependsOn": [],
+      "properties": {
+        "provisioningState": "Default"
+      }
+    },
+    {
+      "apiVersion": "2017-07-01-preview",
+      "type": "Microsoft.ServiceFabric/clusters/applicationTypes/versions",
+      "name": "[concat(variables('clusterName'), '/', variables('applicationTypeName'), '/', variables('applicationTypeVersion'))]",
+      "location": "[variables('clusterLocation')]",
+      "dependsOn": [
+        "[concat('Microsoft.ServiceFabric/clusters/', variables('clusterName'), '/applicationTypes/', variables('applicationTypeName'))]"
+      ],
+      "properties": {
+        "provisioningState": "Default",
+        "appPackageUrl": "[parameters('appPackageUrl')]"
+      }
+    },
+    {
+      "apiVersion": "2017-07-01-preview",
+      "type": "Microsoft.ServiceFabric/clusters/applications",
+      "name": "[concat(variables('clusterName'), '/', variables('applicationName'))]",
+      "location": "[variables('clusterLocation')]",
+      "dependsOn": [
+        "[concat('Microsoft.ServiceFabric/clusters/', variables('clusterName'), '/applicationTypes/', variables('applicationTypeName'), '/versions/', variables('applicationTypeVersion'))]"
+      ],
+      "properties": {
+        "provisioningState": "Default",
+        "typeName": "[variables('applicationTypeName')]",
+        "typeVersion": "[variables('applicationTypeVersion')]",
+        "parameters": {
+          "WUFrequency": "[parameters('windowsUpdateFrequency')]"
+        },
+        "upgradePolicy": {
+          "upgradeReplicaSetCheckTimeout": "01:00:00.0",
+          "forceRestart": "false",
+          "rollingUpgradeMonitoringPolicy": {
+            "healthCheckWaitDuration": "00:02:00.0",
+            "healthCheckStableDuration": "00:05:00.0",
+            "healthCheckRetryTimeout": "00:10:00.0",
+            "upgradeTimeout": "01:00:00.0",
+            "upgradeDomainTimeout": "00:20:00.0"
+          },
+          "applicationHealthPolicy": {
+            "considerWarningAsError": "false",
+            "maxPercentUnhealthyDeployedApplications": "50",
+            "defaultServiceTypeHealthPolicy": {
+              "maxPercentUnhealthyServices": "50",
+              "maxPercentUnhealthyPartitionsPerService": "50",
+              "maxPercentUnhealthyReplicasPerPartition": "50"
+            }
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "2017-07-01-preview",
+      "type": "Microsoft.ServiceFabric/clusters/applications/services",
+      "name": "[concat(variables('clusterName'), '/', variables('applicationName'), '/', variables('serviceName'))]",
+      "location": "[variables('clusterLocation')]",
+      "dependsOn": [
+        "[concat('Microsoft.ServiceFabric/clusters/', variables('clusterName'), '/applications/', variables('applicationName'))]"
+      ],
+      "properties": {
+        "provisioningState": "Default",
+        "serviceKind": "Stateless",
+        "serviceTypeName": "[variables('serviceTypeName')]",
+        "placementConstraints": "",
+        "instanceCount": "-1",
+        "partitionDescription": {
+          "partitionScheme": "Singleton"
+        },
+        "correlationScheme": [],
+        "serviceLoadMetrics": [],
+        "servicePlacementPolicies": []
+      }
+    },
+    {
+      "apiVersion": "2017-07-01-preview",
+      "type": "Microsoft.ServiceFabric/clusters/applications/services",
+      "name": "[concat(variables('clusterName'), '/', variables('applicationName'), '/', variables('serviceName2'))]",
+      "location": "[variables('clusterLocation')]",
+      "dependsOn": [
+        "[concat('Microsoft.ServiceFabric/clusters/', variables('clusterName'), '/applications/', variables('applicationName'))]"
+      ],
+      "properties": {
+        "provisioningState": "Default",
+        "serviceKind": "Stateful",
+        "serviceTypeName": "[variables('serviceTypeName2')]",
+        "placementConstraints": "[parameters('placementConstraint')]",
+        "targetReplicaSetSize": "3",
+        "minReplicaSetSize": "3",
+        "replicaRestartWaitDuration": "00:01:00.0",
+        "quorumLossWaitDuration": "00:02:00.0",
+        "standByReplicaKeepDuration": "00:00:30.0",
+        "partitionDescription": {
+          "partitionScheme": "Singleton"
+        },
+        "hasPersistedState": "true",
+        "correlationScheme": [],
+        "serviceLoadMetrics": [],
+        "servicePlacementPolicies": [],
+        "defaultMoveCost": "Low"
+      }
+    }
+  ]
+}

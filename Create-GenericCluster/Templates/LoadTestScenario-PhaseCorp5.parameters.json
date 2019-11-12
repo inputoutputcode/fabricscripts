@@ -1,0 +1,108 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "clusterName": {
+            "value": "vortex-servicefabric"
+        },
+        "clusterLocation": {
+            "value": "westeurope"
+        },
+        "computeLocation": {
+            "value": "westeurope"
+        },
+        "adminUserName": {
+            "value": "Christian"
+        },
+        "adminPassword": {
+            "value": "nZ549Ux2MMW5srTvOZsq"
+        },
+        "nicName": {
+            "value": "NIC-vortex-servicefabric"
+        },
+        "publicIPAddressName": {
+            "value": "vortex-servicefabric-PubIP"
+        },
+        "dnsName": {
+            "value": "vortex-servicefabric"
+        },
+        "virtualNetworkName": {
+            "value": "VNet-vortex-servicefabric"
+        },
+        "lbName": {
+            "value": "LB-chrpap-servicefabric"
+        },
+        "lbIPName": {
+            "value": "LBIP-chrpap-servicefabric"
+        },
+        "applicationDiagnosticsStorageAccountName": {
+            "value": "sfdgvortexsf2341"
+        },
+        "applicationInsightsKey": {
+            "value": "1931ac8a-f06c-4bb1-84b7-7375ea963401"
+        },
+        "supportLogStorageAccountName": {
+            "value": "sflogschrpapservicef3735"
+        },
+        "sourceVaultValue": {
+            "value": "/subscriptions/9a78d3dd-42ec-490a-a948-16168c10ea00/resourceGroups/vortex-keyvault-group/providers/Microsoft.KeyVault/vaults/vortex-keyvault"
+        },
+        "certificateUrlValue": {
+            "value": "https://vortex-keyvault.vault.azure.net:443/secrets/vortex-servicefabric/01d21b2d985a43f5bde39b144326ab29"
+        },
+        "certificateThumbprint": {
+            "value": "D342B62751810619AB806DD4733D088EEE7E5CDF"
+        },
+        "reverseProxyCertificateThumbprint": {
+            "value": "0AFD0B1CF06A80E76270FC7B5B42C21E5D07EF60"
+        },
+        "reverseProxyCertificateUrlValue": {
+            "value": "https://vortex-keyvault.vault.azure.net:443/secrets/vortex-servicefabric-proxy/1fb968f5aa7a4357b2697efdcb6fbe53"
+        },
+        "vmImageSku": {
+            "value": "2016-Datacenter"
+        },
+        "nt0ephemeralStartPort": {
+            "value": 49152
+        },
+        "nt0ephemeralEndPort": {
+            "value": 65534
+        },
+        "nt0applicationStartPort": {
+            "value": 20000
+        },
+        "nt0applicationEndPort": {
+            "value": 30000
+        },
+        "nt0fabricTcpGatewayPort": {
+            "value": 19000
+        },
+        "nt0fabricHttpGatewayPort": {
+            "value": 19080
+        },
+        "nt0reverseProxyEndpointPort": {
+            "value": 19081
+        },
+        "nt1ephemeralStartPort": {
+            "value": 49152
+        },
+        "nt1ephemeralEndPort": {
+            "value": 65534
+        },
+        "nt1applicationStartPort": {
+            "value": 20000
+        },
+        "nt1applicationEndPort": {
+            "value": 30000
+        },
+        "nt1fabricTcpGatewayPort": {
+            "value": 19000
+        },
+        "nt1fabricHttpGatewayPort": {
+            "value": 19080
+        },
+        "nt1reverseProxyEndpointPort": {
+            "value": 19081
+        }
+    }
+}

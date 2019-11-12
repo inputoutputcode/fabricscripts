@@ -1,0 +1,988 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+
+    "environment_spp": {
+      "type": "string"
+    },
+
+    "omsWorkspaceId": {
+      "type": "string"
+    },
+
+    "subnetBackendPrefix": {
+      "type": "string",
+      "defaultValue": "10.0.1.0/24",
+      "metadata": {
+        "description": "Network range of backend VMSS"
+      }
+    },
+    "subnetFrontendPrefix": {
+      "type": "string",
+      "defaultValue": "10.0.0.0/24",
+      "metadata": {
+        "description": "Network range of backend VMSS"
+      }
+    },
+    "useProdNSGs": {
+      "type": "string",
+      "defaultValue": "true",
+      "metadata": {
+        "description": "if true, the hardened prod NSGs are used, otherwise the NSGs for devtest"
+      }
+    },
+    "monitoringLocation": {
+      "type": "string",
+      "metadata": {
+        "description": "Location for Log Analytics and application Insights"
+      }
+    }
+
+  },
+  "variables": {
+    "solutionname": "spp-servicefabric",
+    "vmssApiVersion": "2016-04-30-preview",
+    "lbApiVersion": "2015-06-15",
+    "vNetApiVersion": "2015-06-15",
+    "storageApiVersion": "2017-10-01",
+
+    "clusterName": "[concat('spp-cluster', '-', parameters('environment_spp'))]",
+
+    "components_spp_servicefabric_name": "[concat( variables('solutionname'), '-', parameters('environment_spp'))]",
+
+    "subnetFrontendName": "Subnet-0",
+    "subnetBackendName": "Subnet-1",
+    "addressPrefix": "10.0.0.0/16",
+    "nt0applicationStartPort": 20000,
+    "nt0applicationEndPort": 30000,
+    "nt0ephemeralStartPort": 49152,
+    "nt0ephemeralEndPort": 65534,
+    "nt0fabricTcpGatewayPort": 19000,
+    "nt0fabricHttpGatewayPort": 19080,
+
+    "subnetManagementName": "Subnet-Mgmt",
+    "subnetManagementPrefix": "10.0.4.0/24",
+
+    "apimSubnetName": "apim-subnet",
+    "apimSubnetSpace": "10.0.10.0/24",
+    "nsgNameAPIManagement": "apim-vnet-security",
+    "nsgNameDevTest": "sf-vnet-security",
+    "nsgNameProdManagement": "sf-vnet-security-management",
+    "nsgNameProdBackend": "sf-vnet-security-backend",
+    "nsgNameProdFrontend": "sf-vnet-security-frontend",
+    "nsgNameProdJumpbox": "sf-vnet-jumpbox",
+    "nsgFrontend": "[if(equals(parameters('useProdNSGs'),'false'),variables('nsgNameDevTest'),variables('nsgNameProdFrontend'))]",
+    "nsgBackend": "[if(equals(parameters('useProdNSGs'),'false'),variables('nsgNameDevTest'),variables('nsgNameProdBackend'))]",
+
+    "storageAccountType": "Standard_LRS",
+    "supportLogStorageAccountType": "Standard_LRS",
+    "applicationDiagnosticsStorageAccountType": "Standard_LRS",
+
+    "vmNodeType0Name": "frontend",
+    "vmNodeType1Name": "backend",
+    "vmNodeType2Name": "mgmt",
+
+    "lbName": "[concat(variables('solutionname'), '-','LB', '-', parameters('environment_spp'))]",
+    "lbIPName": "[concat(variables('solutionname'), '-','LBIP', '-', parameters('environment_spp'))]",
+    "virtualNetworkName": "[concat(variables('solutionname'), '-','VNET', '-', parameters('environment_spp'))]",
+    "supportLogStorageAccountName": "[concat('logstorage', parameters('environment_spp'))]",
+    "applicationDiagnosticsStorageAccountName": "[concat('diagstorage', parameters('environment_spp'))]",
+    "vmStorageAccountName": "[concat('storagevms', parameters('environment_spp'))]",
+    "publicIPAddressName": "[concat( parameters('environment_spp'), 'PubIP')]",
+
+    "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
+
+    "sgApiVersion": "2017-03-01",
+    "subnetInternalFrontendLBName": "Subnet-0-ILB",
+    "subnetInternalFrontendLBPrefix": "10.0.3.0/24",
+
+
+    "subnetGatewayName": "GatewaySubnet",
+    "subnetGatewayPrefix": "10.0.2.0/24",
+    "gatewayName": "[concat('sf-vnet-gateway-', parameters('environment_spp'))]",
+
+    "subnetJumpboxName": "JumpboxSubnet",
+    "subnetJumpboxPrefix": "10.0.5.0/24"
+  },
+
+  "resources": [
+    {
+      "apiVersion": "[variables('storageApiVersion')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[variables('supportLogStorageAccountName')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [],
+      "properties": {
+        "supportsHttpsTrafficOnly": true
+      },
+      "kind": "Storage",
+      "sku": {
+        "name": "[variables('supportLogStorageAccountType')]"
+      },
+      "tags": {
+        "resourceType": "Service Fabric",
+        "clusterName": "[variables('clusterName')]"
+      }
+    },
+    {
+      "apiVersion": "[variables('storageApiVersion')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[variables('applicationDiagnosticsStorageAccountName')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [],
+      "properties": {
+        "supportsHttpsTrafficOnly": true
+      },
+      "kind": "Storage",
+      "sku": {
+        "name": "[variables('applicationDiagnosticsStorageAccountType')]"
+      },
+      "tags": {
+        "resourceType": "Service Fabric",
+        "clusterName": "[variables('clusterName')]"
+      }
+    },
+    {
+      "condition": "[equals(parameters('useProdNSGs'),'false')]",
+      "apiVersion": "[variables('sgApiVersion')]",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[variables('nsgNameDevTest')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allowServiceFabricSMB",
+            "properties": {
+              "access": "Allow",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "445",
+              "direction": "Inbound",
+              "priority": 3950,
+              "protocol": "*",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "sourcePortRange": "*"
+            }
+          },
+          {
+            "name": "allowServiceFabricCluser",
+            "properties": {
+              "access": "Allow",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "1025-1027",
+              "direction": "Inbound",
+              "priority": 3920,
+              "protocol": "*",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "sourcePortRange": "*"
+            }
+          },
+          {
+            "name": "allowServiceFabricEphemeral",
+            "properties": {
+              "access": "Allow",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "[concat(variables('nt0ephemeralStartPort'), '-', variables('nt0ephemeralEndPort'))]",
+              "direction": "Inbound",
+              "priority": 3930,
+              "protocol": "*",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "sourcePortRange": "*"
+            }
+          },
+          {
+            "name": "allowServiceFabricPortal",
+            "properties": {
+              "access": "Allow",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "[variables('nt0fabricHttpGatewayPort')]",
+              "direction": "Inbound",
+              "priority": 3900,
+              "protocol": "*",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*"
+            }
+          },
+          {
+            "name": "allowServiceFabricClient",
+            "properties": {
+              "access": "Allow",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "[variables('nt0fabricTcpGatewayPort')]",
+              "direction": "Inbound",
+              "priority": 3910,
+              "protocol": "*",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*"
+            }
+          },
+          {
+            "name": "allowServiceFabricApplication",
+            "properties": {
+              "access": "Allow",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "[concat(variables('nt0applicationStartPort'), '-', variables('nt0applicationEndPort'))]",
+              "direction": "Inbound",
+              "priority": 3940,
+              "protocol": "*",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*"
+            }
+          },
+          {
+            "name": "allowHTTP",
+            "properties": {
+              "access": "Allow",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "[concat('80', '-', '8081')]",
+              "direction": "Inbound",
+              "priority": 3800,
+              "protocol": "*",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*"
+            }
+          },
+          {
+            "name": "Services",
+            "properties": {
+              "access": "Allow",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "[concat('8000', '-', '9000')]",
+              "direction": "Inbound",
+              "priority": 3700,
+              "protocol": "*",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*"
+            }
+          },
+          {
+            "name": "blockAll",
+            "properties": {
+              "access": "Deny",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "*",
+              "direction": "Inbound",
+              "priority": 4095,
+              "protocol": "*",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*"
+            }
+          },
+          {
+            "name": "allowVNetRDP",
+            "properties": {
+              "access": "Allow",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "3389-4500",
+              "direction": "Inbound",
+              "priority": 3960,
+              "protocol": "*",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*"
+            }
+          }
+        ]
+      },
+      "tags": {
+        "resourceType": "Service Fabric",
+        "clusterName": "[variables('clusterName')]"
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[variables('nsgNameAPIManagement')]",
+      "apiVersion": "[variables('sgApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "Client_communication_to_API_Management",
+            "properties": {
+              "protocol": "TCP",
+              "sourcePortRange": "*",
+              "destinationPortRange": "80",
+              "sourceAddressPrefix": "Internet",
+              "destinationAddressPrefix": "[variables('apimSubnetSpace')]",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Secure_Client_communication_to_API_Management",
+            "properties": {
+              "protocol": "TCP",
+              "sourcePortRange": "*",
+              "destinationPortRange": "443",
+              "sourceAddressPrefix": "Internet",
+              "destinationAddressPrefix": "[variables('apimSubnetSpace')]",
+              "access": "Allow",
+              "priority": 110,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Management_endpoint_for_Azure_portal_and_Powershell",
+            "properties": {
+              "protocol": "TCP",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3443",
+              "sourceAddressPrefix": "Internet",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 120,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Dependency_on_Redis_Cache",
+            "properties": {
+              "protocol": "UDP",
+              "sourcePortRange": "6381-6383",
+              "destinationPortRange": "6381-6383",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 130,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Dependency_on_Azure_Storage_and_Azure_Service_Bus",
+            "properties": {
+              "protocol": "TCP",
+              "sourcePortRange": "*",
+              "destinationPortRange": "80",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "destinationAddressPrefix": "Internet",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "Dependency_on_Azure_SQL",
+            "properties": {
+              "protocol": "TCP",
+              "sourcePortRange": "*",
+              "destinationPortRange": "1433",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "destinationAddressPrefix": "Internet",
+              "access": "Allow",
+              "priority": 110,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "Dependency_on_Azure_SQL_V12",
+            "properties": {
+              "protocol": "TCP",
+              "sourcePortRange": "*",
+              "destinationPortRange": "11000-11999",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "destinationAddressPrefix": "Internet",
+              "access": "Allow",
+              "priority": 120,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "Dependency_on_Azure_SQL_V12_2",
+            "properties": {
+              "protocol": "TCP",
+              "sourcePortRange": "*",
+              "destinationPortRange": "14000-14999",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "destinationAddressPrefix": "Internet",
+              "access": "Allow",
+              "priority": 130,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "Dependency_on_Service_Bus",
+            "properties": {
+              "protocol": "TCP",
+              "sourcePortRange": "*",
+              "destinationPortRange": "9350-9354",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "destinationAddressPrefix": "Internet",
+              "access": "Allow",
+              "priority": 140,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "Dependency_for_Log_to_event_Hub_policy",
+            "properties": {
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "5671",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "destinationAddressPrefix": "Internet",
+              "access": "Allow",
+              "priority": 150,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "Dependency_on_Redis_Cache_outbound",
+            "properties": {
+              "protocol": "UDP",
+              "sourcePortRange": "6381-6383",
+              "destinationPortRange": "6381-6383",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 160,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "Dependency_on_Azure_File_Share_for_GIT",
+            "properties": {
+              "protocol": "TCP",
+              "sourcePortRange": "*",
+              "destinationPortRange": "445",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "destinationAddressPrefix": "Internet",
+              "access": "Allow",
+              "priority": 170,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "Azure_Infrastructure_Load_Balancer",
+            "properties": {
+              "protocol": "TCP",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "AzureLoadBalancer",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 140,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "[variables('sgApiVersion')]",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[variables('nsgNameProdJumpbox')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "blockAll",
+            "properties": {
+              "access": "Deny",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "*",
+              "direction": "Inbound",
+              "priority": 4095,
+              "protocol": "*",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*"
+            }
+          },
+          {
+            "name": "allowRDP",
+            "properties": {
+              "access": "Allow",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "3389-4500",
+              "direction": "Inbound",
+              "priority": 3960,
+              "protocol": "*",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*"
+            }
+          }
+        ]
+      },
+      "tags": {
+        "resourceType": "Service Fabric",
+        "clusterName": "[variables('clusterName')]"
+      }
+    },
+    {
+      "condition": "[equals(parameters('useProdNSGs'),'true')]",
+      "apiVersion": "[variables('sgApiVersion')]",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[variables('nsgNameProdBackend')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allowServiceFabricSMB",
+            "properties": {
+              "access": "Allow",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "445",
+              "direction": "Inbound",
+              "priority": 3950,
+              "protocol": "*",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "sourcePortRange": "*"
+            }
+          },
+          {
+            "name": "allowServiceFabricCluser",
+            "properties": {
+              "access": "Allow",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "1025-1027",
+              "direction": "Inbound",
+              "priority": 3920,
+              "protocol": "*",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "sourcePortRange": "*"
+            }
+          },
+          {
+            "name": "allowServiceFabricEphemeral",
+            "properties": {
+              "access": "Allow",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "[concat(variables('nt0ephemeralStartPort'), '-', variables('nt0ephemeralEndPort'))]",
+              "direction": "Inbound",
+              "priority": 3930,
+              "protocol": "*",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "sourcePortRange": "*"
+            }
+          },
+          {
+            "name": "allowServiceFabricApplication",
+            "properties": {
+              "access": "Allow",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "[concat(variables('nt0applicationStartPort'), '-', variables('nt0applicationEndPort'))]",
+              "direction": "Inbound",
+              "priority": 3940,
+              "protocol": "*",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "sourcePortRange": "*"
+            }
+          },
+          {
+            "name": "allowHTTP",
+            "properties": {
+              "access": "Allow",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "[concat('80', '-', '8081')]",
+              "direction": "Inbound",
+              "priority": 3800,
+              "protocol": "*",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "sourcePortRange": "*"
+            }
+          },
+          {
+            "name": "Services",
+            "properties": {
+              "access": "Allow",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "[concat('8000', '-', '9000')]",
+              "direction": "Inbound",
+              "priority": 3700,
+              "protocol": "*",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "sourcePortRange": "*"
+            }
+          },
+          {
+            "name": "blockAll",
+            "properties": {
+              "access": "Deny",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "*",
+              "direction": "Inbound",
+              "priority": 4095,
+              "protocol": "*",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*"
+            }
+          },
+          {
+            "name": "allowVNetRDP",
+            "properties": {
+              "access": "Allow",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "3389-4500",
+              "direction": "Inbound",
+              "priority": 3960,
+              "protocol": "*",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "sourcePortRange": "*"
+            }
+          }
+        ]
+      },
+      "tags": {
+        "resourceType": "Service Fabric",
+        "clusterName": "[variables('clusterName')]"
+      }
+    },
+    {
+      "apiVersion": "[variables('sgApiVersion')]",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[variables('nsgNameProdManagement')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allowServiceFabricSMB",
+            "properties": {
+              "access": "Allow",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "445",
+              "direction": "Inbound",
+              "priority": 3950,
+              "protocol": "*",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "sourcePortRange": "*"
+            }
+          },
+          {
+            "name": "allowServiceFabricCluser",
+            "properties": {
+              "access": "Allow",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "1025-1027",
+              "direction": "Inbound",
+              "priority": 3920,
+              "protocol": "*",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "sourcePortRange": "*"
+            }
+          },
+          {
+            "name": "allowServiceFabricEphemeral",
+            "properties": {
+              "access": "Allow",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "[concat(variables('nt0ephemeralStartPort'), '-', variables('nt0ephemeralEndPort'))]",
+              "direction": "Inbound",
+              "priority": 3930,
+              "protocol": "*",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "sourcePortRange": "*"
+            }
+          },
+          {
+            "name": "allowServiceFabricPortal",
+            "properties": {
+              "access": "Allow",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "[variables('nt0fabricHttpGatewayPort')]",
+              "direction": "Inbound",
+              "priority": 3900,
+              "protocol": "*",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*"
+            }
+          },
+          {
+            "name": "allowServiceFabricClient",
+            "properties": {
+              "access": "Allow",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "[variables('nt0fabricTcpGatewayPort')]",
+              "direction": "Inbound",
+              "priority": 3910,
+              "protocol": "*",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*"
+            }
+          },
+          {
+            "name": "allowServiceFabricApplication",
+            "properties": {
+              "access": "Allow",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "[concat(variables('nt0applicationStartPort'), '-', variables('nt0applicationEndPort'))]",
+              "direction": "Inbound",
+              "priority": 3940,
+              "protocol": "*",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "sourcePortRange": "*"
+            }
+          },
+          {
+            "name": "allowHTTP",
+            "properties": {
+              "access": "Allow",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "[concat('80', '-', '8081')]",
+              "direction": "Inbound",
+              "priority": 3800,
+              "protocol": "*",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "sourcePortRange": "*"
+            }
+          },
+          {
+            "name": "blockAll",
+            "properties": {
+              "access": "Deny",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "*",
+              "direction": "Inbound",
+              "priority": 4095,
+              "protocol": "*",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*"
+            }
+          },
+          {
+            "name": "allowVNetRDP",
+            "properties": {
+              "access": "Allow",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "3389-4500",
+              "direction": "Inbound",
+              "priority": 3960,
+              "protocol": "*",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "sourcePortRange": "*"
+            }
+          }
+        ]
+      },
+      "tags": {
+        "resourceType": "Service Fabric",
+        "clusterName": "[variables('clusterName')]"
+      }
+    },
+    {
+      "condition": "[equals(parameters('useProdNSGs'),'true')]",
+      "apiVersion": "[variables('sgApiVersion')]",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[variables('nsgNameProdFrontend')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allowServiceFabricSMB",
+            "properties": {
+              "access": "Allow",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "445",
+              "direction": "Inbound",
+              "priority": 3950,
+              "protocol": "*",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "sourcePortRange": "*"
+            }
+          },
+          {
+            "name": "allowServiceFabricCluser",
+            "properties": {
+              "access": "Allow",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "1025-1027",
+              "direction": "Inbound",
+              "priority": 3920,
+              "protocol": "*",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "sourcePortRange": "*"
+            }
+          },
+          {
+            "name": "allowServiceFabricEphemeral",
+            "properties": {
+              "access": "Allow",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "[concat(variables('nt0ephemeralStartPort'), '-', variables('nt0ephemeralEndPort'))]",
+              "direction": "Inbound",
+              "priority": 3930,
+              "protocol": "*",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "sourcePortRange": "*"
+            }
+          },
+          {
+            "name": "allowServiceFabricApplication",
+            "properties": {
+              "access": "Allow",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "[concat(variables('nt0applicationStartPort'), '-', variables('nt0applicationEndPort'))]",
+              "direction": "Inbound",
+              "priority": 3940,
+              "protocol": "*",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "sourcePortRange": "*"
+            }
+          },
+          {
+            "name": "allowHTTP",
+            "properties": {
+              "access": "Allow",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "[concat('80', '-', '8081')]",
+              "direction": "Inbound",
+              "priority": 3800,
+              "protocol": "*",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "sourcePortRange": "*"
+            }
+          },
+          {
+            "name": "Services",
+            "properties": {
+              "access": "Allow",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "[concat('8000', '-', '9000')]",
+              "direction": "Inbound",
+              "priority": 3700,
+              "protocol": "*",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*"
+            }
+          },
+          {
+            "name": "blockAll",
+            "properties": {
+              "access": "Deny",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "*",
+              "direction": "Inbound",
+              "priority": 4095,
+              "protocol": "*",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*"
+            }
+          },
+          {
+            "name": "allowVNetRDP",
+            "properties": {
+              "access": "Allow",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "3389-4500",
+              "direction": "Inbound",
+              "priority": 3960,
+              "protocol": "*",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "sourcePortRange": "*"
+            }
+          }
+        ]
+      },
+      "tags": {
+        "resourceType": "Service Fabric",
+        "clusterName": "[variables('clusterName')]"
+      }
+    },
+    {
+      "apiVersion": "[variables('vNetApiVersion')]",
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[variables('virtualNetworkName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('addressPrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('subnetManagementName')]",
+            "properties": {
+              "addressPrefix": "[variables('subnetManagementPrefix')]",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgNameProdManagement'))]"
+              }
+            }
+          },
+          {
+            "name": "[variables('subnetFrontendName')]",
+            "properties": {
+              "addressPrefix": "[parameters('subnetFrontendPrefix')]",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgFrontend'))]"
+              }
+            }
+          },
+          {
+            "name": "[variables('subnetBackendName')]",
+            "properties": {
+              "addressPrefix": "[parameters('subnetBackendPrefix')]",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgBackend'))]"
+              }
+            }
+          },
+          {
+            "name": "[variables('apimSubnetName')]",
+            "properties": {
+              "addressPrefix": "[variables('apimSubnetSpace')]",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgNameAPIManagement'))]"
+              }
+            }
+          },
+          {
+            "name": "[variables('subnetInternalFrontendLBName')]",
+            "properties": {
+              "addressPrefix": "[variables('subnetInternalFrontendLBPrefix')]",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgFrontend'))]"
+              }
+            }
+          },
+          {
+            "name": "[variables('subnetGatewayName')]",
+            "properties": {
+              "addressPrefix": "[variables('subnetGatewayPrefix')]",
+              "ipConfigurations": [
+                {
+                  "id": "[concat(resourceId('Microsoft.Network/virtualNetworkGateways', variables('gatewayName')), '/ipConfigurations/default')]"
+                }
+              ]
+            }
+          },
+          {
+            "name": "[variables('subnetJumpboxName')]",
+            "properties": {
+              "addressPrefix": "[variables('subnetJumpboxPrefix')]",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgNameProdJumpbox'))]"
+              }
+            }
+          }
+        ]
+      },
+      "tags": {
+        "resourceType": "Service Fabric",
+        "clusterName": "[variables('clusterName')]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgNameAPIManagement'))]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgNameDevTest'))]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgNameProdBackend'))]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgNameProdFrontend'))]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgNameProdManagement'))]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgNameProdJumpbox'))]"
+      ]
+    },
+
+    {
+      "type": "microsoft.insights/components",
+      "kind": "web",
+      "name": "[variables('components_spp_servicefabric_name')]",
+      "apiVersion": "2014-04-01",
+      "location": "[parameters('monitoringLocation')]",
+      "tags": {},
+      "properties": {
+        "ApplicationId": "[variables('components_spp_servicefabric_name')]"
+      },
+      "resources": [],
+      "dependsOn": []
+    }
+  ],
+  "outputs": {
+  }
+}

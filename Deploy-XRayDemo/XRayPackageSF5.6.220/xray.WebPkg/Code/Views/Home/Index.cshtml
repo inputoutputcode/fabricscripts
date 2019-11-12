@@ -1,0 +1,29 @@
+﻿@{
+    ViewData["Title"] = "Service Fabric xray";
+}
+
+<section id="content">
+    <xray>
+        <div class="loading-main">
+            <div class="loading">
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
+        </div>
+    </xray>
+</section>
+
+@section Scripts {
+    <script>
+        System.config({
+            packages: {
+                'app': { defaultExtension: 'js' },
+                'lib': { defaultExtension: 'js' },
+            },
+        });
+
+        System.import('app/boot')
+            .then(null, console.error.bind(console));
+    </script>
+}

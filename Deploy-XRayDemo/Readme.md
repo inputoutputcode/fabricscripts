@@ -1,0 +1,3 @@
+# PowerShell Scripts - Deploy xRay for demo purposes
+
+This is just an old xRay copy with the SDK version 5.6.220, but it works and is totally enough to demonstrate other views as the SPX. But since SPX is open sourced, maybe if some extensions are published in the GitHub repository, it could make sense to demonstrate the new releases. The goal was to say, show here you can build your own views with just JavaScript and some APIs in the backend. 

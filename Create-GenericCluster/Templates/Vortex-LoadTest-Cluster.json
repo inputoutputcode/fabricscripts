@@ -39,10 +39,6 @@
       "type": "int",
       "defaultValue": 19080
     },
-    "nt0reverseProxyEndpointPort": {
-      "type": "int",
-      "defaultValue": 19081
-    },
     "subnet0Name": {
       "type": "string",
       "defaultValue": "Subnet-0"
@@ -74,10 +70,6 @@
     "nt1fabricHttpGatewayPort": {
       "type": "int",
       "defaultValue": 19080
-    },
-    "nt1reverseProxyEndpointPort": {
-      "type": "int",
-      "defaultValue": 19081
     },
     "subnet1Name": {
       "type": "string",
@@ -166,28 +158,6 @@
       }
     },
     "certificateUrlValue": {
-      "type": "string",
-      "metadata": {
-        "description": "Refers to the location URL in your key vault where the certificate was uploaded, it is should be in the format of https://<name of the vault>.vault.azure.net:443/secrets/<exact location>"
-      }
-    },
-    "reverseProxyCertificateStoreValue": {
-      "type": "string",
-      "allowedValues": [
-        "My"
-      ],
-      "defaultValue": "My",
-      "metadata": {
-        "description": "The store name where the cert will be deployed in the virtual machine"
-      }
-    },
-    "reverseProxyCertificateThumbprint": {
-      "type": "string",
-      "metadata": {
-        "description": "Reverse proxy Certificate Thumbprint"
-      }
-    },
-    "reverseProxyCertificateUrlValue": {
       "type": "string",
       "metadata": {
         "description": "Refers to the location URL in your key vault where the certificate was uploaded, it is should be in the format of https://<name of the vault>.vault.azure.net:443/secrets/<exact location>"
@@ -553,10 +523,6 @@
                     "durabilityLevel": "Silver",
                     "enableParallelJobs": true,
                     "nicPrefixOverride": "[parameters('subnet0Prefix')]",
-                    "reverseProxyCertificate": {
-                      "thumbprint": "[parameters('reverseProxyCertificateThumbprint')]",
-                      "x509StoreName": "[parameters('reverseProxyCertificateStoreValue')]"
-                    },
                     "certificate": {
                       "thumbprint": "[parameters('certificateThumbprint')]",
                       "x509StoreName": "[parameters('certificateStoreValue')]"
@@ -691,7 +657,7 @@
                               "DefaultEvents": {
                                 "eventDestination": "ServiceFabricPatchOrchestrationAppEventTable"
                               }
-                            } 
+                            }
                           ],
                           "EtwManifestProviderConfiguration": [
                             {
@@ -767,10 +733,6 @@
                   {
                     "certificateStore": "[parameters('certificateStoreValue')]",
                     "certificateUrl": "[parameters('certificateUrlValue')]"
-                  },
-                  {
-                    "certificateStore": "[parameters('reverseProxyCertificateStoreValue')]",
-                    "certificateUrl": "[parameters('reverseProxyCertificateUrlValue')]"
                   }
                 ]
               }
@@ -963,10 +925,6 @@
                     "durabilityLevel": "Silver",
                     "enableParallelJobs": true,
                     "nicPrefixOverride": "[parameters('subnet1Prefix')]",
-                    "reverseProxyCertificate": {
-                      "thumbprint": "[parameters('reverseProxyCertificateThumbprint')]",
-                      "x509StoreName": "[parameters('reverseProxyCertificateStoreValue')]"
-                    },
                     "certificate": {
                       "thumbprint": "[parameters('certificateThumbprint')]",
                       "x509StoreName": "[parameters('certificateStoreValue')]"
@@ -1101,7 +1059,7 @@
                               "DefaultEvents": {
                                 "eventDestination": "ServiceFabricPatchOrchestrationAppEventTable"
                               }
-                            } 
+                            }
                           ],
                           "EtwManifestProviderConfiguration": [
                             {
@@ -1177,10 +1135,6 @@
                   {
                     "certificateStore": "[parameters('certificateStoreValue')]",
                     "certificateUrl": "[parameters('certificateUrlValue')]"
-                  },
-                  {
-                    "certificateStore": "[parameters('reverseProxyCertificateStoreValue')]",
-                    "certificateUrl": "[parameters('reverseProxyCertificateUrlValue')]"
                   }
                 ]
               }
@@ -1334,7 +1288,6 @@
             },
             "httpGatewayEndpointPort": "[parameters('nt0fabricHttpGatewayPort')]",
             "isPrimary": true,
-            "reverseProxyEndpointPort": "[parameters('nt0reverseProxyEndpointPort')]",
             "vmInstanceCount": "[parameters('nt0InstanceCount')]"
           },
           {
@@ -1351,16 +1304,11 @@
             },
             "httpGatewayEndpointPort": "[parameters('nt1fabricHttpGatewayPort')]",
             "isPrimary": false,
-            "reverseProxyEndpointPort": "[parameters('nt1reverseProxyEndpointPort')]",
             "vmInstanceCount": "[parameters('nt1InstanceCount')]"
           }
         ],
         "provisioningState": "Default",
         "reliabilityLevel": "Silver",
-        "reverseProxyCertificate": {
-          "thumbprint": "[parameters('reverseProxyCertificateThumbprint')]",
-          "x509StoreName": "[parameters('reverseProxyCertificateStoreValue')]"
-        },
         "upgradeMode": "Manual",
         "vmImage": "Windows"
       },

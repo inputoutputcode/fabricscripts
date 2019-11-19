@@ -66,13 +66,13 @@ param
 )
     Write-Warning "This script is mainly intended to help with the scale up scenario. The Script will add the new VMs and also make the necessary cluster setting changes" 
     Write-Warning "`For scale down the script does not remove the VM resources, it just makes the necessary cluster setting changes. You will need to delete the VMs via portal or ARM PS, once this srcipt finshes running"
-    Write-Warning "`Please run Login-AzureRMAccount before running this script."
+    Write-Warning "`Please run Login-AzAccount before running this script."
 
-    Select-AzureRmSubscription -SubscriptionId $SubscriptionId
+    Select-AzSubscription -SubscriptionId $SubscriptionId
 
     Write-Verbose "Getting resource group information"
 
-    $resources = Find-AzureRmResource -ResourceGroupNameContains  $ResourceGroupName 
+    $resources = Find-AzResource -ResourceGroupNameContains  $ResourceGroupName 
      
     $rd = New-Object System.Fabric.CSMTemplate.ResourceDescriptor
     $rd.CreateAllowedParamValues = $false
@@ -95,26 +95,26 @@ param
 
          if($resource.ResourceId.Contains("Microsoft.ServiceFabric"))
          {
-            $clusterResource = Get-AzureRmResource -ResourceId $resource.ResourceId
+            $clusterResource = Get-AzResource -ResourceId $resource.ResourceId
          }
 
          if(!$vmResource -and $resource.ResourceId.Contains("Microsoft.Compute/virtualMachines"))
          {
-            $vmResource = Get-AzureRmResource -ResourceId $resource.ResourceId
+            $vmResource = Get-AzResource -ResourceId $resource.ResourceId
          }
 
          if($resource.ResourceType.Equals("Microsoft.Compute/virtualMachines"))
          {
-            $vmResources += Get-AzureRmResource -ResourceId $resource.ResourceId
+            $vmResources += Get-AzResource -ResourceId $resource.ResourceId
          }
 
          if($resource.Name -ieq "Microsoft.Insights.VMDiagnosticsSettings"){
-            $vmDiagnostics = Get-AzureRmResource -ResourceId $resource.ResourceId
+            $vmDiagnostics = Get-AzResource -ResourceId $resource.ResourceId
          }
 
          if($resource.ResourceType -ieq "Microsoft.Network/loadBalancers")
          {
-            $loadBalancerResource = Get-AzureRmResource -ResourceId $resource.ResourceId
+            $loadBalancerResource = Get-AzResource -ResourceId $resource.ResourceId
             $inputendpointsL_ = Get-ApplicationPorts($loadBalancerResource.Properties.Probes);
 
             foreach($port in $inputendpointsL_) { 
@@ -127,14 +127,14 @@ param
          
          if($resource.ResourceType -ieq "Microsoft.Network/publicIPAddresses" -and $resource.Name.EndsWith("-0"))
          {
-            $primaryPublicIp = Get-AzureRmResource -ResourceId $resource.ResourceId;
+            $primaryPublicIp = Get-AzResource -ResourceId $resource.ResourceId;
             $RGDeploymentParams['dnsName'] = $primaryPublicIp.Properties.DnsSettings.DomainNameLabel;
             $RGDeploymentParams['lbIPName'] = $resource.Name.TrimEnd("-0");
          }
 
          if($resource.ResourceType -ieq "Microsoft.Network/loadBalancers" -and $resource.Name.EndsWith("-0"))
          {           
-            $primaryLB = Get-AzureRmResource -ResourceId $resource.ResourceId;            
+            $primaryLB = Get-AzResource -ResourceId $resource.ResourceId;            
             $RGDeploymentParams['lbName'] = $resource.Name.TrimEnd("-0");
          }
     }
@@ -305,7 +305,7 @@ param
 
     Write-Host ("Deployment started at {0:O}" -f $now)
     
-    $deploymentResult = New-AzureRmResourceGroupDeployment @RGDeploymentParams -WarningAction SilentlyContinue -Verbose
+    $deploymentResult = New-AzResourceGroupDeployment @RGDeploymentParams -WarningAction SilentlyContinue -Verbose
     
     Write-Host ("Deployment completed at {0:O}" -f [DateTime]::Now)
 
@@ -374,16 +374,16 @@ param(
 $ErrorActionPreference = 'Stop'
 
 Write-Host "Switching context to SubscriptionId $SubscriptionId"
-#Set-AzureRmContext -SubscriptionId $SubscriptionId | Out-Null
+#Set-AzContext -SubscriptionId $SubscriptionId | Out-Null
 
-# New-AzureRmResourceGroup is idempotent as long as the location matches
+# New-AzResourceGroup is idempotent as long as the location matches
 Write-Host "Ensuring ResourceGroup $ResourceGroupName in $Location"
-New-AzureRmResourceGroup -Name $ResourceGroupName -Location $Location -Force | Out-Null
+New-AzResourceGroup -Name $ResourceGroupName -Location $Location -Force | Out-Null
 $resourceId = $null
 
 try
 {
-    $existingKeyVault = Get-AzureRmKeyVault -VaultName $VaultName -ResourceGroupName $ResourceGroupName
+    $existingKeyVault = Get-AzKeyVault -VaultName $VaultName -ResourceGroupName $ResourceGroupName
     $resourceId = $existingKeyVault.ResourceId
 
     Write-Host "Using existing valut $VaultName in $($existingKeyVault.Location)"
@@ -395,7 +395,7 @@ catch
 if(!$existingKeyVault)
 {
     Write-Host "Creating new vault $VaultName in $location"
-    $newKeyVault = New-AzureRmKeyVault -VaultName $VaultName -ResourceGroupName $ResourceGroupName -Location $Location -EnabledForDeployment
+    $newKeyVault = New-AzKeyVault -VaultName $VaultName -ResourceGroupName $ResourceGroupName -Location $Location -EnabledForDeployment
     $resourceId = $newKeyVault.ResourceId
 }
 

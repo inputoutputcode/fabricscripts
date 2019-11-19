@@ -1,17 +1,13 @@
 ﻿## Declare parameters
 $armTemplate = ".\Templates\Vortex-LoadTest-Cluster.json"
-$armtTemplatePathForIdGenerator = ".\Templates\Vortex-LoadTest-ParameterGeneration.json"
-$currentExecutionPath = "D:\Code\Azure%20Service%20Fabric%20Skripts\Create-GenericCluster"
+$currentExecutionPath = "D:\Code\inputoutputcode\FabricMonkey\Create-GenericCluster"
 $clusterVersion = "6.5.676.9590"
 
 ## Fixed parameters
 $subscriptionId = "13ad2c84-84fa-4798-ad71-e70c07af873f"
 $azureRegion = "centralus"
-$azureRegionOms = "centralus"
 $localCertificatePath = "D:\Certificates\"
 $generalPassword = "nZ549Ux2MnW6srTvOZsq"
-$tempIdGeneratorGroupName = "temp-" + [guid]::NewGuid()
-
 
 ## Set environment
 Try {
@@ -21,13 +17,10 @@ Try {
     Set-AzContext -SubscriptionId $subscriptionId
 }
 cd $currentExecutionPath
+Enable-AzureRmAlias
 
 ## Generate unique id strings
-New-AzResourceGroup $tempIdGeneratorGroupName -Location $azureRegion -Force
-$output = New-AzResourceGroupDeployment -ResourceGroupName $tempIdGeneratorGroupName -TemplateFile $armtTemplatePathForIdGenerator
-$deploymentName = $output.Outputs.uniqueIdToResourceGroup.Value
-Remove-AzResourceGroup $tempIdGeneratorGroupName -Force
-$deploymentName = ($deploymentName).TrimStart("0123456789?=/&%¤#`"!_.-")
+$deploymentName = "chrpap" + (Get-Date).ToString("ddhhmm")
 
 # Define dynamic parameters
 $certificateName = $deploymentName + "-cert"
@@ -35,7 +28,7 @@ $proxyCertificateName = $deploymentName + "-proxycert"
 $resourceGroup = $deploymentName + "-group"
 $keyVaultName = $deploymentName + "-keyvault"
 $serviceFabricClusterName = $deploymentName + "-servicefabric"
-$serviceFabricClusterDns = $serviceFabricClusterName + ".westeurope.cloudapp.azure.com"
+$serviceFabricClusterDns = $serviceFabricClusterName + "." + $azureRegion + ".cloudapp.azure.com"
 #$serviceFabricClusterWebapplicationReplyUrl = "https://" + $serviceFabricClusterDns + ":19080/Explorer/index.html" # Only for AAD registration
 
 ## Deploy Azure Key Vault
@@ -48,10 +41,6 @@ $clusterCertificate = Invoke-AddCertToKeyVault -SubscriptionId $subscriptionId -
 $clusterCertificate.CertificateThumbprint
 $clusterCertificate.SourceVault
 $clusterCertificate.CertificateURL
-$proxyCertificate = Invoke-AddCertToKeyVault -SubscriptionId $subscriptionId -ResourceGroupName $resourceGroup -Location $azureRegion -VaultName $keyVaultName -CertificateName $proxyCertificateName -CreateSelfSignedCertificate -DnsName $serviceFabricClusterDns -OutputPath $localCertificatePath -Password $generalPassword
-$proxyCertificate.CertificateThumbprint
-$proxyCertificate.SourceVault
-$proxyCertificate.CertificateURL
 
 ## Deploy Azure Service Fabric Cluster
 $armParameter = @{}
@@ -63,8 +52,6 @@ $armParameter.Add("adminPassword", $generalPassword)
 $armParameter.Add("sourceVaultValue", $clusterCertificate.SourceVault)
 $armParameter.Add("certificateUrlValue", $clusterCertificate.CertificateURL)
 $armParameter.Add("certificateThumbprint", $clusterCertificate.CertificateThumbprint)
-$armParameter.Add("reverseProxyCertificateThumbprint", $proxyCertificate.CertificateThumbprint)
-$armParameter.Add("reverseProxyCertificateUrlValue", $proxyCertificate.CertificateURL)
 
 Test-AzResourceGroupDeployment -ResourceGroupName $resourceGroup -TemplateFile $armTemplate -TemplateParameterObject $armParameter -Verbose -ErrorAction Stop
 

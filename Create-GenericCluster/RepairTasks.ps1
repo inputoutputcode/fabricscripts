@@ -1,0 +1,1 @@
+﻿Get-ServiceFabricRepairTask | Where-Object { $_.State -ne "Complete" } | Select TaskId

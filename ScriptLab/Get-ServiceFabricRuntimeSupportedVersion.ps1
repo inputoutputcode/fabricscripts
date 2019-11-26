@@ -1,0 +1,4 @@
+﻿Connect-AzureRmAccount
+
+Get-ServiceFabricRuntimeSupportedVersion
+

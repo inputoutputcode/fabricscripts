@@ -236,7 +236,7 @@
     },
     "vmNodeType0Name": {
       "type": "string",
-      "defaultValue": "frontend",
+      "defaultValue": "mngmt",
       "maxLength": 9
     },
     "vmNodeType0Size": {

@@ -47,70 +47,6 @@
       "type": "string",
       "defaultValue": "10.0.0.0/24"
     },
-    "nt1applicationStartPort": {
-      "type": "int",
-      "defaultValue": 20000
-    },
-    "nt1applicationEndPort": {
-      "type": "int",
-      "defaultValue": 30000
-    },
-    "nt1ephemeralStartPort": {
-      "type": "int",
-      "defaultValue": 49152
-    },
-    "nt1ephemeralEndPort": {
-      "type": "int",
-      "defaultValue": 65534
-    },
-    "nt1fabricTcpGatewayPort": {
-      "type": "int",
-      "defaultValue": 19000
-    },
-    "nt1fabricHttpGatewayPort": {
-      "type": "int",
-      "defaultValue": 19080
-    },
-    "subnet1Name": {
-      "type": "string",
-      "defaultValue": "Subnet-1"
-    },
-    "subnet1Prefix": {
-      "type": "string",
-      "defaultValue": "10.0.1.0/24"
-    },
-    "nt2applicationStartPort": {
-      "type": "int",
-      "defaultValue": 20000
-    },
-    "nt2applicationEndPort": {
-      "type": "int",
-      "defaultValue": 30000
-    },
-    "nt2ephemeralStartPort": {
-      "type": "int",
-      "defaultValue": 49152
-    },
-    "nt2ephemeralEndPort": {
-      "type": "int",
-      "defaultValue": 65534
-    },
-    "nt2fabricTcpGatewayPort": {
-      "type": "int",
-      "defaultValue": 19000
-    },
-    "nt2fabricHttpGatewayPort": {
-      "type": "int",
-      "defaultValue": 19080
-    },
-    "subnet2Name": {
-      "type": "string",
-      "defaultValue": "Subnet-2"
-    },
-    "subnet2Prefix": {
-      "type": "string",
-      "defaultValue": "10.0.2.0/24"
-    },
     "publicIPAddressType": {
       "type": "string",
       "allowedValues": [
@@ -137,7 +73,6 @@
       "type": "string",
       "defaultValue": "false"
     },
-
     "vmImagePublisher": {
       "type": "string",
       "defaultValue": "MicrosoftWindowsServer"
@@ -242,7 +177,7 @@
     "vmNodeType0Size": {
       "type": "string",
       "defaultValue": "Standard_D3_v2"
-    }
+    }  
   },
   "variables": {
     "vmssApiVersion": "2018-10-01",
@@ -256,14 +191,10 @@
     "vnetName": "[concat(parameters('deploymentId'),'-','vnet')]",
     "vnetId": "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]",
     "subnet0Ref": "[concat(variables('vnetId'),'/subnets/',parameters('subnet0Name'))]",
-    "subnet1Ref": "[concat(variables('vnetId'),'/subnets/',parameters('subnet1Name'))]",
-    "subnet2Ref": "[concat(variables('vnetId'),'/subnets/',parameters('subnet2Name'))]",
     "nicName": "[concat(parameters('deploymentId'),'-nic')]",
     "pubIpName": "[concat(parameters('deploymentId'),'-pubip')]",
     "lbName": "[concat(parameters('deploymentId'),'-lb')]",
     "lbIpName": "[concat(parameters('deploymentId'),'-lbip')]",
-    "aiName": "[concat(parameters('deploymentId'),'-ai')]",
-    "omsName": "[concat(parameters('deploymentId'),'-oms')]",
     "sfstorageName": "[concat(parameters('deploymentId'),'sfstorage')]",
     "dgstorageName": "[concat(parameters('deploymentId'),'dgstorage')]",
 
@@ -547,170 +478,6 @@
                   },
                   "typeHandlerVersion": "1.1"
                 }
-              },
-              {
-                "name": "[concat('VMOmsExt','_vmNodeType0Name')]",
-                "properties": {
-                  "publisher": "Microsoft.EnterpriseCloud.Monitoring",
-                  "type": "MicrosoftMonitoringAgent",
-                  "typeHandlerVersion": "1.0",
-                  "autoUpgradeMinorVersion": true,
-                  "settings": {
-                    "workspaceId": "[reference(resourceId('Microsoft.OperationalInsights/workspaces/', variables('omsName')), '2015-11-01-preview').customerId]"
-                  },
-                  "protectedSettings": {
-                    "workspaceKey": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces/', variables('omsName')), '2015-11-01-preview').primarySharedKey]"
-                  }
-                }
-              },
-              {
-                "name": "[concat('VMDiagnosticsVmExt','_vmNodeType0Name')]",
-                "properties": {
-                  "type": "IaaSDiagnostics",
-                  "autoUpgradeMinorVersion": true,
-                  "protectedSettings": {
-                    "storageAccountName": "[variables('dgstorageName')]",
-                    "storageAccountKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('dgstorageName')),'2015-05-01-preview').key1]",
-                    "storageAccountEndPoint": "https://core.windows.net/"
-                  },
-                  "publisher": "Microsoft.Azure.Diagnostics",
-                  "settings": {
-                    "WadCfg": {
-                      "DiagnosticMonitorConfiguration": {
-                        "PerformanceCounters": {
-                          "PerformanceCounterConfiguration": [
-                            {
-                              "annotation": [
-                              ],
-                              "counterSpecifier": "\\Processor(_Total)\\% Processor Time",
-                              "sampleRate": "PT10S"
-                            },
-                            {
-                              "annotation": [
-                              ],
-                              "counterSpecifier": "\\Memory\\Available MBytes",
-                              "sampleRate": "PT10S"
-                            },
-                            {
-                              "annotation": [
-                              ],
-                              "counterSpecifier": "\\LogicalDisk(_Total)\\Disk Read Bytes/sec",
-                              "sampleRate": "PT10S"
-                            },
-                            {
-                              "annotation": [
-                              ],
-                              "counterSpecifier": "\\LogicalDisk(C:)\\Disk Write Bytes/sec",
-                              "sampleRate": "PT10S"
-                            },
-                            {
-                              "annotation": [
-                              ],
-                              "counterSpecifier": "\\LogicalDisk(C:)\\Disk Read Bytes/sec",
-                              "sampleRate": "PT10S"
-                            },
-                            {
-                              "annotation": [
-                              ],
-                              "counterSpecifier": "\\LogicalDisk(D:)\\Disk Write Bytes/sec",
-                              "sampleRate": "PT10S"
-                            },
-                            {
-                              "annotation": [
-                              ],
-                              "counterSpecifier": "\\LogicalDisk(D:)\\Disk Read Bytes/sec",
-                              "sampleRate": "PT10S"
-                            }
-                          ]
-                        },
-                        "WindowsEventLog": {
-                          "DataSource": [
-                            {
-                              "name": "System!*[System[(Level=1 or Level=2)]]"
-                            }
-                          ]
-                        },
-                        "EtwProviders": {
-                          "EtwEventSourceProviderConfiguration": [
-                            {
-                              "provider": "Microsoft-ServiceFabric-Actors",
-                              "scheduledTransferKeywordFilter": "1",
-                              "scheduledTransferPeriod": "PT1M",
-                              "DefaultEvents": {
-                                "eventDestination": "ServiceFabricReliableActorEventTable"
-                              }
-                            },
-                            {
-                              "provider": "Microsoft-ServiceFabric-Services",
-                              "scheduledTransferPeriod": "PT1M",
-                              "DefaultEvents": {
-                                "eventDestination": "ServiceFabricReliableServiceEventTable"
-                              }
-                            },
-                            {
-                              "provider": "Contoso-CustomProvider",
-                              "scheduledTransferPeriod": "PT1M",
-                              "DefaultEvents": {
-                                "eventDestination": "ETWEventTable"
-                              }
-                            },
-                            {
-                              "provider": "e39b723c-590c-4090-abb0-11e3e6616346",
-                              "scheduledTransferPeriod": "PT5M",
-                              "DefaultEvents": {
-                                "eventDestination": "ServiceFabricPatchOrchestrationAppEventTable"
-                              }
-                            },
-                            {
-                              "provider": "fc0028ff-bfdc-499f-80dc-ed922c52c5e9",
-                              "scheduledTransferPeriod": "PT5M",
-                              "DefaultEvents": {
-                                "eventDestination": "ServiceFabricPatchOrchestrationAppEventTable"
-                              }
-                            },
-                            {
-                              "provider": "24afa313-0d3b-4c7c-b485-1047fd964b60",
-                              "scheduledTransferPeriod": "PT5M",
-                              "DefaultEvents": {
-                                "eventDestination": "ServiceFabricPatchOrchestrationAppEventTable"
-                              }
-                            },
-                            {
-                              "provider": "05dc046c-60e9-4ef7-965e-91660adffa68",
-                              "scheduledTransferPeriod": "PT5M",
-                              "DefaultEvents": {
-                                "eventDestination": "ServiceFabricPatchOrchestrationAppEventTable"
-                              }
-                            }
-                          ],
-                          "EtwManifestProviderConfiguration": [
-                            {
-                              "provider": "cbd93bc2-71e5-4566-b3a7-595d8eeca6e8",
-                              "scheduledTransferLogLevelFilter": "Information",
-                              "scheduledTransferKeywordFilter": "4611686018427387936",
-                              "scheduledTransferPeriod": "PT1M",
-                              "DefaultEvents": {
-                                "eventDestination": "ServiceFabricSystemEventTable"
-                              }
-                            }
-                          ]
-                        },
-                        "overallQuotaInMB": "50000",
-                        "sinks": "applicationInsights"
-                      },
-                      "SinksConfig": {
-                        "Sink": [
-                          {
-                            "name": "applicationInsights",
-                            "ApplicationInsights": "[reference(resourceId('Microsoft.Insights/components', variables('aiName')), '2014-04-01').InstrumentationKey]"
-                          }
-                        ]
-                      }
-                    },
-                    "StorageAccount": "[variables('dgstorageName')]"
-                  },
-                  "typeHandlerVersion": "1.5"
-                }
               }
             ]
           },
@@ -790,71 +557,20 @@
       }
     },
     {
-      "apiVersion": "2014-04-01",
-      "name": "[variables('aiName')]",
-      "type": "Microsoft.Insights/components",
-      "location": "[resourceGroup().location]",
-      "properties": {
-        "applicationId": "[variables('aiName')]"
-      }
-    },
-    {
-      "apiVersion": "2015-11-01-preview",
+      "apiVersion": "[variables('publicIPApiVersion')]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[concat(variables('lbIpName'),'-','1')]",
       "location": "[parameters('computeLocation')]",
-      "name": "[variables('omsName')]",
-      "type": "Microsoft.OperationalInsights/workspaces",
       "properties": {
-        "sku": {
-          "name": "Free"
-        }
-      },
-      "resources": [
-        {
-          "apiVersion": "2015-11-01-preview",
-          "name": "[concat(variables('dgstorageName'), variables('omsName'))]",
-          "type": "storageinsightconfigs",
-          "dependsOn": [
-            "[concat('Microsoft.OperationalInsights/workspaces/', variables('omsName'))]",
-            "[concat('Microsoft.Storage/storageAccounts/', variables('dgstorageName'))]"
-          ],
-          "properties": {
-            "containers": [
-            ],
-            "tables": [
-              "WADServiceFabric*EventTable",
-              "WADWindowsEventLogsTable",
-              "WADETWEventTable"
-            ],
-            "storageAccount": {
-              "id": "[resourceId('Microsoft.Storage/storageaccounts/', variables('dgstorageName'))]",
-              "key": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('dgstorageName')),'2015-06-15').key1]"
-            }
-          }
+        "dnsSettings": {
+          "domainNameLabel": "[concat(parameters('clusterName'),'-',parameters('vmNodeType1Name'))]"
         },
-        {
-          "apiVersion": "2015-11-01-preview",
-          "name": "System",
-          "type": "datasources",
-          "dependsOn": [
-            "[concat('Microsoft.OperationalInsights/workspaces/', variables('omsName'))]"
-          ],
-          "kind": "WindowsEvent",
-          "properties": {
-            "eventLogName": "System",
-            "eventTypes": [
-              {
-                "eventType": "Error"
-              },
-              {
-                "eventType": "Warning"
-              },
-              {
-                "eventType": "Information"
-              }
-            ]
-          }
-        }
-      ]
+        "publicIPAllocationMethod": "Dynamic"
+      },
+      "tags": {
+        "resourceType": "Service Fabric",
+        "clusterName": "[parameters('clusterName')]"
+      }
     },
     {
       "apiVersion": "2018-02-01",
@@ -866,7 +582,6 @@
       ],
       "properties": {
         "addonFeatures": [
-          "DnsService",
           "RepairManager"
         ],
         "certificate": {

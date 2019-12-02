@@ -1,12 +1,12 @@
 ﻿
 $ConnectArgs = @{  
-        ConnectionEndpoint = 'chrpap260146-servicefabric.centralus.cloudapp.azure.com:19000';  
+        ConnectionEndpoint = 'chrpap021121-servicefabric.centralus.cloudapp.azure.com:19000';  
         X509Credential = $True;  
         StoreLocation = 'CurrentUser';  
         StoreName = "MY";  
-        ServerCommonName = "chrpap260146-servicefabric.centralus.cloudapp.azure.com";  
+        ServerCommonName = "chrpap021121-servicefabric.centralus.cloudapp.azure.com";  
         FindType = 'FindByThumbprint';  
-        FindValue = "D1FE6AE404699A3DAA0C747D21D943B4810576B8"   
+        FindValue = "BF71968B52098A7873B607C49354B3D4CB53C69A"   
     }
 Connect-ServiceFabricCluster @ConnectArgs
 

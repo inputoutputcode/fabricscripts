@@ -258,22 +258,6 @@
     "vmNodeType1Size": {
       "type": "string",
       "defaultValue": "Standard_D3_v2"
-    },
-    "nt2InstanceCount": {
-      "type": "int",
-      "defaultValue": 5,
-      "metadata": {
-        "description": "Instance count for node type"
-      }
-    },
-     "vmNodeType2Name": {
-      "type": "string",
-      "defaultValue": "scaletmp",
-      "maxLength": 9
-    },
-    "vmNodeType2Size": {
-      "type": "string",
-      "defaultValue": "Standard_D3_v2"
     }
   },
   "variables": {
@@ -373,12 +357,6 @@
             "name": "[parameters('subnet1Name')]",
             "properties": {
               "addressPrefix": "[parameters('subnet1Prefix')]"
-            }
-          },
-          {
-            "name": "[parameters('subnet2Name')]",
-            "properties": {
-              "addressPrefix": "[parameters('subnet2Prefix')]"
             }
           }
         ]
@@ -982,13 +960,13 @@
             "maxPercentUnhealthyApplications": 40
           },
           "deltaHealthPolicy": {
-            "maxPercentDeltaUnhealthyNodes": 0,
-            "maxPercentUpgradeDomainDeltaUnhealthyNodes": 0,
-            "maxPercentDeltaUnhealthyApplications": 0,
+            "maxPercentDeltaUnhealthyNodes": 50,
+            "maxPercentUpgradeDomainDeltaUnhealthyNodes": 50,
+            "maxPercentDeltaUnhealthyApplications": 50,
             "applicationDeltaHealthPolicies": {
               "fabric:/System": {
                 "defaultServiceTypeDeltaHealthPolicy": {
-                  "maxPercentDeltaUnhealthyServices": 0
+                  "maxPercentDeltaUnhealthyServices": 50
                 }
               }
             }

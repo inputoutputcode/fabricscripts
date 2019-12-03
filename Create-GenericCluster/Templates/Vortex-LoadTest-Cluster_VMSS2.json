@@ -326,12 +326,6 @@
             "properties": {
               "addressPrefix": "[parameters('subnet1Prefix')]"
             }
-          },
-          {
-            "name": "[parameters('subnet2Name')]",
-            "properties": {
-              "addressPrefix": "[parameters('subnet2Prefix')]"
-            }
           }
         ]
       },
@@ -946,13 +940,13 @@
             "maxPercentUnhealthyApplications": 40
           },
           "deltaHealthPolicy": {
-            "maxPercentDeltaUnhealthyNodes": 0,
-            "maxPercentUpgradeDomainDeltaUnhealthyNodes": 0,
-            "maxPercentDeltaUnhealthyApplications": 0,
+            "maxPercentDeltaUnhealthyNodes": 50,
+            "maxPercentUpgradeDomainDeltaUnhealthyNodes": 50,
+            "maxPercentDeltaUnhealthyApplications": 50,
             "applicationDeltaHealthPolicies": {
               "fabric:/System": {
                 "defaultServiceTypeDeltaHealthPolicy": {
-                  "maxPercentDeltaUnhealthyServices": 0
+                  "maxPercentDeltaUnhealthyServices": 50
                 }
               }
             }

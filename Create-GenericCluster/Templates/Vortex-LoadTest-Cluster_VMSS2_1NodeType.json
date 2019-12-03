@@ -47,22 +47,6 @@
       "type": "string",
       "defaultValue": "10.0.0.0/24"
     },
-    "nt1applicationStartPort": {
-      "type": "int",
-      "defaultValue": 20000
-    },
-    "nt1applicationEndPort": {
-      "type": "int",
-      "defaultValue": 30000
-    },
-    "nt1ephemeralStartPort": {
-      "type": "int",
-      "defaultValue": 49152
-    },
-    "nt1ephemeralEndPort": {
-      "type": "int",
-      "defaultValue": 65534
-    },
     "nt1fabricTcpGatewayPort": {
       "type": "int",
       "defaultValue": 19000
@@ -78,49 +62,6 @@
     "subnet1Prefix": {
       "type": "string",
       "defaultValue": "10.0.1.0/24"
-    },
-    "nt2applicationStartPort": {
-      "type": "int",
-      "defaultValue": 20000
-    },
-    "nt2applicationEndPort": {
-      "type": "int",
-      "defaultValue": 30000
-    },
-    "nt2ephemeralStartPort": {
-      "type": "int",
-      "defaultValue": 49152
-    },
-    "nt2ephemeralEndPort": {
-      "type": "int",
-      "defaultValue": 65534
-    },
-    "nt2fabricTcpGatewayPort": {
-      "type": "int",
-      "defaultValue": 19000
-    },
-    "nt2fabricHttpGatewayPort": {
-      "type": "int",
-      "defaultValue": 19080
-    },
-    "subnet2Name": {
-      "type": "string",
-      "defaultValue": "Subnet-2"
-    },
-    "subnet2Prefix": {
-      "type": "string",
-      "defaultValue": "10.0.2.0/24"
-    },
-    "publicIPAddressType": {
-      "type": "string",
-      "allowedValues": [
-        "Dynamic"
-      ],
-      "defaultValue": "Dynamic"
-    },
-    "vmStorageAccountContainerName": {
-      "type": "string",
-      "defaultValue": "vhds"
     },
     "adminUserName": {
       "type": "string",
@@ -274,8 +215,6 @@
     "subnet0Ref": "[concat(variables('vnetId'),'/subnets/',parameters('subnet0Name'))]",
     "subnet1Ref": "[concat(variables('vnetId'),'/subnets/',parameters('subnet1Name'))]",
     "nicName": "[concat(parameters('deploymentId'),'-nic')]",
-    "pubIpName": "[concat(parameters('deploymentId'),'-pubip')]",
-    "lbName": "[concat(parameters('deploymentId'),'-lb')]",
     "lbIpName": "[concat(parameters('deploymentId'),'-lbip')]",
     "sfstorageName": "[concat(parameters('deploymentId'),'sfstorage')]",
     "dgstorageName": "[concat(parameters('deploymentId'),'dgstorage')]",
@@ -525,9 +464,7 @@
         "[concat('Microsoft.Network/virtualNetworks/', variables('vnetName'))]",
         "[concat('Microsoft.Network/loadBalancers/', variables('lbName0'))]",
         "[concat('Microsoft.Storage/storageAccounts/', variables('sfstorageName'))]",
-        "[concat('Microsoft.Storage/storageAccounts/', variables('dgstorageName'))]",
-        "[concat('Microsoft.Insights/components/', variables('aiName'))]",
-        "[concat('Microsoft.OperationalInsights/workspaces/', variables('omsName'))]"
+        "[concat('Microsoft.Storage/storageAccounts/', variables('dgstorageName'))]"
       ],
       "properties": {
         "overprovision": "[parameters('overProvision')]",
@@ -771,9 +708,7 @@
         "[concat('Microsoft.Network/virtualNetworks/', variables('vnetName'))]",
         "[concat('Microsoft.Network/loadBalancers/', variables('lbName1'))]",
         "[concat('Microsoft.Storage/storageAccounts/', variables('sfstorageName'))]",
-        "[concat('Microsoft.Storage/storageAccounts/', variables('dgstorageName'))]",
-        "[concat('Microsoft.Insights/components/', variables('aiName'))]",
-        "[concat('Microsoft.OperationalInsights/workspaces/', variables('omsName'))]"
+        "[concat('Microsoft.Storage/storageAccounts/', variables('dgstorageName'))]"
       ],
       "properties": {
         "overprovision": "[parameters('overProvision')]",

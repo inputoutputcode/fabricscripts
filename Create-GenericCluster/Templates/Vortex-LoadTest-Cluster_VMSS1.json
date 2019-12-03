@@ -47,17 +47,6 @@
       "type": "string",
       "defaultValue": "10.0.0.0/24"
     },
-    "publicIPAddressType": {
-      "type": "string",
-      "allowedValues": [
-        "Dynamic"
-      ],
-      "defaultValue": "Dynamic"
-    },
-    "vmStorageAccountContainerName": {
-      "type": "string",
-      "defaultValue": "vhds"
-    },
     "adminUserName": {
       "type": "string",
       "defaultValue": "Christian"
@@ -192,8 +181,6 @@
     "vnetId": "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]",
     "subnet0Ref": "[concat(variables('vnetId'),'/subnets/',parameters('subnet0Name'))]",
     "nicName": "[concat(parameters('deploymentId'),'-nic')]",
-    "pubIpName": "[concat(parameters('deploymentId'),'-pubip')]",
-    "lbName": "[concat(parameters('deploymentId'),'-lb')]",
     "lbIpName": "[concat(parameters('deploymentId'),'-lbip')]",
     "sfstorageName": "[concat(parameters('deploymentId'),'sfstorage')]",
     "dgstorageName": "[concat(parameters('deploymentId'),'dgstorage')]",
@@ -429,9 +416,7 @@
         "[concat('Microsoft.Network/virtualNetworks/', variables('vnetName'))]",
         "[concat('Microsoft.Network/loadBalancers/', variables('lbName0'))]",
         "[concat('Microsoft.Storage/storageAccounts/', variables('sfstorageName'))]",
-        "[concat('Microsoft.Storage/storageAccounts/', variables('dgstorageName'))]",
-        "[concat('Microsoft.Insights/components/', variables('aiName'))]",
-        "[concat('Microsoft.OperationalInsights/workspaces/', variables('omsName'))]"
+        "[concat('Microsoft.Storage/storageAccounts/', variables('dgstorageName'))]"
       ],
       "properties": {
         "overprovision": "[parameters('overProvision')]",

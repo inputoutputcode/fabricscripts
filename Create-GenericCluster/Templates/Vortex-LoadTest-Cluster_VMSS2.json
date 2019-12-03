@@ -79,17 +79,6 @@
       "type": "string",
       "defaultValue": "10.0.1.0/24"
     },
-    "publicIPAddressType": {
-      "type": "string",
-      "allowedValues": [
-        "Dynamic"
-      ],
-      "defaultValue": "Dynamic"
-    },
-    "vmStorageAccountContainerName": {
-      "type": "string",
-      "defaultValue": "vhds"
-    },
     "adminUserName": {
       "type": "string",
       "defaultValue": "Christian"
@@ -242,8 +231,6 @@
     "subnet0Ref": "[concat(variables('vnetId'),'/subnets/',parameters('subnet0Name'))]",
     "subnet1Ref": "[concat(variables('vnetId'),'/subnets/',parameters('subnet1Name'))]",
     "nicName": "[concat(parameters('deploymentId'),'-nic')]",
-    "pubIpName": "[concat(parameters('deploymentId'),'-pubip')]",
-    "lbName": "[concat(parameters('deploymentId'),'-lb')]",
     "lbIpName": "[concat(parameters('deploymentId'),'-lbip')]",
     "sfstorageName": "[concat(parameters('deploymentId'),'sfstorage')]",
     "dgstorageName": "[concat(parameters('deploymentId'),'dgstorage')]",

@@ -1,5 +1,5 @@
 ﻿## Declare parameters
-$armTemplate = ".\Templates\Vortex-LoadTest-Cluster_VMSS3.json"
+$armTemplate = ".\Templates\5-VM-Windows-1-NodeTypes-Secure-NSG.json"
 $currentExecutionPath = "D:\Code\inputoutputcode\FabricMonkey\Create-GenericCluster"
 $clusterVersion = "6.5.676.9590"
 
@@ -20,7 +20,7 @@ cd $currentExecutionPath
 Enable-AzureRmAlias
 
 ## Generate unique id strings
-$deploymentName = "chrpap" + (Get-Date).ToString("ddHHmm")
+$deploymentName = "chrpap" + (Get-Date).ToString("ddhhmm")
 
 # Define dynamic parameters
 $certificateName = $deploymentName + "-cert"
@@ -44,10 +44,9 @@ $clusterCertificate.CertificateURL
 
 ## Deploy Azure Service Fabric Cluster
 $armParameter = @{}
-$armParameter.Add("deploymentId", $deploymentName)
-$armParameter.Add("clusterVersion", $clusterVersion)
-$armParameter.Add("computeLocation", $azureRegion)
+$armParameter.Add("clusterLocation", $azureRegion)
 $armParameter.Add("clusterName", $serviceFabricClusterName)
+$armParameter.Add("adminUserName", $generalPassword)
 $armParameter.Add("adminPassword", $generalPassword)
 $armParameter.Add("sourceVaultValue", $clusterCertificate.SourceVault)
 $armParameter.Add("certificateUrlValue", $clusterCertificate.CertificateURL)
@@ -55,7 +54,7 @@ $armParameter.Add("certificateThumbprint", $clusterCertificate.CertificateThumbp
 
 Test-AzResourceGroupDeployment -ResourceGroupName $resourceGroup -TemplateFile $armTemplate -TemplateParameterObject $armParameter -Verbose -ErrorAction Stop
 
-New-AzResourceGroupDeployment -ResourceGroupName $resourceGroup -TemplateFile $armTemplate -TemplateParameterObject $armParameter -Verbose -Mode Incremental
+New-AzResourceGroupDeployment -ResourceGroupName $resourceGroup -TemplateFile $armTemplate -TemplateParameterObject $armParameter -Verbose -Mode Complete
 
 ## Import certificate in local store
 $certificateFile = $localCertificatePath + $certificateName + ".pfx"

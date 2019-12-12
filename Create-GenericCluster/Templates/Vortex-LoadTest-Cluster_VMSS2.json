@@ -919,21 +919,21 @@
           "upgradeReplicaSetCheckTimeout": "10675199.02:48:05.4775807",
           "healthCheckWaitDuration": "00:05:00",
           "healthCheckStableDuration": "00:05:00",
-          "healthCheckRetryTimeout": "00:15:00",
-          "upgradeTimeout": "00:50:00",
-          "upgradeDomainTimeout": "00:25:00",
+          "healthCheckRetryTimeout": "00:45:00",
+          "upgradeTimeout": "12:00:00",
+          "upgradeDomainTimeout": "02:00:00",
           "healthPolicy": {
-            "maxPercentUnhealthyNodes": 40,
-            "maxPercentUnhealthyApplications": 40
+            "maxPercentUnhealthyNodes": 100,
+            "maxPercentUnhealthyApplications": 100
           },
           "deltaHealthPolicy": {
-            "maxPercentDeltaUnhealthyNodes": 50,
-            "maxPercentUpgradeDomainDeltaUnhealthyNodes": 50,
-            "maxPercentDeltaUnhealthyApplications": 50,
+            "maxPercentDeltaUnhealthyNodes": 0,
+            "maxPercentUpgradeDomainDeltaUnhealthyNodes": 0,
+            "maxPercentDeltaUnhealthyApplications": 0,
             "applicationDeltaHealthPolicies": {
               "fabric:/System": {
                 "defaultServiceTypeDeltaHealthPolicy": {
-                  "maxPercentDeltaUnhealthyServices": 50
+                  "maxPercentDeltaUnhealthyServices": 0
                 }
               }
             }

@@ -1,5 +1,5 @@
 ﻿
-$armTemplate = ".\Templates\Vortex-LoadTest-Cluster_VMSS2_1NodeType.json"
+$armTemplate = ".\Templates\Vortex-LoadTest-Cluster_VMSS3_2NodeType.json"
 $currentExecutionPath = "D:\Code\inputoutputcode\FabricMonkey\Create-GenericCluster"
 $subscriptionId = "13ad2c84-84fa-4798-ad71-e70c07af873f"
 $clusterVersion = "6.5.676.9590"
@@ -9,7 +9,7 @@ $generalPassword = "nZ549Ux2MnW6srTvOZsq"
 cd $currentExecutionPath
 Enable-AzureRmAlias
 
-$deploymentName = "chrpap020419"
+$deploymentName = "chrpap090258"
 
 # Define dynamic parameters
 $certificateName = $deploymentName + "-cert"
@@ -19,9 +19,9 @@ $keyVaultName = $deploymentName + "-keyvault"
 $serviceFabricClusterName = $deploymentName + "-servicefabric"
 $serviceFabricClusterDns = $serviceFabricClusterName + "." + $azureRegion + ".cloudapp.azure.com"
 
-$sourceVault = "/subscriptions/13ad2c84-84fa-4798-ad71-e70c07af873f/resourceGroups/chrpap020419-group/providers/Microsoft.KeyVault/vaults/chrpap020419-keyvault"
-$certificateURL = "https://chrpap020419-keyvault.vault.azure.net/secrets/chrpap020419-cert/6d49335cc3664561bad70aef2899fec9"
-$certificateThumbprint = "FC65B977AF93294E2CFFA800FAADDE73D92BEB7F"
+$sourceVault = "/subscriptions/13ad2c84-84fa-4798-ad71-e70c07af873f/resourceGroups/chrpap090258-group/providers/Microsoft.KeyVault/vaults/chrpap090258-keyvault"
+$certificateURL = "https://chrpap090258-keyvault.vault.azure.net/secrets/chrpap090258-cert/d32480d72667408694ce1085a853782e"
+$certificateThumbprint = "10E451B0E686C9A48B81D5BF62FE90A7D414548B"
 
 ## Deploy Azure Service Fabric Cluster
 $armParameter = @{}
@@ -36,5 +36,5 @@ $armParameter.Add("certificateThumbprint", $certificateThumbprint)
 
 Test-AzResourceGroupDeployment -ResourceGroupName $resourceGroup -TemplateFile $armTemplate -TemplateParameterObject $armParameter -Verbose -ErrorAction Stop
 
-New-AzResourceGroupDeployment -ResourceGroupName $resourceGroup -TemplateFile $armTemplate -TemplateParameterObject $armParameter -Verbose -Mode Incremental
+New-AzResourceGroupDeployment -ResourceGroupName $resourceGroup -TemplateFile $armTemplate -TemplateParameterObject $armParameter -Verbose -Mode Complete -Force
 

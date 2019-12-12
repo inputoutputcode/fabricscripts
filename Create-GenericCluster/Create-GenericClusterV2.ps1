@@ -1,5 +1,5 @@
 ﻿## Declare parameters
-$armTemplate = ".\Templates\Vortex-LoadTest-Cluster_VMSS3.json"
+$armTemplate = ".\noderemovalportaltemplate\template_1vmss.json"
 $currentExecutionPath = "D:\Code\inputoutputcode\FabricMonkey\Create-GenericCluster"
 $clusterVersion = "6.5.676.9590"
 
@@ -11,7 +11,7 @@ $generalPassword = "nZ549Ux2MnW6srTvOZsq"
 
 ## Set environment
 Try {
-  Select-AzSubscription -SubscriptionId $subscriptionId -ErrorAction Stop
+  $subscription = Select-AzSubscription -SubscriptionId $subscriptionId -ErrorAction Stop
 } Catch {
     Login-AzAccount
     Set-AzContext -SubscriptionId $subscriptionId
@@ -20,46 +20,46 @@ cd $currentExecutionPath
 Enable-AzureRmAlias
 
 ## Generate unique id strings
-$deploymentName = "chrpap" + (Get-Date).ToString("ddHHmm")
+$deploymentName = "chrpap" + (Get-Date).ToString("ddhhmm")
 
 # Define dynamic parameters
 $certificateName = $deploymentName + "-cert"
-$proxyCertificateName = $deploymentName + "-proxycert"
 $resourceGroup = $deploymentName + "-group"
 $keyVaultName = $deploymentName + "-keyvault"
 $serviceFabricClusterName = $deploymentName + "-servicefabric"
 $serviceFabricClusterDns = $serviceFabricClusterName + "." + $azureRegion + ".cloudapp.azure.com"
-#$serviceFabricClusterWebapplicationReplyUrl = "https://" + $serviceFabricClusterDns + ":19080/Explorer/index.html" # Only for AAD registration
 
 ## Deploy Azure Key Vault
-New-AzTag -Name "alias"
-New-AzResourceGroup -Name $resourceGroup -Location $azureRegion -Tag @{"alias"="chrpap"} -Force 
-New-AzKeyVault -VaultName $keyVaultName -ResourceGroupName $resourceGroup -Location $azureRegion -EnabledForDeployment
-Import-Module ".\ServiceFabricRPHelpers\ServiceFabricRPHelpers.psm1"
+Write-Host "Creating tags"
+$tag = New-AzTag -Name "alias"
+Write-Host "Creating group"
+$group = New-AzResourceGroup -Name $resourceGroup -Location $azureRegion -Tag @{"alias"="chrpap"} -Force 
+Write-Host "Creating KeyVault"
+$keyVault = New-AzKeyVault -VaultName $keyVaultName -ResourceGroupName $resourceGroup -Location $azureRegion -EnabledForDeployment
+Import-Module ".\ServiceFabricRPHelpers\ServiceFabricRPHelpers.psm1" -Force
 New-Item -ItemType Directory -Path $localCertificatePath -ErrorAction Ignore
-$clusterCertificate = Invoke-AddCertToKeyVaultAsSecret -SubscriptionId $subscriptionId -ResourceGroupName $resourceGroup -Location $azureRegion -VaultName $keyVaultName -CertificateName $certificateName -CreateSelfSignedCertificate -DnsName $serviceFabricClusterDns -OutputPath $localCertificatePath -Password $generalPassword
-$clusterCertificate.CertificateThumbprint
-$clusterCertificate.SourceVault
-$clusterCertificate.CertificateURL
+Write-Host "Creating certificate"
+$clusterCertificate = Invoke-AddCertToKeyVaultAsCert -SubscriptionId $subscriptionId -ResourceGroupName $resourceGroup -Location $azureRegion -VaultName $keyVaultName -CertificateName $certificateName -CreateSelfSignedCertificate -DnsName $serviceFabricClusterDns -OutputPath $localCertificatePath -Password $generalPassword
 
 ## Deploy Azure Service Fabric Cluster
 $armParameter = @{}
 $armParameter.Add("deploymentId", $deploymentName)
-$armParameter.Add("clusterVersion", $clusterVersion)
-$armParameter.Add("computeLocation", $azureRegion)
 $armParameter.Add("clusterName", $serviceFabricClusterName)
 $armParameter.Add("adminPassword", $generalPassword)
-$armParameter.Add("sourceVaultValue", $clusterCertificate.SourceVault)
-$armParameter.Add("certificateUrlValue", $clusterCertificate.CertificateURL)
 $armParameter.Add("certificateThumbprint", $clusterCertificate.CertificateThumbprint)
+$armParameter.Add("certificateUrlValue", $clusterCertificate.CertificateURL)
+$armParameter.Add("keyVaultResourceId", $keyVault.ResourceId)
 
+Write-Host "Testing ARM template"
 Test-AzResourceGroupDeployment -ResourceGroupName $resourceGroup -TemplateFile $armTemplate -TemplateParameterObject $armParameter -Verbose -ErrorAction Stop
 
+Write-Host "Start ARM deployment"
 New-AzResourceGroupDeployment -ResourceGroupName $resourceGroup -TemplateFile $armTemplate -TemplateParameterObject $armParameter -Verbose -Mode Incremental
 
 ## Import certificate in local store
 $certificateFile = $localCertificatePath + $certificateName + ".pfx"
 $certificatePassword = ConvertTo-SecureString $generalPassword -AsPlainText -Force
+Write-Host "Importing certificate locally"
 Import-PfxCertificate -Exportable -CertStoreLocation Cert:\CurrentUser\My -FilePath $certificateFile -Password $certificatePassword
 Import-PfxCertificate -Exportable -CertStoreLocation Cert:\CurrentUser\TrustedPeople -FilePath $certificateFile -Password $certificatePassword
 

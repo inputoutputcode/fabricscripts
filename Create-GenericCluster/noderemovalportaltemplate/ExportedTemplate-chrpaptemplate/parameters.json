@@ -1,0 +1,42 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "vaults_chrpapkv_name": {
+            "value": null
+        },
+        "clusters_chrpaptemplate_name": {
+            "value": null
+        },
+        "virtualMachineScaleSets_primary_name": {
+            "value": null
+        },
+        "virtualMachineScaleSets_secondary_name": {
+            "value": null
+        },
+        "virtualNetworks_VNet_chrpaptemplate_name": {
+            "value": null
+        },
+        "storageAccounts_sfdgchrpaptemplate3188_name": {
+            "value": null
+        },
+        "loadBalancers_LB_chrpaptemplate_primary_name": {
+            "value": null
+        },
+        "storageAccounts_sflogschrpaptemplate3451_name": {
+            "value": null
+        },
+        "loadBalancers_LB_chrpaptemplate_secondary_name": {
+            "value": null
+        },
+        "publicIPAddresses_LBIP_chrpaptemplate_primary_name": {
+            "value": null
+        },
+        "publicIPAddresses_LBIP_chrpaptemplate_secondary_name": {
+            "value": null
+        },
+        "networkSecurityGroups_rg_cleanupservice_nsg_externalid": {
+            "value": null
+        }
+    }
+}

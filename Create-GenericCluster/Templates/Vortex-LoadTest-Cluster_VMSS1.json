@@ -1,5 +1,5 @@
 {
-  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
     "deploymentId": {
@@ -46,6 +46,14 @@
     "subnet0Prefix": {
       "type": "string",
       "defaultValue": "10.0.0.0/24"
+    },
+    "subnet1Name": {
+      "type": "string",
+      "defaultValue": "Subnet-1"
+    },
+    "subnet1Prefix": {
+      "type": "string",
+      "defaultValue": "10.0.1.0/24"
     },
     "adminUserName": {
       "type": "string",
@@ -170,7 +178,7 @@
   },
   "variables": {
     "vmssApiVersion": "2018-10-01",
-    "lbApiVersion": "2018-08-01",
+    "lbApiVersion": "2019-09-01",
     "vNetApiVersion": "2018-08-01",
     "storageApiVersion": "2018-07-01",
     "publicIPApiVersion": "2018-08-01",
@@ -248,6 +256,12 @@
             "name": "[parameters('subnet0Name')]",
             "properties": {
               "addressPrefix": "[parameters('subnet0Prefix')]"
+            }
+          },
+          {
+            "name": "[parameters('subnet1Name')]",
+            "properties": {
+              "addressPrefix": "[parameters('subnet1Prefix')]"
             }
           }
         ]
@@ -530,22 +544,6 @@
       }
     },
     {
-      "apiVersion": "[variables('publicIPApiVersion')]",
-      "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[concat(variables('lbIpName'),'-','1')]",
-      "location": "[parameters('computeLocation')]",
-      "properties": {
-        "dnsSettings": {
-          "domainNameLabel": "[concat(parameters('clusterName'),'-',parameters('vmNodeType1Name'))]"
-        },
-        "publicIPAllocationMethod": "Dynamic"
-      },
-      "tags": {
-        "resourceType": "Service Fabric",
-        "clusterName": "[parameters('clusterName')]"
-      }
-    },
-    {
       "apiVersion": "2018-02-01",
       "type": "Microsoft.ServiceFabric/clusters",
       "name": "[parameters('clusterName')]",
@@ -608,24 +606,24 @@
         "reliabilityLevel": "Silver",
         "upgradeDescription": {
           "forceRestart": false,
-          "upgradeReplicaSetCheckTimeout": "10675199.02:48:05.4775807",
+          "upgradeReplicaSetCheckTimeout": "00:05:00",
           "healthCheckWaitDuration": "00:05:00",
           "healthCheckStableDuration": "00:05:00",
-          "healthCheckRetryTimeout": "00:15:00",
-          "upgradeTimeout": "00:50:00",
-          "upgradeDomainTimeout": "00:25:00",
+          "healthCheckRetryTimeout": "00:45:00",
+          "upgradeTimeout": "12:00:00",
+          "upgradeDomainTimeout": "02:00:00",
           "healthPolicy": {
-            "maxPercentUnhealthyNodes": 40,
-            "maxPercentUnhealthyApplications": 40
+            "maxPercentUnhealthyNodes": 100,
+            "maxPercentUnhealthyApplications": 100
           },
           "deltaHealthPolicy": {
-            "maxPercentDeltaUnhealthyNodes": 50,
-            "maxPercentUpgradeDomainDeltaUnhealthyNodes": 50,
-            "maxPercentDeltaUnhealthyApplications": 50,
+            "maxPercentDeltaUnhealthyNodes": 0,
+            "maxPercentUpgradeDomainDeltaUnhealthyNodes": 0,
+            "maxPercentDeltaUnhealthyApplications": 0,
             "applicationDeltaHealthPolicies": {
               "fabric:/System": {
                 "defaultServiceTypeDeltaHealthPolicy": {
-                  "maxPercentDeltaUnhealthyServices": 50
+                  "maxPercentDeltaUnhealthyServices": 0
                 }
               }
             }

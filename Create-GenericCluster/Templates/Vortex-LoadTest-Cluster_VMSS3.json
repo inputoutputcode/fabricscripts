@@ -1211,7 +1211,7 @@
               "startPort": "[parameters('nt0ephemeralStartPort')]"
             },
             "httpGatewayEndpointPort": "[parameters('nt0fabricHttpGatewayPort')]",
-            "isPrimary": true,
+            "isPrimary": false,
             "vmInstanceCount": "[parameters('nt0InstanceCount')]"
           },
           {
@@ -1243,7 +1243,7 @@
               "startPort": "[parameters('nt2ephemeralStartPort')]"
             },
             "httpGatewayEndpointPort": "[parameters('nt2fabricHttpGatewayPort')]",
-            "isPrimary": false,
+            "isPrimary": true,
             "vmInstanceCount": "[parameters('nt2InstanceCount')]"
           }
         ],

@@ -6,14 +6,14 @@
       "type": "string",
       "defaultValue": "westus",
       "metadata": {
-        "description": "Location of the Cluster."
+        "description": "Location of the Cluster"
       }
     },
     "clusterName": {
       "type": "string",
       "defaultValue": "GEN-UNIQUE",
       "metadata": {
-        "description": "Name of your cluster - Between 3 and 23 characters. Letters and numbers only."
+        "description": "Name of your cluster - Between 3 and 23 characters. Letters and numbers only"
       }
     },
     "adminUserName": {
@@ -27,14 +27,14 @@
       "type": "securestring",
       "defaultValue": "GEN-PASSWORD",
       "metadata": {
-        "description": "Remote desktop user password. Must be a strong password."
+        "description": "Remote desktop user password. Must be a strong password"
       }
     },
     "loadBalancedAppPort1": {
       "type": "int",
       "defaultValue": 80,
       "metadata": {
-        "description": "Input endpoint for the application to use. Replace it with what your application uses."
+        "description": "Input endpoint1 for the application to use. Replace it with what your application uses"
       }
     },
     "clusterProtectionLevel": {
@@ -46,7 +46,7 @@
       ],
       "defaultValue": "EncryptAndSign",
       "metadata": {
-        "description": "Protection level.Three values are allowed - EncryptAndSign, Sign, None. It is best to keep the default of EncryptAndSign, unless you have a need not to."
+        "description": "Protection level.Three values are allowed - EncryptAndSign, Sign, None. It is best to keep the default of EncryptAndSign, unless you have a need not to"
       }
     },
     "certificateStoreValue": {
@@ -56,28 +56,28 @@
       ],
       "defaultValue": "My",
       "metadata": {
-        "description": "The store name where the cert will be deployed in the virtual machine."
+        "description": "The store name where the cert will be deployed in the virtual machine"
       }
     },
     "certificateThumbprint": {
       "type": "string",
       "defaultValue": "GEN-CUSTOM-DOMAIN-SSLCERT-THUMBPRINT",
       "metadata": {
-        "description": "Certificate Thumbprint."
+        "description": "Certificate Thumbprint"
       }
     },
     "sourceVaultValue": {
       "type": "string",
       "defaultValue": "GEN-KEYVAULT-RESOURCE-ID",
       "metadata": {
-        "description": "Resource Id of the key vault, is should be in the format of /subscriptions/<Sub ID>/resourceGroups/<Resource group name>/providers/Microsoft.KeyVault/vaults/<vault name>."
+        "description": "Resource Id of the key vault, is should be in the format of /subscriptions/<Sub ID>/resourceGroups/<Resource group name>/providers/Microsoft.KeyVault/vaults/<vault name>"
       }
     },
     "certificateUrlValue": {
       "type": "string",
       "defaultValue": "GEN-KEYVAULT-SSL-SECRET-URI",
       "metadata": {
-        "description": "Refers to the location URL in your key vault where the certificate was uploaded, it is should be in the format of https://<name of the vault>.vault.azure.net:443/secrets/<exact location>."
+        "description": "Refers to the location URL in your key vault where the certificate was uploaded, it is should be in the format of https://<name of the vault>.vault.azure.net:443/secrets/<exact location>"
       }
     },
     "storageAccountType": {
@@ -88,7 +88,7 @@
       ],
       "defaultValue": "Standard_LRS",
       "metadata": {
-        "description": "Replication option for the VM image storage account."
+        "description": "Replication option for the VM image storage account"
       }
     },
     "supportLogStorageAccountType": {
@@ -99,7 +99,7 @@
       ],
       "defaultValue": "Standard_LRS",
       "metadata": {
-        "description": "Replication option for the support log storage account."
+        "description": "Replication option for the support log storage account"
       }
     },
     "applicationDiagnosticsStorageAccountType": {
@@ -110,7 +110,7 @@
       ],
       "defaultValue": "Standard_LRS",
       "metadata": {
-        "description": "Replication option for the application diagnostics storage account."
+        "description": "Replication option for the application diagnostics storage account"
       }
     },
     "nt0InstanceCount": {
@@ -122,7 +122,7 @@
     },
     "vmNodeType0Size": {
       "type": "string",
-      "defaultValue": "Standard_D2_V2"
+      "defaultValue": "Standard_D2_v2"
     }
   },
   "variables": {
@@ -135,7 +135,7 @@
     "lbIPName": "PublicIP-LB-FE",
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
     "overProvision": "false",
-    "storageApiVersion": "2018-07-01",
+    "storageApiVersion": "2016-01-01",
     "nt0applicationStartPort": "20000",
     "nt0applicationEndPort": "30000",
     "nt0ephemeralStartPort": "49152",
@@ -145,15 +145,21 @@
     "subnet0Name": "Subnet-0",
     "subnet0Prefix": "10.0.0.0/24",
     "subnet0Ref": "[concat(variables('vnetID'),'/subnets/',variables('subnet0Name'))]",
-    "supportLogStorageAccountName": "[toLower( concat('sflogs', uniqueString(resourceGroup().id),'2'))]",
+    "supportLogStorageAccountName": "[toLower( concat( uniqueString(resourceGroup().id),'2'))]",
     "applicationDiagnosticsStorageAccountName": "[toLower(concat('wad',uniqueString(resourceGroup().id), '3' ))]",
+    "wadlogs": "<WadCfg><DiagnosticMonitorConfiguration>",
+    "wadperfcounters1": "<PerformanceCounters scheduledTransferPeriod=\"PT1M\"><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\AvailableMemory\" sampleRate=\"PT15S\" unit=\"Bytes\"><annotation displayName=\"Memory available\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\PercentAvailableMemory\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Mem. percent available\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\UsedMemory\" sampleRate=\"PT15S\" unit=\"Bytes\"><annotation displayName=\"Memory used\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\PercentUsedMemory\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Memory percentage\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\PercentUsedByCache\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Mem. used by cache\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentIdleTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU idle time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentUserTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU user time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentProcessorTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU percentage guest OS\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentIOWaitTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU IO wait time\" locale=\"en-us\"/></PerformanceCounterConfiguration>",
+    "wadperfcounters2": "<PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\BytesPerSecond\" sampleRate=\"PT15S\" unit=\"BytesPerSecond\"><annotation displayName=\"Disk total bytes\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\ReadBytesPerSecond\" sampleRate=\"PT15S\" unit=\"BytesPerSecond\"><annotation displayName=\"Disk read guest OS\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\WriteBytesPerSecond\" sampleRate=\"PT15S\" unit=\"BytesPerSecond\"><annotation displayName=\"Disk write guest OS\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\TransfersPerSecond\" sampleRate=\"PT15S\" unit=\"CountPerSecond\"><annotation displayName=\"Disk transfers\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\ReadsPerSecond\" sampleRate=\"PT15S\" unit=\"CountPerSecond\"><annotation displayName=\"Disk reads\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\WritesPerSecond\" sampleRate=\"PT15S\" unit=\"CountPerSecond\"><annotation displayName=\"Disk writes\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\AverageReadTime\" sampleRate=\"PT15S\" unit=\"Seconds\"><annotation displayName=\"Disk read time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\AverageWriteTime\" sampleRate=\"PT15S\" unit=\"Seconds\"><annotation displayName=\"Disk write time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\AverageTransferTime\" sampleRate=\"PT15S\" unit=\"Seconds\"><annotation displayName=\"Disk transfer time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\AverageDiskQueueLength\" sampleRate=\"PT15S\" unit=\"Count\"><annotation displayName=\"Disk queue length\" locale=\"en-us\"/></PerformanceCounterConfiguration></PerformanceCounters>",
+    "wadcfgxstart": "[concat(variables('wadlogs'),variables('wadperfcounters1'),variables('wadperfcounters2'),'<Metrics resourceId=\"')]",
+    "wadcfgxend": "[concat('\"><MetricAggregation scheduledTransferPeriod=\"PT1H\"/><MetricAggregation scheduledTransferPeriod=\"PT1M\"/></Metrics></DiagnosticMonitorConfiguration></WadCfg>')]",
     "lbID0": "[resourceId('Microsoft.Network/loadBalancers',concat('LB','-', parameters('clusterName'),'-',variables('vmNodeType0Name')))]",
     "lbIPConfig0": "[concat(variables('lbID0'),'/frontendIPConfigurations/LoadBalancerIPConfig')]",
     "lbPoolID0": "[concat(variables('lbID0'),'/backendAddressPools/LoadBalancerBEAddressPool')]",
     "lbProbeID0": "[concat(variables('lbID0'),'/probes/FabricGatewayProbe')]",
     "lbHttpProbeID0": "[concat(variables('lbID0'),'/probes/FabricHttpGatewayProbe')]",
     "lbNatPoolID0": "[concat(variables('lbID0'),'/inboundNatPools/LoadBalancerBEAddressNatPool')]",
-    "vmNodeType0Name": "[toLower(concat('NT1', variables('vmName')))]"
+    "vmNodeType0Name": "[toLower(concat('NT1', variables('vmName')))]",
+    "wadmetricsresourceid0": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name ,'/providers/','Microsoft.Compute/virtualMachineScaleSets/', variables('vmNodeType0Name'))]"
   },
   "resources": [
     {
@@ -193,9 +199,7 @@
       "type": "Microsoft.Network/virtualNetworks",
       "name": "[variables('virtualNetworkName')]",
       "location": "[variables('computeLocation')]",
-      "dependsOn": [
-        "[concat('Microsoft.Network/networkSecurityGroups/', concat('nsg', variables('subnet0Name')))]"
-      ],
+      "dependsOn": [],
       "properties": {
         "addressSpace": {
           "addressPrefixes": [
@@ -206,10 +210,7 @@
           {
             "name": "[variables('subnet0Name')]",
             "properties": {
-              "addressPrefix": "[variables('subnet0Prefix')]",
-              "networkSecurityGroup": {
-                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat('nsg', variables('subnet0Name')))]"
-              }
+              "addressPrefix": "[variables('subnet0Prefix')]"
             }
           }
         ]
@@ -352,11 +353,11 @@
           {
             "name": "LoadBalancerBEAddressNatPool",
             "properties": {
-              "backendPort": "3389",
+              "backendPort": "22",
               "frontendIPConfiguration": {
                 "id": "[variables('lbIPConfig0')]"
               },
-              "frontendPortRangeEnd": "3395",
+              "frontendPortRangeEnd": "4500",
               "frontendPortRangeStart": "3389",
               "protocol": "tcp"
             }
@@ -376,7 +377,7 @@
       "properties": {
         "securityRules": [
           {
-            "name": "SFX",
+            "name": "AzurePortal",
             "properties": {
               "access": "Allow",
               "sourceAddressPrefix": "Internet",
@@ -392,7 +393,7 @@
             }
           },
           {
-            "name": "Client",
+            "name": "Deny",
             "properties": {
               "access": "Allow",
               "sourceAddressPrefix": "Internet",
@@ -474,7 +475,7 @@
           {
             "name": "RDP",
             "properties": {
-              "access": "Allow",
+              "access": "Deny",
               "sourceAddressPrefix": "Internet",
               "sourcePortRange": "*",
               "sourcePortRanges": [],
@@ -515,22 +516,6 @@
               "destinationPortRanges": [],
               "direction": "Inbound",
               "priority": 3980,
-              "protocol": "Tcp",
-              "description": ""
-            }
-          },
-          {
-            "name": "AzureLoadBalancer",
-            "properties": {
-              "access": "Allow",
-              "sourceAddressPrefix": "AzureLoadBalancer",
-              "sourcePortRange": "*",
-              "sourcePortRanges": [],
-              "destinationAddressPrefix": "*",
-              "destinationPortRange": "*",
-              "destinationPortRanges": [],
-              "direction": "Inbound",
-              "priority": 3990,
               "protocol": "Tcp",
               "description": ""
             }
@@ -586,13 +571,13 @@
           {
             "name": "Upgrade",
             "properties": {
-              "access": "Allow",
+              "access": "Deny",
               "sourceAddressPrefix": "*",
               "sourcePortRange": "*",
               "sourcePortRanges": [],
               "destinationAddressPrefix": "Internet",
-              "destinationPortRange": "",
-              "destinationPortRanges": ["80", "443"],
+              "destinationPortRange": "80",
+              "destinationPortRanges": [],
               "direction": "Outbound",
               "priority": 3920,
               "protocol": "Tcp",
@@ -644,7 +629,7 @@
               {
                 "name": "[concat('ServiceFabricNodeVmExt','_vmNodeType0Name')]",
                 "properties": {
-                  "type": "ServiceFabricNode",
+                  "type": "ServiceFabricLinuxNode",
                   "autoUpgradeMinorVersion": true,
                   "protectedSettings": {
                     "StorageAccountKey1": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('supportLogStorageAccountName')),'2015-05-01-preview').key1]",
@@ -654,7 +639,6 @@
                   "settings": {
                     "clusterEndpoint": "[reference(parameters('clusterName')).clusterEndpoint]",
                     "nodeTypeRef": "[variables('vmNodeType0Name')]",
-                    "dataPath": "D:\\SvcFab",
                     "durabilityLevel": "Silver",
                     "enableParallelJobs": true,
                     "nicPrefixOverride": "[variables('subnet0Prefix')]",
@@ -663,84 +647,27 @@
                       "x509StoreName": "[parameters('certificateStoreValue')]"
                     }
                   },
-                  "typeHandlerVersion": "1.1"
+                  "typeHandlerVersion": "1.0"
                 }
               },
               {
                 "name": "[concat('VMDiagnosticsVmExt','_vmNodeType0Name')]",
                 "properties": {
-                  "type": "IaaSDiagnostics",
+                  "type": "LinuxDiagnostic",
                   "autoUpgradeMinorVersion": true,
                   "protectedSettings": {
                     "storageAccountName": "[variables('applicationDiagnosticsStorageAccountName')]",
                     "storageAccountKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('applicationDiagnosticsStorageAccountName')),'2015-05-01-preview').key1]",
                     "storageAccountEndPoint": "https://core.windows.net/"
                   },
-                  "publisher": "Microsoft.Azure.Diagnostics",
+                  "publisher": "Microsoft.OSTCExtensions",
                   "settings": {
-                    "WadCfg": {
-                      "DiagnosticMonitorConfiguration": {
-                        "overallQuotaInMB": "50000",
-                        "EtwProviders": {
-                          "EtwEventSourceProviderConfiguration": [
-                            {
-                              "provider": "Microsoft-ServiceFabric-Actors",
-                              "scheduledTransferKeywordFilter": "1",
-                              "scheduledTransferPeriod": "PT5M",
-                              "DefaultEvents": {
-                                "eventDestination": "ServiceFabricReliableActorEventTable"
-                              }
-                            },
-                            {
-                              "provider": "Microsoft-ServiceFabric-Services",
-                              "scheduledTransferPeriod": "PT5M",
-                              "DefaultEvents": {
-                                "eventDestination": "ServiceFabricReliableServiceEventTable"
-                              }
-                            }
-                          ],
-                          "EtwManifestProviderConfiguration": [
-                            {
-                              "provider": "cbd93bc2-71e5-4566-b3a7-595d8eeca6e8",
-                              "scheduledTransferLogLevelFilter": "Information",
-                              "scheduledTransferKeywordFilter": "4611686018427387904",
-                              "scheduledTransferPeriod": "PT5M",
-                              "DefaultEvents": {
-                                "eventDestination": "ServiceFabricSystemEventTable"
-                              }
-                            }
-                          ]
-                        }
-                      }
-                    },
+                    "xmlCfg": "[base64(concat(variables('wadcfgxstart'),variables('wadmetricsresourceid0'),variables('wadcfgxend')))]",
                     "StorageAccount": "[variables('applicationDiagnosticsStorageAccountName')]"
                   },
-                  "typeHandlerVersion": "1.5"
+                  "typeHandlerVersion": "2.3"
                 }
-              },
-              {
-                  "name": "[concat('VMIaaSAntimalware','_vmNodeType0Name')]",
-                  "properties": {
-                      "publisher": "Microsoft.Azure.Security",
-                      "type": "IaaSAntimalware",
-                      "typeHandlerVersion": "1.5",
-                      "settings": {
-                         "AntimalwareEnabled": "true",
-                         "Exclusions": {
-                           "Paths": "D:\\SvcFab;D:\\SvcFab\\Log;C:\\Program Files\\Microsoft Service Fabric",
-                           "Processes": "Fabric.exe;FabricHost.exe;FabricInstallerService.exe;FabricSetup.exe;FabricDeployer.exe;ImageBuilder.exe;FabricGateway.exe;FabricDCA.exe;FabricFAS.exe;FabricUOS.exe;FabricRM.exe;FileStoreService.exe"
-                         },
-                         "RealtimeProtectionEnabled": "true",
-                         "ScheduledScanSettings": {
-                           "isEnabled": "true",
-                           "scanType": "Quick",
-                           "day": "7",
-                           "time": "120"
-                         }
-                      },
-                      "protectedSettings": null
-                   }
-                }
+              }
             ]
           },
           "networkProfile": {
@@ -784,7 +711,6 @@
                 },
                 "vaultCertificates": [
                   {
-                    "certificateStore": "[parameters('certificateStoreValue')]",
                     "certificateUrl": "[parameters('certificateUrlValue')]"
                   }
                 ]
@@ -793,9 +719,9 @@
           },
           "storageProfile": {
             "imageReference": {
-              "publisher": "MicrosoftWindowsServer",
-              "offer": "WindowsServer",
-              "sku": "2016-Datacenter-with-Containers",
+              "publisher": "Canonical",
+              "offer": "UbuntuServer",
+              "sku": "16.04-LTS",
               "version": "latest"
             },
             "osDisk": {
@@ -819,7 +745,7 @@
       }
     },
     {
-      "apiVersion": "2019-03-01",
+      "apiVersion": "2018-02-01",
       "type": "Microsoft.ServiceFabric/clusters",
       "name": "[parameters('clusterName')]",
       "location": "[parameters('clusterLocation')]",
@@ -827,8 +753,10 @@
         "[concat('Microsoft.Storage/storageAccounts/', variables('supportLogStorageAccountName'))]"
       ],
       "properties": {
-        
-        "addonFeatures": [],
+        "addonFeatures": [
+          "DnsService",
+          "RepairManager"
+        ],
         "certificate": {
           "thumbprint": "[parameters('certificateThumbprint')]",
           "x509StoreName": "[parameters('certificateStoreValue')]"
@@ -874,7 +802,7 @@
         "provisioningState": "Default",
         "reliabilityLevel": "Silver",
         "upgradeMode": "Automatic",
-        "vmImage": "Windows"
+        "vmImage": "Linux"
       },
       "tags": {
         "resourceType": "Service Fabric",

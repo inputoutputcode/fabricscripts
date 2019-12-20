@@ -1,11 +1,11 @@
 ﻿## Declare parameters
-$armTemplate = ".\Templates\5-VM-Windows-1-NodeTypes-Secure-NSG.json"
+$armTemplate = ".\Templates\5-VM-Ubuntu-1-NodeTypes-Secure.json"
 $currentExecutionPath = "D:\Code\inputoutputcode\FabricMonkey\Create-GenericCluster"
 $clusterVersion = "6.5.676.9590"
 
 ## Fixed parameters
 $subscriptionId = "13ad2c84-84fa-4798-ad71-e70c07af873f"
-$azureRegion = "eastus"
+$azureRegion = "centralus"
 $localCertificatePath = "D:\Certificates\"
 $generalPassword = "nZ549Ux2MnW6srTvOZsq"
 
@@ -32,9 +32,11 @@ $serviceFabricClusterDns = $serviceFabricClusterName + "." + $azureRegion + ".cl
 #$serviceFabricClusterWebapplicationReplyUrl = "https://" + $serviceFabricClusterDns + ":19080/Explorer/index.html" # Only for AAD registration
 
 ## Deploy Azure Key Vault
-New-AzTag -Name "alias"
-New-AzResourceGroup -Name $resourceGroup -Location $azureRegion -Tag @{"alias"="chrpap"} -Force 
-New-AzKeyVault -VaultName $keyVaultName -ResourceGroupName $resourceGroup -Location $azureRegion -EnabledForDeployment
+$tag = New-AzTag -Name "alias"
+$group = New-AzResourceGroup -Name $resourceGroup -Location $azureRegion -Tag @{"alias"="chrpap"}
+Write-Host "Created the resource group" $group.ResourceGroupName
+$keyVault = New-AzKeyVault -VaultName $keyVaultName -ResourceGroupName $resourceGroup -Location $azureRegion -EnabledForDeployment
+Write-Host "Created the resource group" $keyVault.VaultName
 Import-Module ".\ServiceFabricRPHelpers\ServiceFabricRPHelpers.psm1"
 New-Item -ItemType Directory -Path $localCertificatePath -ErrorAction Ignore
 $clusterCertificate = Invoke-AddCertToKeyVaultAsSecret -SubscriptionId $subscriptionId -ResourceGroupName $resourceGroup -Location $azureRegion -VaultName $keyVaultName -CertificateName $certificateName -CreateSelfSignedCertificate -DnsName $serviceFabricClusterDns -OutputPath $localCertificatePath -Password $generalPassword

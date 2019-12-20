@@ -1,0 +1,18 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+      "environment_spp": {
+          "value": "a5ahawh6he6rk-servicefabric"
+      },
+      "appPackageUrl": {
+          "value": "https://chrpapappstorage.blob.core.windows.net/app-packages/PatchOrchestrationApplication_v1.2.1.sfpkg?sp=r&st=2018-11-19T15:20:08Z&se=2018-11-19T23:20:08Z&spr=https&sv=2017-11-09&sig=uIqYAsUV2FOrUb47yIB0zD3AIiOASbC2OYOfEj4T%2FlI%3D&sr=b"
+      },
+      "windowsUpdateFrequency": {
+          "value": "Weekly,Wednesday,7:00:00"
+      },
+      "placementConstraint": {
+          "value": "(NodeType == backend)"
+      }
+  }
+}

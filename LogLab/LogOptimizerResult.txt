@@ -1,0 +1,175 @@
+Read the file C:\Code\Tool.POA.LogOptimizer\GetWindowsUpdateResults.json
+
+List of all nodes
+
+Count of all nodes: 30
+List of all nodes:
+_backend_0
+_backend_1
+_backend_10
+_backend_2
+_backend_3
+_backend_4
+_backend_5
+_backend_6
+_backend_7
+_backend_8
+_backend_9
+_frontend_0
+_frontend_1
+_frontend_10
+_frontend_11
+_frontend_12
+_frontend_13
+_frontend_2
+_frontend_3
+_frontend_4
+_frontend_5
+_frontend_6
+_frontend_7
+_frontend_8
+_frontend_9
+_mgmt_0
+_mgmt_1
+_mgmt_2
+_mgmt_3
+_mgmt_4
+
+Check all nodes for the latest entry. OperationResult=0 (Succeeded) and OperationType=1 (Installation)
+
+OperationResult/ResultCode: 
+0 - Succeeded
+1 - Succeeded With Errors
+2 - Failed
+3 - Aborted
+4 - Aborted With Timeout
+
+OperationType: 
+1 - Installation
+0 - Search and Download
+
+Node: _backend_0 | OperationResult: 0 | OperationType: 1 | Time 16/01/2019 07:17:47
+Node: _backend_1 | OperationResult: 0 | OperationType: 1 | Time 16/01/2019 07:26:31
+Node: _backend_10 | OperationResult: 0 | OperationType: 1 | Time 10/10/2018 22:55:26
+Node: _backend_2 | OperationResult: 0 | OperationType: 1 | Time 16/01/2019 07:54:12
+Node: _backend_3 | OperationResult: 0 | OperationType: 1 | Time 16/01/2019 07:28:43
+Node: _backend_4 | OperationResult: 0 | OperationType: 1 | Time 16/01/2019 07:03:54
+Node: _backend_5 | OperationResult: 0 | OperationType: 1 | Time 16/01/2019 07:23:22
+Node: _backend_6 | OperationResult: 0 | OperationType: 1 | Time 16/01/2019 07:34:53
+Node: _backend_7 | OperationResult: 0 | OperationType: 1 | Time 17/10/2018 07:37:53
+Node: _backend_8 | OperationResult: 0 | OperationType: 1 | Time 17/10/2018 07:17:13
+Node: _backend_9 | OperationResult: 0 | OperationType: 1 | Time 17/10/2018 07:33:50
+
+Issues found on _frontend_0
+Node: _frontend_0 | OperationResult: 2 | OperationType: 1 | Time: 16/01/2019 08:36:19
+ResultCode: 2 | Title: Microsoft driver update for MS Publisher Color Printer
+Node: _frontend_0 | OperationResult: 2 | OperationType: 1 | Time: 16/01/2019 08:28:53
+ResultCode: 2 | Title: Microsoft driver update for MS Publisher Color Printer
+Node: _frontend_0 | OperationResult: 2 | OperationType: 1 | Time: 16/01/2019 08:20:28
+ResultCode: 2 | Title: Microsoft driver update for MS Publisher Color Printer
+Node: _frontend_0 | OperationResult: 2 | OperationType: 1 | Time: 16/01/2019 08:12:57
+ResultCode: 2 | Title: Microsoft driver update for MS Publisher Color Printer
+Node: _frontend_0 | OperationResult: 2 | OperationType: 1 | Time: 16/01/2019 08:03:30
+ResultCode: 2 | Title: Microsoft driver update for MS Publisher Color Printer
+Node: _frontend_0 | OperationResult: 2 | OperationType: 1 | Time: 16/01/2019 07:13:28
+ResultCode: 2 | Title: Microsoft driver update for MS Publisher Color Printer
+ResultCode: 0 | Title: Definition Update for Windows Defender Antivirus - KB2267602 (Definition 1.283.3065.0)
+Node: _frontend_0 | OperationResult: 2 | OperationType: 1 | Time: 11/01/2019 15:18:30
+ResultCode: 2 | Title: Microsoft driver update for MS Publisher Color Printer
+ResultCode: 0 | Title: 2019-01 Cumulative Update for Windows Server 2016 for x64-based Systems (KB4480961)
+ResultCode: 0 | Title: Windows Malicious Software Removal Tool x64 - January 2019 (KB890830)
+ResultCode: 0 | Title: 2018-10 Update for Windows Server 2016 for x64-based Systems (KB4091664)
+ResultCode: 2 | Title: Definition Update for Windows Defender Antivirus - KB2267602 (Definition 1.283.2744.0)
+Node: _frontend_0 | OperationResult: 2 | OperationType: 1 | Time: 11/01/2019 12:18:47
+ResultCode: 2 | Title: Microsoft driver update for MS Publisher Color Printer
+ResultCode: 2 | Title: 2019-01 Cumulative Update for Windows Server 2016 for x64-based Systems (KB4480961)
+ResultCode: 2 | Title: Windows Malicious Software Removal Tool x64 - January 2019 (KB890830)
+ResultCode: 2 | Title: 2018-10 Update for Windows Server 2016 for x64-based Systems (KB4091664)
+ResultCode: 2 | Title: Definition Update for Windows Defender Antivirus - KB2267602 (Definition 1.283.2579.0)
+Node: _frontend_0 | OperationResult: 2 | OperationType: 1 | Time: 02/01/2019 08:29:27
+ResultCode: 2 | Title: Microsoft driver update for MS Publisher Color Printer
+Node: _frontend_0 | OperationResult: 2 | OperationType: 1 | Time: 02/01/2019 08:21:59
+ResultCode: 2 | Title: Microsoft driver update for MS Publisher Color Printer
+Node: _frontend_0 | OperationResult: 2 | OperationType: 1 | Time: 02/01/2019 08:13:29
+ResultCode: 2 | Title: Microsoft driver update for MS Publisher Color Printer
+Node: _frontend_0 | OperationResult: 2 | OperationType: 1 | Time: 02/01/2019 08:06:03
+ResultCode: 2 | Title: Microsoft driver update for MS Publisher Color Printer
+ResultCode: 0 | Title: Definition Update for Windows Defender Antivirus - KB2267602 (Definition 1.283.2040.0)
+Node: _frontend_0 | OperationResult: 2 | OperationType: 1 | Time: 02/01/2019 07:55:56
+ResultCode: 2 | Title: Microsoft driver update for MS Publisher Color Printer
+ResultCode: 2 | Title: Definition Update for Windows Defender Antivirus - KB2267602 (Definition 1.283.2040.0)
+Node: _frontend_0 | OperationResult: 2 | OperationType: 1 | Time: 02/01/2019 07:08:02
+ResultCode: 2 | Title: Microsoft driver update for MS Publisher Color Printer
+ResultCode: 0 | Title: Definition Update for Windows Defender Antivirus - KB2267602 (Definition 1.283.2036.0)
+Node: _frontend_0 | OperationResult: 2 | OperationType: 1 | Time: 26/12/2018 20:17:08
+ResultCode: 2 | Title: Microsoft driver update for MS Publisher Color Printer
+Node: _frontend_0 | OperationResult: 2 | OperationType: 1 | Time: 26/12/2018 20:08:37
+ResultCode: 2 | Title: Microsoft driver update for MS Publisher Color Printer
+Node: _frontend_0 | OperationResult: 2 | OperationType: 1 | Time: 26/12/2018 20:01:21
+ResultCode: 2 | Title: Microsoft driver update for MS Publisher Color Printer
+ResultCode: 0 | Title: Definition Update for Windows Defender Antivirus - KB2267602 (Definition 1.283.1556.0)
+Node: _frontend_0 | OperationResult: 2 | OperationType: 1 | Time: 26/12/2018 19:54:21
+ResultCode: 2 | Title: Microsoft driver update for MS Publisher Color Printer
+ResultCode: 2 | Title: Definition Update for Windows Defender Antivirus - KB2267602 (Definition 1.283.1552.0)
+Node: _frontend_0 | OperationResult: 2 | OperationType: 1 | Time: 26/12/2018 18:34:02
+ResultCode: 2 | Title: Microsoft driver update for MS Publisher Color Printer
+ResultCode: 2 | Title: Definition Update for Windows Defender Antivirus - KB2267602 (Definition 1.283.1549.0)
+Node: _frontend_0 | OperationResult: 2 | OperationType: 1 | Time: 26/12/2018 10:25:24
+ResultCode: 2 | Title: Microsoft driver update for MS Publisher Color Printer
+ResultCode: 0 | Title: Definition Update for Windows Defender Antivirus - KB2267602 (Definition 1.283.1511.0)
+Node: _frontend_0 | OperationResult: 2 | OperationType: 1 | Time: 19/12/2018 20:35:43
+ResultCode: 2 | Title: Microsoft driver update for MS Publisher Color Printer
+ResultCode: 0 | Title: 2018-12 Cumulative Update for Windows Server 2016 for x64-based Systems (KB4483229)
+Node: _frontend_0 | OperationResult: 2 | OperationType: 1 | Time: 19/12/2018 19:02:29
+ResultCode: 2 | Title: Microsoft driver update for MS Publisher Color Printer
+ResultCode: 2 | Title: 2018-12 Cumulative Update for Windows Server 2016 for x64-based Systems (KB4483229)
+ResultCode: 0 | Title: Definition Update for Windows Defender Antivirus - KB2267602 (Definition 1.283.985.0)
+Node: _frontend_0 | OperationResult: 2 | OperationType: 1 | Time: 19/12/2018 17:03:16
+ResultCode: 2 | Title: Microsoft driver update for MS Publisher Color Printer
+ResultCode: 2 | Title: Definition Update for Windows Defender Antivirus - KB2267602 (Definition 1.283.932.0)
+Node: _frontend_0 | OperationResult: 2 | OperationType: 1 | Time: 12/12/2018 14:13:18
+ResultCode: 2 | Title: Microsoft driver update for MS Publisher Color Printer
+ResultCode: 0 | Title: 2018-12 Cumulative Update for Windows Server 2016 for x64-based Systems (KB4471321)
+ResultCode: 0 | Title: Windows Malicious Software Removal Tool x64 - December 2018 (KB890830)
+ResultCode: 0 | Title: Definition Update for Windows Defender Antivirus - KB2267602 (Definition 1.283.405.0)
+Node: _frontend_0 | OperationResult: 2 | OperationType: 1 | Time: 05/12/2018 09:21:52
+ResultCode: 2 | Title: Microsoft driver update for MS Publisher Color Printer
+Node: _frontend_0 | OperationResult: 2 | OperationType: 1 | Time: 05/12/2018 09:09:17
+ResultCode: 2 | Title: Microsoft driver update for MS Publisher Color Printer
+Node: _frontend_0 | OperationResult: 2 | OperationType: 1 | Time: 05/12/2018 09:01:54
+ResultCode: 2 | Title: Microsoft driver update for MS Publisher Color Printer
+Node: _frontend_0 | OperationResult: 2 | OperationType: 1 | Time: 05/12/2018 08:51:22
+ResultCode: 2 | Title: Microsoft driver update for MS Publisher Color Printer
+ResultCode: 0 | Title: Definition Update for Windows Defender Antivirus - KB2267602 (Definition 1.281.1412.0)
+Node: _frontend_0 | OperationResult: 2 | OperationType: 1 | Time: 05/12/2018 08:44:18
+ResultCode: 2 | Title: Microsoft driver update for MS Publisher Color Printer
+ResultCode: 2 | Title: Definition Update for Windows Defender Antivirus - KB2267602 (Definition 1.281.1412.0)
+Node: _frontend_0 | OperationResult: 2 | OperationType: 1 | Time: 05/12/2018 08:10:33
+ResultCode: 2 | Title: Microsoft driver update for MS Publisher Color Printer
+ResultCode: 0 | Title: Definition Update for Windows Defender Antivirus - KB2267602 (Definition 1.281.1406.0)
+Node: _frontend_0 | OperationResult: 2 | OperationType: 1 | Time: 28/11/2018 17:44:51
+ResultCode: 2 | Title: Microsoft driver update for MS Publisher Color Printer
+ResultCode: 0 | Title: 2018-11 Cumulative Update for Windows Server 2016 for x64-based Systems (KB4467684)
+ResultCode: 2 | Title: Definition Update for Windows Defender Antivirus - KB2267602 (Definition 1.281.1000.0)
+Node: _frontend_0 | OperationResult: 0 | OperationType: 1 | Time: 21/11/2018 08:27:43
+
+Node: _frontend_1 | OperationResult: 0 | OperationType: 1 | Time 16/01/2019 07:38:27
+Node: _frontend_10 | OperationResult: 0 | OperationType: 1 | Time 16/01/2019 08:06:57
+Node: _frontend_11 | OperationResult: 0 | OperationType: 1 | Time 10/10/2018 07:30:18
+Node: _frontend_12 | OperationResult: 0 | OperationType: 1 | Time 10/10/2018 13:53:23
+Node: _frontend_13 | OperationResult: 0 | OperationType: 1 | Time 10/10/2018 22:06:18
+Node: _frontend_2 | OperationResult: 0 | OperationType: 1 | Time 16/01/2019 07:37:18
+Node: _frontend_3 | OperationResult: 0 | OperationType: 1 | Time 16/01/2019 07:51:45
+Node: _frontend_4 | OperationResult: 0 | OperationType: 1 | Time 16/01/2019 07:20:08
+Node: _frontend_5 | OperationResult: 0 | OperationType: 1 | Time 16/01/2019 07:47:13
+Node: _frontend_6 | OperationResult: 0 | OperationType: 1 | Time 16/01/2019 07:57:00
+Node: _frontend_7 | OperationResult: 0 | OperationType: 1 | Time 16/01/2019 07:41:28
+Node: _frontend_8 | OperationResult: 0 | OperationType: 1 | Time 16/01/2019 07:18:55
+Node: _frontend_9 | OperationResult: 0 | OperationType: 1 | Time 10/10/2018 11:01:23
+Node: _mgmt_0 | OperationResult: 0 | OperationType: 1 | Time 16/01/2019 07:31:00
+Node: _mgmt_1 | OperationResult: 0 | OperationType: 1 | Time 16/01/2019 07:35:56
+Node: _mgmt_2 | OperationResult: 0 | OperationType: 1 | Time 16/01/2019 07:49:29
+Node: _mgmt_3 | OperationResult: 0 | OperationType: 1 | Time 16/01/2019 07:44:07
+Node: _mgmt_4 | OperationResult: 0 | OperationType: 1 | Time 16/01/2019 07:06:18
+
+

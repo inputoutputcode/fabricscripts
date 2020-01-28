@@ -331,6 +331,24 @@
       }
     },
     {
+      "apiVersion": "[variables('storageApiVersion')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[variables('ddstorageName')]",
+      "location": "[parameters('computeLocation')]",
+      "dependsOn": [
+      ],
+      "properties": {
+      },
+      "kind": "Storage",
+      "sku": {
+        "name": "[parameters('applicationDiagnosticsStorageAccountType')]"
+      },
+      "tags": {
+        "resourceType": "Service Fabric",
+        "clusterName": "[parameters('clusterName')]"
+      }
+    },
+    {
       "apiVersion": "[variables('vNetApiVersion')]",
       "type": "Microsoft.Network/virtualNetworks",
       "name": "[variables('vnetName')]",
@@ -557,7 +575,6 @@
                     "StorageAccountKey2": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('sfstorageName')), variables('storageApiVersion')).keys[1].value]"
                   },
                   "provisionAfterExtensions": [
-                    "[concat(parameters('vmNodeType0Name'),'_ConfigureNodes')]"
                   ],
                   "publisher": "Microsoft.Azure.ServiceFabric",
                   "settings": {
@@ -580,21 +597,6 @@
                 }
               },
               {
-                "name": "[concat(parameters('vmNodeType0Name'),'_ConfigureNodes')]",
-                "properties": {
-                  "publisher": "Microsoft.Compute",
-                  "settings": {
-                    "fileUris": [
-                      "https://privatetests.blob.core.windows.net/scripts/manageddisksetup.ps1"
-                    ],
-                    "commandToExecute": "[concat('(powershell.exe -ExecutionPolicy Unrestricted -File manageddisksetup.ps1) > output.txt')]"
-                  },
-                  "typeHandlerVersion": "1.8",
-                  "autoUpgradeMinorVersion": true,
-                  "type": "CustomScriptExtension"
-                }
-              },
-              {
                 "name": "[concat('VMOmsExt','_vmNodeType0Name')]",
                 "properties": {
                   "publisher": "Microsoft.EnterpriseCloud.Monitoring",
@@ -602,7 +604,6 @@
                   "typeHandlerVersion": "1.0",
                   "autoUpgradeMinorVersion": true,
                   "provisionAfterExtensions": [
-                    "[concat(parameters('vmNodeType0Name'),'_ServiceFabricNode')]"
                   ],
                   "settings": {
                     "workspaceId": "[reference(resourceId('Microsoft.OperationalInsights/workspaces/', variables('omsName')), variables('omsApiVersion')).customerId]"
@@ -618,7 +619,6 @@
                   "type": "IaaSDiagnostics",
                   "autoUpgradeMinorVersion": true,
                   "provisionAfterExtensions": [
-                    "[concat(parameters('vmNodeType0Name'),'_ServiceFabricNode')]"
                   ],
                   "protectedSettings": {
                     "storageAccountName": "[variables('dgstorageName')]",
@@ -830,10 +830,15 @@
             },
             "dataDisks": [
               {
-                "diskSizeGB": 128,
-                "lun": 0,
-                "createOption": "Empty"
-              }
+                    "lun": 0,
+                    "createOption": "Attach",
+                    "caching": "None",
+                    "managedDisk": {
+                        "storageAccountType": "Standard_LRS",
+                        "id": "[resourceId('Microsoft.Storage/storageAccounts', variables('ddstorageName'))]"
+                    },
+                    "diskSizeGB": 250
+                }
             ]
           }
         }

@@ -1,7 +1,7 @@
 ﻿## Declare parameters
-$armTemplate = ".\Templates\Vortex-LoadTest-Cluster_VMSS1.json"
-$currentExecutionPath = "D:\Code\inputoutputcode\FabricMonkey\Create-GenericCluster"
-$clusterVersion = "6.5.676.9590"
+$armTemplate = ".\Templates\Vortex-LoadTest-Cluster-ExternalRoot.json"
+$currentExecutionPath = "D:\Code\FabricMonkey\FabricScripts\Create-GenericCluster"
+$clusterVersion = "7.0.457.9590"
 
 ## Fixed parameters
 $subscriptionId = "13ad2c84-84fa-4798-ad71-e70c07af873f"
@@ -52,6 +52,8 @@ $armParameter.Add("adminPassword", $generalPassword)
 $armParameter.Add("sourceVaultValue", $clusterCertificate.SourceVault)
 $armParameter.Add("certificateUrlValue", $clusterCertificate.CertificateURL)
 $armParameter.Add("certificateThumbprint", $clusterCertificate.CertificateThumbprint)
+$armParameter.Add("reverseProxyCertificateThumbprint", $clusterCertificate.CertificateThumbprint)
+$armParameter.Add("reverseProxyCertificateUrlValue", $clusterCertificate.CertificateURL)
 
 Test-AzResourceGroupDeployment -ResourceGroupName $resourceGroup -TemplateFile $armTemplate -TemplateParameterObject $armParameter -Verbose -ErrorAction Stop
 

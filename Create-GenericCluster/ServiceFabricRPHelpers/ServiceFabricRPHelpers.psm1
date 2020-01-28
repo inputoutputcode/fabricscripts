@@ -408,13 +408,18 @@ if($CreateSelfSignedCertificate)
     Write-Host "Creating new self signed certificate at $NewPfxFilePath"
     
     ## Changes to PSPKI version 3.5.2 New-SelfSignedCertificate replaced by New-SelfSignedCertificateEx
+    ## 1.0.0.0    PKI 
     $PspkiVersion = (Get-Module PSPKI).Version
     if($PSPKIVersion.Major -ieq 3 -And $PspkiVersion.Minor -ieq 2 -And $PspkiVersion.Build -ieq 5) {
         New-SelfsignedCertificateEx -Subject "CN=$DnsName" -EKU "Server Authentication", "Client authentication" -KeyUsage "KeyEncipherment, DigitalSignature" -Path $NewPfxFilePath -Password $securePassword -Exportable
     }
     else {
-        New-SelfSignedCertificate -CertStoreLocation Cert:\CurrentUser\My -DnsName $DnsName | Export-PfxCertificate -FilePath $NewPfxFilePath -Password $securePassword | Out-Null
-    }
+        $provider = "Microsoft Enhanced RSA and AES Cryptographic Provider"
+        $certPath = "Cert:\CurrentUser\My"
+
+        New-SelfSignedCertificate -CertStoreLocation $certPath -DnsName $DnsName | Export-PfxCertificate -FilePath $NewPfxFilePath -Password $securePassword | Out-Null
+    	##New-SelfSignedCertificate -NotBefore '' -NotAfter '' -DnsName -CertStoreLocation Cert:\LocalMachine\My -Provider "Microsoft Enhanced RSA and AES Cryptographic Provider" -KeyExportPolicy ExportableEncrypted -Type Custom -Subject ""
+}
 
     $ExistingPfxFilePath = $NewPfxFilePath
 }

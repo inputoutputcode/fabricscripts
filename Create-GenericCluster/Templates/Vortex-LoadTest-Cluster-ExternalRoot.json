@@ -1,4 +1,4 @@
-{
+  {
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
@@ -39,6 +39,10 @@
       "type": "int",
       "defaultValue": 19080
     },
+    "nt0reverseProxyEndpointPort": {
+      "type": "int",
+      "defaultValue": 19081
+    },
     "subnet0Name": {
       "type": "string",
       "defaultValue": "Subnet-0"
@@ -47,6 +51,30 @@
       "type": "string",
       "defaultValue": "10.0.0.0/24"
     },
+    "nt1applicationStartPort": {
+      "type": "int",
+      "defaultValue": 20000
+    },
+    "nt1applicationEndPort": {
+      "type": "int",
+      "defaultValue": 30000
+    },
+    "nt1ephemeralStartPort": {
+      "type": "int",
+      "defaultValue": 49152
+    },
+    "nt1ephemeralEndPort": {
+      "type": "int",
+      "defaultValue": 65534
+    },
+    "nt1fabricTcpGatewayPort": {
+      "type": "int",
+      "defaultValue": 19000
+    },
+    "nt1fabricHttpGatewayPort": {
+      "type": "int",
+      "defaultValue": 19080
+    },
     "subnet1Name": {
       "type": "string",
       "defaultValue": "Subnet-1"
@@ -54,6 +82,38 @@
     "subnet1Prefix": {
       "type": "string",
       "defaultValue": "10.0.1.0/24"
+    },
+    "nt2applicationStartPort": {
+      "type": "int",
+      "defaultValue": 20000
+    },
+    "nt2applicationEndPort": {
+      "type": "int",
+      "defaultValue": 30000
+    },
+    "nt2ephemeralStartPort": {
+      "type": "int",
+      "defaultValue": 49152
+    },
+    "nt2ephemeralEndPort": {
+      "type": "int",
+      "defaultValue": 65534
+    },
+    "nt2fabricTcpGatewayPort": {
+      "type": "int",
+      "defaultValue": 19000
+    },
+    "nt2fabricHttpGatewayPort": {
+      "type": "int",
+      "defaultValue": 19080
+    },
+    "subnet2Name": {
+      "type": "string",
+      "defaultValue": "Subnet-2"
+    },
+    "subnet2Prefix": {
+      "type": "string",
+      "defaultValue": "10.0.2.0/24"
     },
     "adminUserName": {
       "type": "string",
@@ -70,6 +130,7 @@
       "type": "string",
       "defaultValue": "false"
     },
+
     "vmImagePublisher": {
       "type": "string",
       "defaultValue": "MicrosoftWindowsServer"
@@ -126,6 +187,28 @@
         "description": "Refers to the location URL in your key vault where the certificate was uploaded, it is should be in the format of https://<name of the vault>.vault.azure.net:443/secrets/<exact location>"
       }
     },
+    "reverseProxyCertificateStoreValue": {
+        "type": "string",
+        "allowedValues": [
+            "My"
+        ],
+        "defaultValue": "My",
+        "metadata": {
+            "description": "The store name where the cert will be deployed in the virtual machine"
+        }
+    },
+    "reverseProxyCertificateThumbprint": {
+        "type": "string",
+        "metadata": {
+            "description": "Reverse proxy Certificate Thumbprint"
+        }
+    },
+    "reverseProxyCertificateUrlValue": {
+        "type": "string",
+        "metadata": {
+            "description": "Refers to the location URL in your key vault where the certificate was uploaded, it is should be in the format of https://<name of the vault>.vault.azure.net:443/secrets/<exact location>"
+        }
+    },
     "storageAccountType": {
       "type": "string",
       "allowedValues": [
@@ -174,24 +257,33 @@
     "vmNodeType0Size": {
       "type": "string",
       "defaultValue": "Standard_D3_v2"
-    }  
+    }
   },
   "variables": {
-    "vmssApiVersion": "2018-10-01",
+    "vmssApiVersion": "2019-07-01",
     "lbApiVersion": "2019-09-01",
     "vNetApiVersion": "2018-08-01",
     "storageApiVersion": "2018-07-01",
     "publicIPApiVersion": "2018-08-01",
+    "omsApiVersion": "2017-04-26-preview",
+    "omsDataSourceVersion": "2015-11-01-preview",
 
-    "customWebAppPort": "8947",
+    "customWebAppPort": "8180",
 
     "vnetName": "[concat(parameters('deploymentId'),'-','vnet')]",
     "vnetId": "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]",
     "subnet0Ref": "[concat(variables('vnetId'),'/subnets/',parameters('subnet0Name'))]",
+    "subnet1Ref": "[concat(variables('vnetId'),'/subnets/',parameters('subnet1Name'))]",
+    "subnet2Ref": "[concat(variables('vnetId'),'/subnets/',parameters('subnet2Name'))]",
     "nicName": "[concat(parameters('deploymentId'),'-nic')]",
+    "pubIpName": "[concat(parameters('deploymentId'),'-pubip')]",
+    "lbName": "[concat(parameters('deploymentId'),'-lb')]",
     "lbIpName": "[concat(parameters('deploymentId'),'-lbip')]",
+    "aiName": "[concat(parameters('deploymentId'),'-ai')]",
+    "omsName": "[concat(parameters('deploymentId'),'-oms')]",
     "sfstorageName": "[concat(parameters('deploymentId'),'sfstorage')]",
     "dgstorageName": "[concat(parameters('deploymentId'),'dgstorage')]",
+    "ddstorageName": "[concat(parameters('deploymentId'),'ddstorage')]",
 
     "lbName0": "[concat(parameters('deploymentId'),'-','lb','-',parameters('vmNodeType0Name'))]",
     "lbID0": "[resourceId('Microsoft.Network/loadBalancers', variables('lbName0'))]",
@@ -262,6 +354,12 @@
             "name": "[parameters('subnet1Name')]",
             "properties": {
               "addressPrefix": "[parameters('subnet1Prefix')]"
+            }
+          },
+          {
+            "name": "[parameters('subnet2Name')]",
+            "properties": {
+              "addressPrefix": "[parameters('subnet2Prefix')]"
             }
           }
         ]
@@ -436,7 +534,9 @@
         "[concat('Microsoft.Network/virtualNetworks/', variables('vnetName'))]",
         "[concat('Microsoft.Network/loadBalancers/', variables('lbName0'))]",
         "[concat('Microsoft.Storage/storageAccounts/', variables('sfstorageName'))]",
-        "[concat('Microsoft.Storage/storageAccounts/', variables('dgstorageName'))]"
+        "[concat('Microsoft.Storage/storageAccounts/', variables('dgstorageName'))]",
+        "[concat('Microsoft.Insights/components/', variables('aiName'))]",
+        "[concat('Microsoft.OperationalInsights/workspaces/', variables('omsName'))]"
       ],
       "properties": {
         "overprovision": "[parameters('overProvision')]",
@@ -453,23 +553,215 @@
                   "type": "ServiceFabricNode",
                   "autoUpgradeMinorVersion": true,
                   "protectedSettings": {
-                    "StorageAccountKey1": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('sfstorageName')),'2015-05-01-preview').key1]",
-                    "StorageAccountKey2": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('sfstorageName')),'2015-05-01-preview').key2]"
+                    "StorageAccountKey1": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('sfstorageName')), variables('storageApiVersion')).keys[0].value]",
+                    "StorageAccountKey2": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('sfstorageName')), variables('storageApiVersion')).keys[1].value]"
                   },
+                  "provisionAfterExtensions": [
+                    "[concat(parameters('vmNodeType0Name'),'_ConfigureNodes')]"
+                  ],
                   "publisher": "Microsoft.Azure.ServiceFabric",
                   "settings": {
                     "clusterEndpoint": "[reference(parameters('clusterName')).clusterEndpoint]",
                     "nodeTypeRef": "[parameters('vmNodeType0Name')]",
-                    "dataPath": "D:\\\\SvcFab",
+                    "dataPath": "Y:\\\\SvcFab",
                     "durabilityLevel": "Silver",
                     "enableParallelJobs": true,
                     "nicPrefixOverride": "[parameters('subnet0Prefix')]",
+                    "reverseProxyCertificate": {
+                        "thumbprint": "[parameters('reverseProxyCertificateThumbprint')]",
+                        "x509StoreName": "[parameters('reverseProxyCertificateStoreValue')]"
+                    },
                     "certificate": {
                       "thumbprint": "[parameters('certificateThumbprint')]",
                       "x509StoreName": "[parameters('certificateStoreValue')]"
                     }
                   },
                   "typeHandlerVersion": "1.1"
+                }
+              },
+              {
+                "name": "[concat(parameters('vmNodeType0Name'),'_ConfigureNodes')]",
+                "properties": {
+                  "publisher": "Microsoft.Compute",
+                  "settings": {
+                    "fileUris": [
+                      "https://privatetests.blob.core.windows.net/scripts/manageddisksetup.ps1"
+                    ],
+                    "commandToExecute": "[concat('(powershell.exe -ExecutionPolicy Unrestricted -File manageddisksetup.ps1) > output.txt')]"
+                  },
+                  "typeHandlerVersion": "1.8",
+                  "autoUpgradeMinorVersion": true,
+                  "type": "CustomScriptExtension"
+                }
+              },
+              {
+                "name": "[concat('VMOmsExt','_vmNodeType0Name')]",
+                "properties": {
+                  "publisher": "Microsoft.EnterpriseCloud.Monitoring",
+                  "type": "MicrosoftMonitoringAgent",
+                  "typeHandlerVersion": "1.0",
+                  "autoUpgradeMinorVersion": true,
+                  "provisionAfterExtensions": [
+                    "[concat(parameters('vmNodeType0Name'),'_ServiceFabricNode')]"
+                  ],
+                  "settings": {
+                    "workspaceId": "[reference(resourceId('Microsoft.OperationalInsights/workspaces/', variables('omsName')), variables('omsApiVersion')).customerId]"
+                  },
+                  "protectedSettings": {
+                    "workspaceKey": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces/', variables('omsName')), variables('omsApiVersion')).primarySharedKey]"
+                  }
+                }
+              },
+              {
+                "name": "[concat('VMDiagnosticsVmExt','_vmNodeType0Name')]",
+                "properties": {
+                  "type": "IaaSDiagnostics",
+                  "autoUpgradeMinorVersion": true,
+                  "provisionAfterExtensions": [
+                    "[concat(parameters('vmNodeType0Name'),'_ServiceFabricNode')]"
+                  ],
+                  "protectedSettings": {
+                    "storageAccountName": "[variables('dgstorageName')]",
+                    "storageAccountKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('dgstorageName')), variables('storageApiVersion')).keys[0].value]",
+                    "storageAccountEndPoint": "https://core.windows.net/"
+                  },
+                  "publisher": "Microsoft.Azure.Diagnostics",
+                  "settings": {
+                    "WadCfg": {
+                      "DiagnosticMonitorConfiguration": {
+                        "PerformanceCounters": {
+                          "PerformanceCounterConfiguration": [
+                            {
+                              "annotation": [
+                              ],
+                              "counterSpecifier": "\\Processor(_Total)\\% Processor Time",
+                              "sampleRate": "PT10S"
+                            },
+                            {
+                              "annotation": [
+                              ],
+                              "counterSpecifier": "\\Memory\\Available MBytes",
+                              "sampleRate": "PT10S"
+                            },
+                            {
+                              "annotation": [
+                              ],
+                              "counterSpecifier": "\\LogicalDisk(_Total)\\Disk Read Bytes/sec",
+                              "sampleRate": "PT10S"
+                            },
+                            {
+                              "annotation": [
+                              ],
+                              "counterSpecifier": "\\LogicalDisk(C:)\\Disk Write Bytes/sec",
+                              "sampleRate": "PT10S"
+                            },
+                            {
+                              "annotation": [
+                              ],
+                              "counterSpecifier": "\\LogicalDisk(C:)\\Disk Read Bytes/sec",
+                              "sampleRate": "PT10S"
+                            },
+                            {
+                              "annotation": [
+                              ],
+                              "counterSpecifier": "\\LogicalDisk(D:)\\Disk Write Bytes/sec",
+                              "sampleRate": "PT10S"
+                            },
+                            {
+                              "annotation": [
+                              ],
+                              "counterSpecifier": "\\LogicalDisk(D:)\\Disk Read Bytes/sec",
+                              "sampleRate": "PT10S"
+                            }
+                          ]
+                        },
+                        "WindowsEventLog": {
+                          "DataSource": [
+                            {
+                              "name": "System!*[System[(Level=1 or Level=2)]]"
+                            }
+                          ]
+                        },
+                        "EtwProviders": {
+                          "EtwEventSourceProviderConfiguration": [
+                            {
+                              "provider": "Microsoft-ServiceFabric-Actors",
+                              "scheduledTransferKeywordFilter": "1",
+                              "scheduledTransferPeriod": "PT1M",
+                              "DefaultEvents": {
+                                "eventDestination": "ServiceFabricReliableActorEventTable"
+                              }
+                            },
+                            {
+                              "provider": "Microsoft-ServiceFabric-Services",
+                              "scheduledTransferPeriod": "PT1M",
+                              "DefaultEvents": {
+                                "eventDestination": "ServiceFabricReliableServiceEventTable"
+                              }
+                            },
+                            {
+                              "provider": "Contoso-CustomProvider",
+                              "scheduledTransferPeriod": "PT1M",
+                              "DefaultEvents": {
+                                "eventDestination": "ETWEventTable"
+                              }
+                            },
+                            {
+                              "provider": "e39b723c-590c-4090-abb0-11e3e6616346",
+                              "scheduledTransferPeriod": "PT5M",
+                              "DefaultEvents": {
+                                "eventDestination": "ServiceFabricPatchOrchestrationAppEventTable"
+                              }
+                            },
+                            {
+                              "provider": "fc0028ff-bfdc-499f-80dc-ed922c52c5e9",
+                              "scheduledTransferPeriod": "PT5M",
+                              "DefaultEvents": {
+                                "eventDestination": "ServiceFabricPatchOrchestrationAppEventTable"
+                              }
+                            },
+                            {
+                              "provider": "24afa313-0d3b-4c7c-b485-1047fd964b60",
+                              "scheduledTransferPeriod": "PT5M",
+                              "DefaultEvents": {
+                                "eventDestination": "ServiceFabricPatchOrchestrationAppEventTable"
+                              }
+                            },
+                            {
+                              "provider": "05dc046c-60e9-4ef7-965e-91660adffa68",
+                              "scheduledTransferPeriod": "PT5M",
+                              "DefaultEvents": {
+                                "eventDestination": "ServiceFabricPatchOrchestrationAppEventTable"
+                              }
+                            }
+                          ],
+                          "EtwManifestProviderConfiguration": [
+                            {
+                              "provider": "cbd93bc2-71e5-4566-b3a7-595d8eeca6e8",
+                              "scheduledTransferLogLevelFilter": "Information",
+                              "scheduledTransferKeywordFilter": "4611686018427387936",
+                              "scheduledTransferPeriod": "PT1M",
+                              "DefaultEvents": {
+                                "eventDestination": "ServiceFabricSystemEventTable"
+                              }
+                            }
+                          ]
+                        },
+                        "overallQuotaInMB": "50000",
+                        "sinks": "applicationInsights"
+                      },
+                      "SinksConfig": {
+                        "Sink": [
+                          {
+                            "name": "applicationInsights",
+                            "ApplicationInsights": "[reference(resourceId('Microsoft.Insights/components', variables('aiName')), '2014-04-01').InstrumentationKey]"
+                          }
+                        ]
+                      }
+                    },
+                    "StorageAccount": "[variables('dgstorageName')]"
+                  },
+                  "typeHandlerVersion": "1.5"
                 }
               }
             ]
@@ -535,7 +827,14 @@
               "managedDisk": {
                 "storageAccountType": "[parameters('storageAccountType')]"
               }
-            }
+            },
+            "dataDisks": [
+              {
+                "diskSizeGB": 128,
+                "lun": 0,
+                "createOption": "Empty"
+              }
+            ]
           }
         }
       },
@@ -550,7 +849,74 @@
       }
     },
     {
-      "apiVersion": "2018-02-01",
+      "apiVersion": "2014-04-01",
+      "name": "[variables('aiName')]",
+      "type": "Microsoft.Insights/components",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "applicationId": "[variables('aiName')]"
+      }
+    },
+    {
+      "apiVersion": "[variables('omsApiVersion')]",
+      "location": "[parameters('computeLocation')]",
+      "name": "[variables('omsName')]",
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "properties": {
+        "sku": {
+          "name": "Free"
+        }
+      },
+      "resources": [
+        {
+          "apiVersion": "[variables('omsApiVersion')]",
+          "name": "[concat(variables('dgstorageName'), variables('omsName'))]",
+          "type": "storageinsightconfigs",
+          "dependsOn": [
+            "[concat('Microsoft.OperationalInsights/workspaces/', variables('omsName'))]",
+            "[concat('Microsoft.Storage/storageAccounts/', variables('dgstorageName'))]"
+          ],
+          "properties": {
+            "containers": [
+            ],
+            "tables": [
+              "WADServiceFabric*EventTable",
+              "WADWindowsEventLogsTable",
+              "WADETWEventTable"
+            ],
+            "storageAccount": {
+              "id": "[resourceId('Microsoft.Storage/storageaccounts/', variables('dgstorageName'))]",
+              "key": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('dgstorageName')), variables('storageApiVersion')).keys[0].value]"   
+            }
+          }
+        },
+        {
+          "apiVersion": "[variables('omsDataSourceVersion')]",
+          "name": "System",
+          "type": "datasources",
+          "dependsOn": [
+            "[concat('Microsoft.OperationalInsights/workspaces/', variables('omsName'))]"
+          ],
+          "kind": "WindowsEvent",
+          "properties": {
+            "eventLogName": "System",
+            "eventTypes": [
+              {
+                "eventType": "Error"
+              },
+              {
+                "eventType": "Warning"
+              },
+              {
+                "eventType": "Information"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "apiVersion": "2019-03-01",
       "type": "Microsoft.ServiceFabric/clusters",
       "name": "[parameters('clusterName')]",
       "location": "[parameters('computeLocation')]",
@@ -559,11 +925,16 @@
       ],
       "properties": {
         "addonFeatures": [
+          "DnsService",
           "RepairManager"
         ],
         "certificate": {
           "thumbprint": "[parameters('certificateThumbprint')]",
           "x509StoreName": "[parameters('certificateStoreValue')]"
+        },
+        "reverseProxyCertificate": {
+          "thumbprint": "[parameters('reverseProxyCertificateThumbprint')]",
+          "x509StoreName": "[parameters('reverseProxyCertificateStoreValue')]"
         },
         "clientCertificateCommonNames": [
         ],
@@ -604,6 +975,7 @@
               "startPort": "[parameters('nt0ephemeralStartPort')]"
             },
             "httpGatewayEndpointPort": "[parameters('nt0fabricHttpGatewayPort')]",
+            "reverseProxyEndpointPort": "[parameters('nt0reverseProxyEndpointPort')]",
             "isPrimary": true,
             "vmInstanceCount": "[parameters('nt0InstanceCount')]"
           }
@@ -612,15 +984,15 @@
         "reliabilityLevel": "Silver",
         "upgradeDescription": {
           "forceRestart": false,
-          "upgradeReplicaSetCheckTimeout": "00:05:00",
+          "upgradeReplicaSetCheckTimeout": "10675199.02:48:05.4775807",
           "healthCheckWaitDuration": "00:05:00",
           "healthCheckStableDuration": "00:05:00",
-          "healthCheckRetryTimeout": "00:45:00",
-          "upgradeTimeout": "12:00:00",
-          "upgradeDomainTimeout": "02:00:00",
+          "healthCheckRetryTimeout": "00:15:00",
+          "upgradeTimeout": "00:50:00",
+          "upgradeDomainTimeout": "00:25:00",
           "healthPolicy": {
-            "maxPercentUnhealthyNodes": 100,
-            "maxPercentUnhealthyApplications": 100
+            "maxPercentUnhealthyNodes": 40,
+            "maxPercentUnhealthyApplications": 40
           },
           "deltaHealthPolicy": {
             "maxPercentDeltaUnhealthyNodes": 0,

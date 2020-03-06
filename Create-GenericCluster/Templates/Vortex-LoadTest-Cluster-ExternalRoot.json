@@ -260,7 +260,7 @@
     }
   },
   "variables": {
-    "vmssApiVersion": "2019-07-01",
+    "vmssApiVersion": "2019-03-01",
     "lbApiVersion": "2019-09-01",
     "vNetApiVersion": "2018-08-01",
     "storageApiVersion": "2018-07-01",
@@ -283,7 +283,6 @@
     "omsName": "[concat(parameters('deploymentId'),'-oms')]",
     "sfstorageName": "[concat(parameters('deploymentId'),'sfstorage')]",
     "dgstorageName": "[concat(parameters('deploymentId'),'dgstorage')]",
-    "ddstorageName": "[concat(parameters('deploymentId'),'ddstorage')]",
 
     "lbName0": "[concat(parameters('deploymentId'),'-','lb','-',parameters('vmNodeType0Name'))]",
     "lbID0": "[resourceId('Microsoft.Network/loadBalancers', variables('lbName0'))]",
@@ -316,24 +315,6 @@
       "apiVersion": "[variables('storageApiVersion')]",
       "type": "Microsoft.Storage/storageAccounts",
       "name": "[variables('dgstorageName')]",
-      "location": "[parameters('computeLocation')]",
-      "dependsOn": [
-      ],
-      "properties": {
-      },
-      "kind": "Storage",
-      "sku": {
-        "name": "[parameters('applicationDiagnosticsStorageAccountType')]"
-      },
-      "tags": {
-        "resourceType": "Service Fabric",
-        "clusterName": "[parameters('clusterName')]"
-      }
-    },
-    {
-      "apiVersion": "[variables('storageApiVersion')]",
-      "type": "Microsoft.Storage/storageAccounts",
-      "name": "[variables('ddstorageName')]",
       "location": "[parameters('computeLocation')]",
       "dependsOn": [
       ],
@@ -565,17 +546,34 @@
         "virtualMachineProfile": {
           "extensionProfile": {
             "extensions": [
+                {
+                "name": "[concat(parameters('vmNodeType0Name'), '-InitializeDisksVmExt')]",
+                "properties": {
+                  "publisher": "Microsoft.Compute",
+                  "type": "CustomScriptExtension",
+                  "typeHandlerVersion": "1.8",
+                  "autoUpgradeMinorVersion": true,
+                  "settings": {
+                    "fileUris": [
+                      "https://csb7e07ba72cff7x49e5x909.blob.core.windows.net/clusterscripts/DSC-FormatAttachedDisk.ps1"
+                    ],
+                    "commandToExecute": "[concat('(powershell.exe -ExecutionPolicy Unrestricted -File DSC-FormatAttachedDisk.ps1) > output.txt')]",
+                    "version": "1.8"
+                  }
+                }
+              },
               {
                 "name": "[concat(parameters('vmNodeType0Name'),'_ServiceFabricNode')]",
                 "properties": {
                   "type": "ServiceFabricNode",
                   "autoUpgradeMinorVersion": true,
+                   "provisionAfterExtensions": [
+                    "[concat(parameters('vmNodeType0Name'), '-InitializeDisksVmExt')]"
+                  ],
                   "protectedSettings": {
                     "StorageAccountKey1": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('sfstorageName')), variables('storageApiVersion')).keys[0].value]",
                     "StorageAccountKey2": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('sfstorageName')), variables('storageApiVersion')).keys[1].value]"
                   },
-                  "provisionAfterExtensions": [
-                  ],
                   "publisher": "Microsoft.Azure.ServiceFabric",
                   "settings": {
                     "clusterEndpoint": "[reference(parameters('clusterName')).clusterEndpoint]",
@@ -603,8 +601,6 @@
                   "type": "MicrosoftMonitoringAgent",
                   "typeHandlerVersion": "1.0",
                   "autoUpgradeMinorVersion": true,
-                  "provisionAfterExtensions": [
-                  ],
                   "settings": {
                     "workspaceId": "[reference(resourceId('Microsoft.OperationalInsights/workspaces/', variables('omsName')), variables('omsApiVersion')).customerId]"
                   },
@@ -618,8 +614,6 @@
                 "properties": {
                   "type": "IaaSDiagnostics",
                   "autoUpgradeMinorVersion": true,
-                  "provisionAfterExtensions": [
-                  ],
                   "protectedSettings": {
                     "storageAccountName": "[variables('dgstorageName')]",
                     "storageAccountKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('dgstorageName')), variables('storageApiVersion')).keys[0].value]",
@@ -830,15 +824,14 @@
             },
             "dataDisks": [
               {
-                    "lun": 0,
-                    "createOption": "Attach",
-                    "caching": "None",
-                    "managedDisk": {
-                        "storageAccountType": "Standard_LRS",
-                        "id": "[resourceId('Microsoft.Storage/storageAccounts', variables('ddstorageName'))]"
-                    },
-                    "diskSizeGB": 250
+                "diskSizeGB": "250",
+                "lun": 0,
+                "createOption": "Empty",
+                "caching": "None",
+                "managedDisk": {
+                  "storageAccountType": "StandardSSD_LRS"
                 }
+              }
             ]
           }
         }

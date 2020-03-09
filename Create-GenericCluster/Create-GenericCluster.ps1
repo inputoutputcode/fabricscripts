@@ -1,11 +1,11 @@
 ﻿## Declare parameters
-$armTemplate = ".\Templates\Vortex-LoadTest-Cluster-ExternalRoot.json"
+$armTemplate = ".\Templates\Vortex-LoadTest-Cluster_VMSS1.json"
 $currentExecutionPath = "D:\Code\FabricMonkey\FabricScripts\Create-GenericCluster"
-$clusterVersion = "7.0.457.9590"
+$clusterVersion = "7.0.470.9590"
 
 ## Fixed parameters
 $subscriptionId = "13ad2c84-84fa-4798-ad71-e70c07af873f"
-$azureRegion = "centralus"
+$azureRegion = "westus"
 $localCertificatePath = "D:\Certificates\"
 $generalPassword = "nZ549Ux2MnW6srTvOZsq"
 
@@ -29,11 +29,9 @@ $resourceGroup = $deploymentName + "-group"
 $keyVaultName = $deploymentName + "-keyvault"
 $serviceFabricClusterName = $deploymentName + "-servicefabric"
 $serviceFabricClusterDns = $serviceFabricClusterName + "." + $azureRegion + ".cloudapp.azure.com"
-#$serviceFabricClusterWebapplicationReplyUrl = "https://" + $serviceFabricClusterDns + ":19080/Explorer/index.html" # Only for AAD registration
 
 ## Deploy Azure Key Vault
-New-AzTag -Name "alias"
-New-AzResourceGroup -Name $resourceGroup -Location $azureRegion -Tag @{"alias"="chrpap"} -Force 
+New-AzResourceGroup -Name $resourceGroup -Location $azureRegion -Force 
 New-AzKeyVault -VaultName $keyVaultName -ResourceGroupName $resourceGroup -Location $azureRegion -EnabledForDeployment
 Import-Module ".\ServiceFabricRPHelpers\ServiceFabricRPHelpers.psm1"
 New-Item -ItemType Directory -Path $localCertificatePath -ErrorAction Ignore
@@ -52,8 +50,6 @@ $armParameter.Add("adminPassword", $generalPassword)
 $armParameter.Add("sourceVaultValue", $clusterCertificate.SourceVault)
 $armParameter.Add("certificateUrlValue", $clusterCertificate.CertificateURL)
 $armParameter.Add("certificateThumbprint", $clusterCertificate.CertificateThumbprint)
-$armParameter.Add("reverseProxyCertificateThumbprint", $clusterCertificate.CertificateThumbprint)
-$armParameter.Add("reverseProxyCertificateUrlValue", $clusterCertificate.CertificateURL)
 
 Test-AzResourceGroupDeployment -ResourceGroupName $resourceGroup -TemplateFile $armTemplate -TemplateParameterObject $armParameter -Verbose -ErrorAction Stop
 

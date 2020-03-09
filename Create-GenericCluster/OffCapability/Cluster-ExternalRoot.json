@@ -45,7 +45,7 @@
     },
     "subnet0Name": {
       "type": "string",
-      "defaultValue": "Subnet-0"
+      "defaultValue": "subnet0"
     },
     "subnet0Prefix": {
       "type": "string",
@@ -77,43 +77,11 @@
     },
     "subnet1Name": {
       "type": "string",
-      "defaultValue": "Subnet-1"
+      "defaultValue": "subnet1"
     },
     "subnet1Prefix": {
       "type": "string",
       "defaultValue": "10.0.1.0/24"
-    },
-    "nt2applicationStartPort": {
-      "type": "int",
-      "defaultValue": 20000
-    },
-    "nt2applicationEndPort": {
-      "type": "int",
-      "defaultValue": 30000
-    },
-    "nt2ephemeralStartPort": {
-      "type": "int",
-      "defaultValue": 49152
-    },
-    "nt2ephemeralEndPort": {
-      "type": "int",
-      "defaultValue": 65534
-    },
-    "nt2fabricTcpGatewayPort": {
-      "type": "int",
-      "defaultValue": 19000
-    },
-    "nt2fabricHttpGatewayPort": {
-      "type": "int",
-      "defaultValue": 19080
-    },
-    "subnet2Name": {
-      "type": "string",
-      "defaultValue": "Subnet-2"
-    },
-    "subnet2Prefix": {
-      "type": "string",
-      "defaultValue": "10.0.2.0/24"
     },
     "adminUserName": {
       "type": "string",
@@ -187,28 +155,6 @@
         "description": "Refers to the location URL in your key vault where the certificate was uploaded, it is should be in the format of https://<name of the vault>.vault.azure.net:443/secrets/<exact location>"
       }
     },
-    "reverseProxyCertificateStoreValue": {
-        "type": "string",
-        "allowedValues": [
-            "My"
-        ],
-        "defaultValue": "My",
-        "metadata": {
-            "description": "The store name where the cert will be deployed in the virtual machine"
-        }
-    },
-    "reverseProxyCertificateThumbprint": {
-        "type": "string",
-        "metadata": {
-            "description": "Reverse proxy Certificate Thumbprint"
-        }
-    },
-    "reverseProxyCertificateUrlValue": {
-        "type": "string",
-        "metadata": {
-            "description": "Refers to the location URL in your key vault where the certificate was uploaded, it is should be in the format of https://<name of the vault>.vault.azure.net:443/secrets/<exact location>"
-        }
-    },
     "storageAccountType": {
       "type": "string",
       "allowedValues": [
@@ -257,6 +203,25 @@
     "vmNodeType0Size": {
       "type": "string",
       "defaultValue": "Standard_D3_v2"
+    },
+    "extensionScriptFileUri": {
+      "type": "string"
+    },
+    "fileShareStorageAccountName": {
+      "type": "string"
+    },
+    "fileShareStorageAccountKey": {
+      "type": "string"
+    },
+    "fileShareEndpoint": {
+      "type": "string"
+    },
+    "fileShareName": {
+      "type": "string"
+    },
+    "forceExtensionUpdateTrigger": {
+      "type": "string",
+      "defaultValue": "[utcNow()]"
     }
   },
   "variables": {
@@ -270,27 +235,28 @@
 
     "customWebAppPort": "8180",
 
-    "vnetName": "[concat(parameters('deploymentId'),'-','vnet')]",
+    "vnetName": "[concat(parameters('deploymentId'),'vnet')]",
     "vnetId": "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]",
     "subnet0Ref": "[concat(variables('vnetId'),'/subnets/',parameters('subnet0Name'))]",
     "subnet1Ref": "[concat(variables('vnetId'),'/subnets/',parameters('subnet1Name'))]",
-    "subnet2Ref": "[concat(variables('vnetId'),'/subnets/',parameters('subnet2Name'))]",
-    "nicName": "[concat(parameters('deploymentId'),'-nic')]",
-    "pubIpName": "[concat(parameters('deploymentId'),'-pubip')]",
-    "lbName": "[concat(parameters('deploymentId'),'-lb')]",
-    "lbIpName": "[concat(parameters('deploymentId'),'-lbip')]",
-    "aiName": "[concat(parameters('deploymentId'),'-ai')]",
-    "omsName": "[concat(parameters('deploymentId'),'-oms')]",
+    "nicName": "[concat(parameters('deploymentId'),'nic')]",
+    "pubIpName": "[concat(parameters('deploymentId'),'pubip')]",
+    "lbName": "[concat(parameters('deploymentId'),'lb')]",
+    "lbIpName": "[concat(parameters('deploymentId'),'lbip')]",
+    "aiName": "[concat(parameters('deploymentId'),'ai')]",
+    "omsName": "[concat(parameters('deploymentId'),'oms')]",
     "sfstorageName": "[concat(parameters('deploymentId'),'sfstorage')]",
     "dgstorageName": "[concat(parameters('deploymentId'),'dgstorage')]",
 
-    "lbName0": "[concat(parameters('deploymentId'),'-','lb','-',parameters('vmNodeType0Name'))]",
+    "lbName0": "[concat(parameters('deploymentId'),'lb',parameters('vmNodeType0Name'))]",
     "lbID0": "[resourceId('Microsoft.Network/loadBalancers', variables('lbName0'))]",
     "lbIPConfig0": "[concat(variables('lbID0'),'/frontendIPConfigurations/LoadBalancerIPConfig')]",
     "lbPoolID0": "[concat(variables('lbID0'),'/backendAddressPools/LoadBalancerBEAddressPool')]",
     "lbProbeID0": "[concat(variables('lbID0'),'/probes/FabricGatewayProbe')]",
     "lbHttpProbeID0": "[concat(variables('lbID0'),'/probes/FabricHttpGatewayProbe')]",
-    "lbNatPoolID0": "[concat(variables('lbID0'),'/inboundNatPools/LoadBalancerBEAddressNatPool')]"
+    "lbNatPoolID0": "[concat(variables('lbID0'),'/inboundNatPools/LoadBalancerBEAddressNatPool')]",
+
+    "scriptExecutionText": "[concat('(powershell.exe -ExecutionPolicy Unrestricted -File Mount-FileShare.ps1 -fileShareStorageAccountName ', parameters('fileShareStorageAccountName'), ' -fileShareStorageAccountKey ', parameters('fileShareStorageAccountKey'), ' -fileShareEndpoint ', parameters('fileShareEndpoint'), ' -fileShareName ', parameters('fileShareName'), ') > output.txt')]"
   },
   "resources": [
     {
@@ -353,12 +319,6 @@
             "name": "[parameters('subnet1Name')]",
             "properties": {
               "addressPrefix": "[parameters('subnet1Prefix')]"
-            }
-          },
-          {
-            "name": "[parameters('subnet2Name')]",
-            "properties": {
-              "addressPrefix": "[parameters('subnet2Prefix')]"
             }
           }
         ]
@@ -547,17 +507,18 @@
           "extensionProfile": {
             "extensions": [
                 {
-                "name": "[concat(parameters('vmNodeType0Name'), '-InitializeDisksVmExt')]",
+                "name": "[concat(parameters('vmNodeType0Name'), '-MounFileShare')]",
                 "properties": {
                   "publisher": "Microsoft.Compute",
                   "type": "CustomScriptExtension",
                   "typeHandlerVersion": "1.8",
                   "autoUpgradeMinorVersion": true,
+                  "forceUpdateTag": "[parameters('forceExtensionUpdateTrigger')]",
                   "settings": {
                     "fileUris": [
-                      "https://csb7e07ba72cff7x49e5x909.blob.core.windows.net/clusterscripts/DSC-FormatAttachedDisk.ps1"
+                      "[parameters('extensionScriptFileUri')]"
                     ],
-                    "commandToExecute": "[concat('(powershell.exe -ExecutionPolicy Unrestricted -File DSC-FormatAttachedDisk.ps1) > output.txt')]",
+                    "commandToExecute": "[variables('scriptExecutionText')]",
                     "version": "1.8"
                   }
                 }
@@ -568,7 +529,7 @@
                   "type": "ServiceFabricNode",
                   "autoUpgradeMinorVersion": true,
                    "provisionAfterExtensions": [
-                    "[concat(parameters('vmNodeType0Name'), '-InitializeDisksVmExt')]"
+                    "[concat(parameters('vmNodeType0Name'), '-MounFileShare')]"
                   ],
                   "protectedSettings": {
                     "StorageAccountKey1": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('sfstorageName')), variables('storageApiVersion')).keys[0].value]",
@@ -578,13 +539,11 @@
                   "settings": {
                     "clusterEndpoint": "[reference(parameters('clusterName')).clusterEndpoint]",
                     "nodeTypeRef": "[parameters('vmNodeType0Name')]",
-                    "dataPath": "Y:\\\\SvcFab",
+                    "dataPath": "Z:\\\\SvcFab",
                     "durabilityLevel": "Silver",
                     "enableParallelJobs": true,
                     "nicPrefixOverride": "[parameters('subnet0Prefix')]",
                     "reverseProxyCertificate": {
-                        "thumbprint": "[parameters('reverseProxyCertificateThumbprint')]",
-                        "x509StoreName": "[parameters('reverseProxyCertificateStoreValue')]"
                     },
                     "certificate": {
                       "thumbprint": "[parameters('certificateThumbprint')]",
@@ -929,10 +888,6 @@
         "certificate": {
           "thumbprint": "[parameters('certificateThumbprint')]",
           "x509StoreName": "[parameters('certificateStoreValue')]"
-        },
-        "reverseProxyCertificate": {
-          "thumbprint": "[parameters('reverseProxyCertificateThumbprint')]",
-          "x509StoreName": "[parameters('reverseProxyCertificateStoreValue')]"
         },
         "clientCertificateCommonNames": [
         ],

@@ -21,11 +21,11 @@ Try {
     Login-AzAccount
     Set-AzContext -SubscriptionId $subscriptionId
 }
-
+    
 ## Generate the certificate
 New-AzResourceGroup -Name $resourceGroup -Location $azureRegion -Force 
 New-AzKeyVault -VaultName $keyVaultName -ResourceGroupName $resourceGroup -Location $azureRegion -EnabledForDeployment
-Import-Module ".\..\ServiceFabricRPHelpers\ServiceFabricRPHelpers.psm1" ## Load a modified version of ServiceFabricRPHelpers module
+Import-Module ".\..\CertificateHelpers\CertificateHelpers.psm1" 
 #Enable-AzureRmAlias ## Still needed for Service Fabric RP Helpers
 New-Item -ItemType Directory -Path $localCertificatePath -ErrorAction Ignore
 $clusterCertificate = Invoke-AddCertToKeyVaultAsSecret -SubscriptionId $subscriptionId -ResourceGroupName $resourceGroup -Location $azureRegion -VaultName $keyVaultName -CertificateName $certificateName -CreateSelfSignedCertificate -DnsName $serviceFabricClusterDns -OutputPath $localCertificatePath -Password $generalPassword

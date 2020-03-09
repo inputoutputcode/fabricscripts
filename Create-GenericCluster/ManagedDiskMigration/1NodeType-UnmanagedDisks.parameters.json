@@ -62,6 +62,9 @@
         "dnsName": {
             "value": "quicktest-sf.eastus.cloudapp.azure.com"
         },
+        "commonName": {
+            "value": "quicktest-sf.eastus.cloudapp.azure.com"
+        },
         "nicName": {
             "value": "NIC"
         },

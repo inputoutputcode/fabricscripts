@@ -205,7 +205,8 @@
         "vmNodeType0Size": {
             "type": "string",
             "defaultValue": "Standard_D2_v2"
-        }
+        },
+        "certificateCommonName":{ "value": "" }
     },
     "variables": {
         "vmssApiVersion": "2019-03-01",
@@ -610,6 +611,9 @@
                                         "enableParallelJobs": true,
                                         "nicPrefixOverride": "[parameters('subnet0Prefix')]",
                                         "certificate": {
+                                            "commonNames": [
+                                                "[parameters('certificateCommonName')]"
+                                            ]
                                         }
                                     },
                                     "typeHandlerVersion": "1.1"

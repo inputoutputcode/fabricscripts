@@ -204,7 +204,10 @@
       "type": "string",
       "defaultValue": "Standard_D3_v2"
     },
-    "extensionScriptFileUri": {
+    "extensionImpersonateScriptFileUri": {
+      "type": "string"
+    },
+    "extensionMountScriptFileUri": {
       "type": "string"
     },
     "fileShareStorageAccountName": {
@@ -256,7 +259,7 @@
     "lbHttpProbeID0": "[concat(variables('lbID0'),'/probes/FabricHttpGatewayProbe')]",
     "lbNatPoolID0": "[concat(variables('lbID0'),'/inboundNatPools/LoadBalancerBEAddressNatPool')]",
 
-    "scriptExecutionText": "[concat('(powershell.exe -ExecutionPolicy Unrestricted -File Mount-FileShare.ps1 -fileShareStorageAccountName ', parameters('fileShareStorageAccountName'), ' -fileShareStorageAccountKey ', parameters('fileShareStorageAccountKey'), ' -fileShareEndpoint ', parameters('fileShareEndpoint'), ' -fileShareName ', parameters('fileShareName'), ') > output.txt')]"
+    "scriptExecutionText": "[concat('(powershell.exe -ExecutionPolicy Unrestricted -File Impersonate-Script.ps1 -serviceAccountUsername ', parameters('adminUserName'), ' -serviceAccountPassword ', parameters('adminPassword'), ' -fileShareStorageAccountName ', parameters('fileShareStorageAccountName'), ' -fileShareStorageAccountKey ', parameters('fileShareStorageAccountKey'), ' -fileShareEndpoint ', parameters('fileShareEndpoint'), ' -fileShareName', parameters('fileShareName'), ') > output.txt')]"
   },
   "resources": [
     {
@@ -516,7 +519,8 @@
                   "forceUpdateTag": "[parameters('forceExtensionUpdateTrigger')]",
                   "settings": {
                     "fileUris": [
-                      "[parameters('extensionScriptFileUri')]"
+                      "[parameters('extensionImpersonateScriptFileUri')]",
+                      "[parameters('extensionMountScriptFileUri')]"
                     ],
                     "commandToExecute": "[variables('scriptExecutionText')]",
                     "version": "1.8"

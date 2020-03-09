@@ -44,19 +44,23 @@ $clusterCertificate.CertificateURL
 ## Create storage account
 $containerName = "extensionscripts"
 $fileShareName = "sfdatapath"
-$extensionScriptFileName = "Mount-FileShare.ps1"
-$extensionScriptFilePath = ".\Mount-FileShare.ps1"
+$extensionMountScriptFileName = "Mount-FileShare.ps1"
+$extensionMountScriptFilePath = ".\Mount-FileShare.ps1"
+$extensionImpersonateScriptFileName = "Impersonate-Script.ps1"
+$extensionImpersonateScriptFilePath = ".\Impersonate-Script.ps1"
 $scriptStorageAccount = New-AzStorageAccount -ResourceGroupName $resourceGroup -Name $scriptStorageName -Location $azureRegion -SkuName Standard_LRS -Kind StorageV2
 $scriptStorageAccountContext = $scriptStorageAccount.Context
 New-AzStorageContainer -Name $containerName -Context $scriptStorageAccountContext -Permission blob
-$uploadedBlobContent = Set-AzStorageBlobContent -File $extensionScriptFilePath -Container $containerName -Blob $extensionScriptFileName -Context $scriptStorageAccountContext 
+$uploadedBlobContent1 = Set-AzStorageBlobContent -File $extensionMountScriptFileName -Container $containerName -Blob $extensionMountScriptFilePath -Context $scriptStorageAccountContext 
+$uploadedBlobContent2 = Set-AzStorageBlobContent -File $extensionImpersonateScriptFilePath -Container $containerName -Blob $extensionImpersonateScriptFileName -Context $scriptStorageAccountContext 
 
 $fileShareStorageAccount = New-AzStorageAccount -ResourceGroupName $resourceGroup -Name $fileShareStorageName -Location $azureRegion -SkuName Premium_LRS -Kind FileStorage
 $fileShareStorageAccountContext = $fileShareStorageAccount.Context
 New-AzRmStorageShare -ResourceGroupName $resourceGroup -StorageAccountName $fileShareStorageName -Name $shareName -QuotaGiB 1024
 $fileShare = Get-AzStorageShare -Context $fileShareStorageAccountContext | Where-Object { $_.Name -eq $shareName -and $_.IsSnapshot -eq $false }
 
-$extensionScriptFileUri = $uploadedBlobContent.ICloudBlob.uri.AbsoluteUri
+$extensionMountScriptFileUri = $uploadedBlobContent1.ICloudBlob.uri.AbsoluteUri
+$extensionImpersonateScriptFileUri =  $uploadedBlobContent2.ICloudBlob.uri.AbsoluteUri
 $fileShareStorageAccountName = $fileShareStorageName
 $fileShareStorageAccountKey = (Get-AzStorageAccountKey -ResourceGroupName $resourceGroup -Name $fileShareStorageName)[0].Value
 $fileShareEndpoint = $fileShare.StorageUri.PrimaryUri.Host
@@ -71,7 +75,8 @@ $armParameter.Add("adminPassword", $machineAdminPass)
 $armParameter.Add("sourceVaultValue", $clusterCertificate.SourceVault)
 $armParameter.Add("certificateUrlValue", $clusterCertificate.CertificateURL)
 $armParameter.Add("certificateThumbprint", $clusterCertificate.CertificateThumbprint)
-$armParameter.Add("extensionScriptFileUri", $extensionScriptFileUri)
+$armParameter.Add("extensionImpersonateScriptFileUri", $extensionImpersonateScriptFileUri)
+$armParameter.Add("extensionMountScriptFileUri", $extensionMountScriptFileUri)
 $armParameter.Add("fileShareStorageAccountName", $fileShareStorageAccountName)
 $armParameter.Add("fileShareStorageAccountKey", $fileShareStorageAccountKey)
 $armParameter.Add("fileShareEndpoint", $fileShareEndpoint)

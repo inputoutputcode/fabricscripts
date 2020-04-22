@@ -516,7 +516,6 @@
                   "type": "CustomScriptExtension",
                   "typeHandlerVersion": "1.8",
                   "autoUpgradeMinorVersion": true,
-                  "forceUpdateTag": "[parameters('forceExtensionUpdateTrigger')]",
                   "settings": {
                     "fileUris": [
                       "[parameters('extensionImpersonateScriptFileUri')]",
@@ -524,6 +523,26 @@
                     ],
                     "commandToExecute": "[variables('scriptExecutionText')]",
                     "version": "1.8"
+                  }
+                }
+              },
+              {
+                "name": "Microsoft.Powershell.DSC",
+                "properties": {
+                  "publisher": "Microsoft.Powershell",
+                  "type": "DSC",
+                  "typeHandlerVersion": "2.77",
+                  "autoUpgradeMinorVersion": false,
+                  "forceUpdateTag": "v1",
+                  "settings": {
+                    "configuration": {
+                      "url": "[parameters('dscExtensionZipFileUrl')]",
+                      "script": "Mount-FileShare.ps1",
+                      "function": "Main"
+                    }
+                  },
+                  "protectedSettings": {
+                    "configurationUrlSasToken": "[parameters('artifactsLocationSasToken')]"
                   }
                 }
               },

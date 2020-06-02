@@ -1,15 +1,15 @@
 ﻿
-$armTemplate = ".\Templates\Vortex-LoadTest-Cluster_VMSS3_2NodeTypeRefs.json"
+$armTemplate = ".\Templates\Vortex-LoadTest-Cluster.json"
 $currentExecutionPath = "D:\Code\inputoutputcode\FabricMonkey\Create-GenericCluster"
 $subscriptionId = "13ad2c84-84fa-4798-ad71-e70c07af873f"
-$clusterVersion = "6.5.676.9590"
-$azureRegion = "centralus"
+$clusterVersion = "7.1.409.9590"
+$azureRegion = "westus"
 $generalPassword = "nZ549Ux2MnW6srTvOZsq"
 
 cd $currentExecutionPath
 Enable-AzureRmAlias
 
-$deploymentName = "chrpap161451"
+$deploymentName = "chrpap011951"
 
 # Define dynamic parameters
 $certificateName = $deploymentName + "-cert"
@@ -19,9 +19,9 @@ $keyVaultName = $deploymentName + "-keyvault"
 $serviceFabricClusterName = $deploymentName + "-servicefabric"
 $serviceFabricClusterDns = $serviceFabricClusterName + "." + $azureRegion + ".cloudapp.azure.com"
 
-$sourceVault = "/subscriptions/13ad2c84-84fa-4798-ad71-e70c07af873f/resourceGroups/chrpap161451-group/providers/Microsoft.KeyVault/vaults/chrpap161451-keyvault"
-$certificateURL = "https://chrpap161451-keyvault.vault.azure.net/secrets/chrpap161451-cert/1170f3d3afff43fab7180ef78368c052"
-$certificateThumbprint = "922335844238A1FD33CF2565E369AED58F298A0C"
+$sourceVault = "/subscriptions/13ad2c84-84fa-4798-ad71-e70c07af873f/resourceGroups/chrpap011951-group/providers/Microsoft.KeyVault/vaults/chrpap011951-keyvault"
+$certificateURL = "https://chrpap011951-keyvault.vault.azure.net:443/secrets/chrpap011951-cert/7939748ff14e4ee5bb9ba11e90663609"
+$certificateThumbprint = "EC9E3DD93941A3B4EBCA4BE039B30D963A5EED92"
 
 ## Deploy Azure Service Fabric Cluster
 $armParameter = @{}

@@ -1,7 +1,7 @@
 ﻿## Declare parameters
-$armTemplate = ".\Templates\Vortex-LoadTest-Cluster_VMSS1.json"
+$armTemplate = ".\Templates\Vortex-LoadTest-Cluster.json"
 $currentExecutionPath = "D:\Code\FabricMonkey\FabricScripts\Create-GenericCluster"
-$clusterVersion = "7.0.470.9590"
+$clusterVersion = "7.1.409.9590"
 
 ## Fixed parameters
 $subscriptionId = "13ad2c84-84fa-4798-ad71-e70c07af873f"

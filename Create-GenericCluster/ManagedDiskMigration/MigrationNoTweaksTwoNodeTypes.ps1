@@ -64,7 +64,7 @@ if (!($clusterState -eq "Ready")) {
 }   
 Write-host "Cluster state is ready" -ForegroundColor Green  
 
-# Connect to the cluster and check the cluster health.  
+# Connect to the cluster and check the cluster health.
 $connectArgs = @{  
         ConnectionEndpoint = $serviceFabricClusterDns + ':19000';  
         X509Credential = $True;  
@@ -80,7 +80,7 @@ Get-ServiceFabricClusterHealth
 
 # Deploy a new scale set into the primary node type.  
 New-AzResourceGroupDeployment -ResourceGroupName $resourceGroup -TemplateParameterObject $armParameter `
-    -TemplateFile "1NodeType-2ScaleSets.json" -Verbose 
+    -TemplateFile "2NodeType-2ScaleSets-1LBPIP.json" -Verbose 
 
 # Check the cluster health again. All 15 nodes should be healthy.
 Get-ServiceFabricClusterHealth

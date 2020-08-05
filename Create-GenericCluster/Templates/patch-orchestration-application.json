@@ -23,6 +23,7 @@
     },
     "WUOperationTimeOutInMinutes": {
       "type": "int",
+      "defaultValue": 90,
       "metadata": {
         "description": "Specifies the timeout for any Windows Update operation"
       }
@@ -30,14 +31,14 @@
 
     "placementConstraint": {
       "type": "string",
-      "defaultValue": "(NodeType == backend)",
+      "defaultValue": "",
       "metadata": {
         "description": "NodeType where the POA should run"
       }
     }
   },
   "variables": {
-    "clusterName": "parameters('clusterName')",
+    "clusterName": "[parameters('clusterName')]",
     "applicationTypeName": "PatchOrchestrationApplicationType",
     "applicationTypeVersion": "1.3.2",
     "applicationName": "PatchOrchestrationApplication",

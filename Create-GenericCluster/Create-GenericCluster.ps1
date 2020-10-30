@@ -1,5 +1,5 @@
 ﻿## Declare parameters
-$armTemplate = ".\Templates\Vortex-LoadTest-Cluster_BestPracticeAnalyzer.json"
+$armTemplate = ".\Templates\Vortex-LoadTest-Cluster_VMSS1.json"
 $currentExecutionPath = "D:\Code\FabricMonkey\FabricScripts\Create-GenericCluster"
 $clusterVersion = "7.1.409.9590"
 

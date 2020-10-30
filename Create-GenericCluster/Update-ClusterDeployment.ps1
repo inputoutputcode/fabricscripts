@@ -36,5 +36,5 @@ $armParameter.Add("certificateThumbprint", $certificateThumbprint)
 
 Test-AzResourceGroupDeployment -ResourceGroupName $resourceGroup -TemplateFile $armTemplate -TemplateParameterObject $armParameter -Verbose -ErrorAction Stop
 
-New-AzResourceGroupDeployment -ResourceGroupName $resourceGroup - -TemplateFile $armTemplate -TemplateParameterObject $armParameter -Verbose -Mode Complete -Force
+New-AzResourceGroupDeployment -ResourceGroupName $resourceGroup -TemplateFile $armTemplate -TemplateParameterObject $armParameter -Verbose -Mode Complete -Force
 

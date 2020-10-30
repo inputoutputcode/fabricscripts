@@ -1,0 +1,1765 @@
+  {
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "deploymentId": {
+      "type": "string"
+    },
+    "computeLocation": {
+      "type": "string"
+    },
+    "clusterName": {
+      "type": "string"
+    },
+    "clusterVersion": {
+      "type": "string",
+      "defaultValue": "7.0.457.9590"
+    },
+    "nt0applicationStartPort": {
+      "type": "int",
+      "defaultValue": 20000
+    },
+    "nt0applicationEndPort": {
+      "type": "int",
+      "defaultValue": 30000
+    },
+    "nt0ephemeralStartPort": {
+      "type": "int",
+      "defaultValue": 49152
+    },
+    "nt0ephemeralEndPort": {
+      "type": "int",
+      "defaultValue": 65534
+    },
+    "nt0fabricTcpGatewayPort": {
+      "type": "int",
+      "defaultValue": 19000
+    },
+    "nt0fabricHttpGatewayPort": {
+      "type": "int",
+      "defaultValue": 19080
+    },
+    "nt0reverseProxyEndpointPort": {
+      "type": "int",
+      "defaultValue": 19081
+    },
+    "subnet0Name": {
+      "type": "string",
+      "defaultValue": "subnet0"
+    },
+    "subnet0Prefix": {
+      "type": "string",
+      "defaultValue": "10.0.0.0/24"
+    },
+    "adminUserName": {
+      "type": "string",
+      "defaultValue": "Christian"
+    },
+    "adminPassword": {
+      "type": "securestring"
+    },
+    "addressPrefix": {
+      "type": "string",
+      "defaultValue": "10.0.0.0/16"
+    },
+    "overProvision": {
+      "type": "string",
+      "defaultValue": "false"
+    },
+
+    "vmImagePublisher": {
+      "type": "string",
+      "defaultValue": "MicrosoftWindowsServer"
+    },
+    "vmImageOffer": {
+      "type": "string",
+      "defaultValue": "WindowsServer"
+    },
+    "vmImageSku": {
+      "type": "string",
+      "defaultValue": "2016-Datacenter"
+    },
+    "vmImageVersion": {
+      "type": "string",
+      "defaultValue": "latest"
+    },
+    "clusterProtectionLevel": {
+      "type": "string",
+      "allowedValues": [
+        "None",
+        "Sign",
+        "EncryptAndSign"
+      ],
+      "defaultValue": "EncryptAndSign",
+      "metadata": {
+        "description": "Protection level.Three values are allowed - EncryptAndSign, Sign, None. It is best to keep the default of EncryptAndSign, unless you have a need not to"
+      }
+    },
+    "certificateStoreValue": {
+      "type": "string",
+      "allowedValues": [
+        "My"
+      ],
+      "defaultValue": "My",
+      "metadata": {
+        "description": "The store name where the cert will be deployed in the virtual machine"
+      }
+    },
+    "certificateThumbprint": {
+      "type": "string",
+      "metadata": {
+        "description": "Certificate Thumbprint"
+      }
+    },
+    "sourceVaultValue": {
+      "type": "string",
+      "metadata": {
+        "description": "Resource Id of the key vault, is should be in the format of /subscriptions/<Sub ID>/resourceGroups/<Resource group name>/providers/Microsoft.KeyVault/vaults/<vault name>"
+      }
+    },
+    "certificateUrlValue": {
+      "type": "string",
+      "metadata": {
+        "description": "Refers to the location URL in your key vault where the certificate was uploaded, it is should be in the format of https://<name of the vault>.vault.azure.net:443/secrets/<exact location>"
+      }
+    },
+    "storageAccountType": {
+      "type": "string",
+      "allowedValues": [
+        "Standard_LRS",
+        "Standard_GRS"
+      ],
+      "defaultValue": "Standard_LRS",
+      "metadata": {
+        "description": "Replication option for the VM image storage account"
+      }
+    },
+    "supportLogStorageAccountType": {
+      "type": "string",
+      "allowedValues": [
+        "Standard_LRS",
+        "Standard_GRS"
+      ],
+      "defaultValue": "Standard_LRS",
+      "metadata": {
+        "description": "Replication option for the support log storage account"
+      }
+    },
+    "applicationDiagnosticsStorageAccountType": {
+      "type": "string",
+      "allowedValues": [
+        "Standard_LRS",
+        "Standard_GRS"
+      ],
+      "defaultValue": "Standard_LRS",
+      "metadata": {
+        "description": "Replication option for the application diagnostics storage account"
+      }
+    },
+    "nt0InstanceCount": {
+      "type": "int",
+      "defaultValue": 5,
+      "metadata": {
+        "description": "Instance count for node type"
+      }
+    },
+    "vmNodeType0Name": {
+      "type": "string",
+      "defaultValue": "mngmt",
+      "maxLength": 9
+    },
+    "vmNodeType0Size": {
+      "type": "string",
+      "defaultValue": "Standard_D3_v2"
+    }
+  },
+  "variables": {
+    "vmssApiVersion": "2019-03-01",
+    "lbApiVersion": "2019-09-01",
+    "vNetApiVersion": "2018-08-01",
+    "storageApiVersion": "2018-07-01",
+    "publicIPApiVersion": "2018-08-01",
+    "omsApiVersion": "2017-04-26-preview",
+    "omsDataSourceVersion": "2015-11-01-preview",
+
+    "customWebAppPort": "8180",
+
+    "vnetName": "[concat(parameters('deploymentId'),'vnet')]",
+    "vnetId": "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]",
+    "subnet0Ref": "[concat(variables('vnetId'),'/subnets/',parameters('subnet0Name'))]",
+    "nicName": "[concat(parameters('deploymentId'),'nic')]",
+    "lbIpName": "[concat(parameters('deploymentId'),'lbip')]",
+    "aiName": "[concat(parameters('deploymentId'),'ai')]",
+    "omsName": "[concat(parameters('deploymentId'),'oms')]",
+    "sfstorageName": "[concat(parameters('deploymentId'),'sfstorage')]",
+    "dgstorageName": "[concat(parameters('deploymentId'),'dgstorage')]",
+
+    "lbName0": "[concat(parameters('deploymentId'),'lb',parameters('vmNodeType0Name'))]",
+    "lbID0": "[resourceId('Microsoft.Network/loadBalancers', variables('lbName0'))]",
+    "lbIPConfig0": "[concat(variables('lbID0'),'/frontendIPConfigurations/LoadBalancerIPConfig')]",
+    "lbPoolID0": "[concat(variables('lbID0'),'/backendAddressPools/LoadBalancerBEAddressPool')]",
+    "lbProbeID0": "[concat(variables('lbID0'),'/probes/FabricGatewayProbe')]",
+    "lbHttpProbeID0": "[concat(variables('lbID0'),'/probes/FabricHttpGatewayProbe')]",
+    "lbNatPoolID0": "[concat(variables('lbID0'),'/inboundNatPools/LoadBalancerBEAddressNatPool')]"
+
+  },
+  "resources": [
+    {
+      "apiVersion": "[variables('storageApiVersion')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[variables('sfstorageName')]",
+      "location": "[parameters('computeLocation')]",
+      "dependsOn": [
+      ],
+      "properties": {
+      },
+      "kind": "Storage",
+      "sku": {
+        "name": "[parameters('supportLogStorageAccountType')]"
+      },
+      "tags": {
+        "resourceType": "Service Fabric",
+        "clusterName": "[parameters('clusterName')]"
+      }
+    },
+    {
+      "apiVersion": "[variables('storageApiVersion')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[variables('dgstorageName')]",
+      "location": "[parameters('computeLocation')]",
+      "dependsOn": [
+      ],
+      "properties": {
+      },
+      "kind": "Storage",
+      "sku": {
+        "name": "[parameters('applicationDiagnosticsStorageAccountType')]"
+      },
+      "tags": {
+        "resourceType": "Service Fabric",
+        "clusterName": "[parameters('clusterName')]"
+      }
+    },
+    {
+      "apiVersion": "[variables('vNetApiVersion')]",
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[variables('vnetName')]",
+      "location": "[parameters('computeLocation')]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/networkSecurityGroups/', concat(parameters('subnet0Name'), '-nsg'))]"
+      ],
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[parameters('addressPrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[parameters('subnet0Name')]",
+            "properties": {
+              "addressPrefix": "[parameters('subnet0Prefix')]",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(parameters('subnet0Name'), '-nsg'))]"
+              }
+            }
+          }
+        ]
+      },
+      "tags": {
+        "resourceType": "Service Fabric",
+        "clusterName": "[parameters('clusterName')]"
+      }
+    },
+    {
+      "apiVersion": "[variables('publicIPApiVersion')]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[concat(variables('lbIpName'),'-','0')]",
+      "location": "[parameters('computeLocation')]",
+      "sku": {
+        "name": "Standard"
+      },
+      "properties": {
+        "dnsSettings": {
+          "domainNameLabel": "[parameters('clusterName')]"
+        },
+        "publicIPAllocationMethod": "Static"
+      },
+      "tags": {
+        "resourceType": "Service Fabric",
+        "clusterName": "[parameters('clusterName')]"
+      }
+    },
+    {
+      "apiVersion": "[variables('lbApiVersion')]",
+      "type": "Microsoft.Network/loadBalancers",
+      "name": "[variables('lbName0')]",
+      "location": "[parameters('computeLocation')]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/',concat(variables('lbIpName'),'-','0'))]"
+      ],
+      "sku": {
+        "name": "Standard"
+      },
+      "properties": {
+        "frontendIPConfigurations": [
+          {
+            "name": "LoadBalancerIPConfig",
+            "properties": {
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses',concat(variables('lbIpName'),'-','0'))]"
+              }
+            }
+          }
+        ],
+        "backendAddressPools": [
+          {
+            "name": "LoadBalancerBEAddressPool",
+            "properties": {
+            }
+          }
+        ],
+        "loadBalancingRules": [
+          {
+            "name": "LBRule",
+            "properties": {
+              "backendAddressPool": {
+                "id": "[variables('lbPoolID0')]"
+              },
+              "backendPort": "[parameters('nt0fabricTcpGatewayPort')]",
+              "enableFloatingIP": "false",
+              "frontendIPConfiguration": {
+                "id": "[variables('lbIPConfig0')]"
+              },
+              "frontendPort": "[parameters('nt0fabricTcpGatewayPort')]",
+              "idleTimeoutInMinutes": "5",
+              "probe": {
+                "id": "[variables('lbProbeID0')]"
+              },
+              "protocol": "tcp"
+            }
+          },
+          {
+            "name": "LBHttpRule",
+            "properties": {
+              "backendAddressPool": {
+                "id": "[variables('lbPoolID0')]"
+              },
+              "backendPort": "[parameters('nt0fabricHttpGatewayPort')]",
+              "enableFloatingIP": "false",
+              "frontendIPConfiguration": {
+                "id": "[variables('lbIPConfig0')]"
+              },
+              "frontendPort": "[parameters('nt0fabricHttpGatewayPort')]",
+              "idleTimeoutInMinutes": "5",
+              "probe": {
+                "id": "[variables('lbHttpProbeID0')]"
+              },
+              "protocol": "tcp"
+            }
+          },
+          {
+            "name": "LBHttpRulePublic",
+            "properties": {
+              "backendAddressPool": {
+                "id": "[variables('lbPoolID0')]"
+              },
+              "backendPort": "[variables('customWebAppPort')]",
+              "enableFloatingIP": "false",
+              "frontendIPConfiguration": {
+                "id": "[variables('lbIPConfig0')]"
+              },
+              "frontendPort": "80",
+              "idleTimeoutInMinutes": "5",
+              "probe": {
+                "id": "[variables('lbHttpProbeID0')]"
+              },
+              "protocol": "tcp"
+            }
+          }
+        ],
+        "probes": [
+          {
+            "name": "FabricGatewayProbe",
+            "properties": {
+              "intervalInSeconds": 5,
+              "numberOfProbes": 2,
+              "port": "[parameters('nt0fabricTcpGatewayPort')]",
+              "protocol": "tcp"
+            }
+          },
+          {
+            "name": "FabricHttpGatewayProbePublic",
+            "properties": {
+              "intervalInSeconds": 5,
+              "numberOfProbes": 2,
+              "port": "[variables('customWebAppPort')]",
+              "protocol": "tcp"
+            }
+          },
+          {
+            "name": "FabricHttpGatewayProbe",
+            "properties": {
+              "intervalInSeconds": 5,
+              "numberOfProbes": 2,
+              "port": "[parameters('nt0fabricHttpGatewayPort')]",
+              "protocol": "tcp"
+            }
+          }
+        ],
+        "inboundNatPools": [
+          {
+            "name": "LoadBalancerBEAddressNatPool",
+            "properties": {
+              "backendPort": "3389",
+              "frontendIPConfiguration": {
+                "id": "[variables('lbIPConfig0')]"
+              },
+              "frontendPortRangeEnd": "4500",
+              "frontendPortRangeStart": "3389",
+              "protocol": "tcp"
+            }
+          }
+        ]
+      },
+      "tags": {
+        "resourceType": "Service Fabric",
+        "clusterName": "[parameters('clusterName')]"
+      }
+    },
+    {
+      "apiVersion": "[variables('vmssApiVersion')]",
+      "type": "Microsoft.Compute/virtualMachineScaleSets",
+      "name": "[parameters('vmNodeType0Name')]",
+      "location": "[parameters('computeLocation')]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/virtualNetworks/', variables('vnetName'))]",
+        "[concat('Microsoft.Network/loadBalancers/', variables('lbName0'))]",
+        "[concat('Microsoft.Storage/storageAccounts/', variables('sfstorageName'))]",
+        "[concat('Microsoft.Storage/storageAccounts/', variables('dgstorageName'))]",
+        "[concat('Microsoft.Insights/components/', variables('aiName'))]",
+        "[concat('Microsoft.OperationalInsights/workspaces/', variables('omsName'))]"
+      ],
+      "properties": {
+        "overprovision": "[parameters('overProvision')]",
+        "singlePlacementGroup": true,
+        "upgradePolicy": {
+          "mode": "Automatic"
+        },
+        "virtualMachineProfile": {
+          "extensionProfile": {
+            "extensions": [
+              {
+                "name": "[concat(parameters('vmNodeType0Name'), '-InstallNET48')]",
+                "properties": {
+                  "publisher": "Microsoft.Compute",
+                  "type": "CustomScriptExtension",
+                  "typeHandlerVersion": "1.8",
+                  "autoUpgradeMinorVersion": true,
+                  "settings": {
+                    "fileUris": [
+                      "https://raw.githubusercontent.com/Azure/Service-Fabric-Troubleshooting-Guides/master/Scripts/install-dotnet-48.ps1"
+                    ],
+                    "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File install-dotnet-48.ps1",
+                    "version": "1.8"
+                  }
+                }
+              },
+              {
+                "name": "[concat(parameters('vmNodeType0Name'),'_ServiceFabricNode')]",
+                "properties": {
+                  "type": "ServiceFabricNode",
+                  "autoUpgradeMinorVersion": true,
+                   "provisionAfterExtensions": [
+                  ],
+                  "protectedSettings": {
+                    "StorageAccountKey1": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('sfstorageName')), variables('storageApiVersion')).keys[0].value]",
+                    "StorageAccountKey2": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('sfstorageName')), variables('storageApiVersion')).keys[1].value]"
+                  },
+                  "publisher": "Microsoft.Azure.ServiceFabric",
+                  "settings": {
+                    "clusterEndpoint": "[reference(parameters('clusterName')).clusterEndpoint]",
+                    "nodeTypeRef": "[parameters('vmNodeType0Name')]",
+                    "dataPath": "D:\\\\SvcFab",
+                    "durabilityLevel": "Silver",
+                    "enableParallelJobs": true,
+                    "nicPrefixOverride": "[parameters('subnet0Prefix')]",
+                    "reverseProxyCertificate": {
+                    },
+                    "certificate": {
+                      "thumbprint": "[parameters('certificateThumbprint')]",
+                      "x509StoreName": "[parameters('certificateStoreValue')]"
+                    }
+                  },
+                  "typeHandlerVersion": "1.1"
+                }
+              },
+              {
+                "name": "[concat('VMOmsExt','_vmNodeType0Name')]",
+                "properties": {
+                  "publisher": "Microsoft.EnterpriseCloud.Monitoring",
+                  "type": "MicrosoftMonitoringAgent",
+                  "typeHandlerVersion": "1.0",
+                  "autoUpgradeMinorVersion": true,
+                  "settings": {
+                    "workspaceId": "[reference(resourceId('Microsoft.OperationalInsights/workspaces/', variables('omsName')), variables('omsApiVersion')).customerId]"
+                  },
+                  "protectedSettings": {
+                    "workspaceKey": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces/', variables('omsName')), variables('omsApiVersion')).primarySharedKey]"
+                  }
+                }
+              },
+              {
+                "name": "[concat('VMDiagnosticsVmExt','_vmNodeType0Name')]",
+                "properties": {
+                  "type": "IaaSDiagnostics",
+                  "autoUpgradeMinorVersion": true,
+                  "protectedSettings": {
+                    "storageAccountName": "[variables('dgstorageName')]",
+                    "storageAccountKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('dgstorageName')), variables('storageApiVersion')).keys[0].value]",
+                    "storageAccountEndPoint": "https://core.windows.net/"
+                  },
+                  "publisher": "Microsoft.Azure.Diagnostics",
+                  "settings": {
+                    "WadCfg": {
+                      "DiagnosticMonitorConfiguration": {
+                        "PerformanceCounters": {
+                          "PerformanceCounterConfiguration": [
+                            {
+                              "annotation": [
+                              ],
+                              "counterSpecifier": "\\Processor(_Total)\\% Processor Time",
+                              "sampleRate": "PT10S"
+                            },
+                            {
+                              "annotation": [
+                              ],
+                              "counterSpecifier": "\\Memory\\Available MBytes",
+                              "sampleRate": "PT10S"
+                            },
+                            {
+                              "annotation": [
+                              ],
+                              "counterSpecifier": "\\LogicalDisk(_Total)\\Disk Read Bytes/sec",
+                              "sampleRate": "PT10S"
+                            },
+                            {
+                              "annotation": [
+                              ],
+                              "counterSpecifier": "\\LogicalDisk(C:)\\Disk Write Bytes/sec",
+                              "sampleRate": "PT10S"
+                            },
+                            {
+                              "annotation": [
+                              ],
+                              "counterSpecifier": "\\LogicalDisk(C:)\\Disk Read Bytes/sec",
+                              "sampleRate": "PT10S"
+                            },
+                            {
+                              "annotation": [
+                              ],
+                              "counterSpecifier": "\\LogicalDisk(D:)\\Disk Write Bytes/sec",
+                              "sampleRate": "PT10S"
+                            },
+                            {
+                              "annotation": [
+                              ],
+                              "counterSpecifier": "\\LogicalDisk(D:)\\Disk Read Bytes/sec",
+                              "sampleRate": "PT10S"
+                            }
+                          ]
+                        },
+                        "WindowsEventLog": {
+                          "DataSource": [
+                            {
+                              "name": "System!*[System[(Level=1 or Level=2)]]"
+                            }
+                          ]
+                        },
+                        "EtwProviders": {
+                          "EtwEventSourceProviderConfiguration": [
+                            {
+                              "provider": "Microsoft-ServiceFabric-Actors",
+                              "scheduledTransferKeywordFilter": "1",
+                              "scheduledTransferPeriod": "PT1M",
+                              "DefaultEvents": {
+                                "eventDestination": "ServiceFabricReliableActorEventTable"
+                              }
+                            },
+                            {
+                              "provider": "Microsoft-ServiceFabric-Services",
+                              "scheduledTransferPeriod": "PT1M",
+                              "DefaultEvents": {
+                                "eventDestination": "ServiceFabricReliableServiceEventTable"
+                              }
+                            },
+                            {
+                              "provider": "Contoso-CustomProvider",
+                              "scheduledTransferPeriod": "PT1M",
+                              "DefaultEvents": {
+                                "eventDestination": "ETWEventTable"
+                              }
+                            },
+                            {
+                              "provider": "e39b723c-590c-4090-abb0-11e3e6616346",
+                              "scheduledTransferPeriod": "PT5M",
+                              "DefaultEvents": {
+                                "eventDestination": "ServiceFabricPatchOrchestrationAppEventTable"
+                              }
+                            },
+                            {
+                              "provider": "fc0028ff-bfdc-499f-80dc-ed922c52c5e9",
+                              "scheduledTransferPeriod": "PT5M",
+                              "DefaultEvents": {
+                                "eventDestination": "ServiceFabricPatchOrchestrationAppEventTable"
+                              }
+                            },
+                            {
+                              "provider": "24afa313-0d3b-4c7c-b485-1047fd964b60",
+                              "scheduledTransferPeriod": "PT5M",
+                              "DefaultEvents": {
+                                "eventDestination": "ServiceFabricPatchOrchestrationAppEventTable"
+                              }
+                            },
+                            {
+                              "provider": "05dc046c-60e9-4ef7-965e-91660adffa68",
+                              "scheduledTransferPeriod": "PT5M",
+                              "DefaultEvents": {
+                                "eventDestination": "ServiceFabricPatchOrchestrationAppEventTable"
+                              }
+                            }
+                          ],
+                          "EtwManifestProviderConfiguration": [
+                            {
+                              "provider": "cbd93bc2-71e5-4566-b3a7-595d8eeca6e8",
+                              "scheduledTransferLogLevelFilter": "Information",
+                              "scheduledTransferKeywordFilter": "4611686018427387936",
+                              "scheduledTransferPeriod": "PT1M",
+                              "DefaultEvents": {
+                                "eventDestination": "ServiceFabricSystemEventTable"
+                              }
+                            }
+                          ]
+                        },
+                        "overallQuotaInMB": "50000",
+                        "sinks": "applicationInsights"
+                      },
+                      "SinksConfig": {
+                        "Sink": [
+                          {
+                            "name": "applicationInsights",
+                            "ApplicationInsights": "[reference(resourceId('Microsoft.Insights/components', variables('aiName')), '2014-04-01').InstrumentationKey]"
+                          }
+                        ]
+                      }
+                    },
+                    "StorageAccount": "[variables('dgstorageName')]"
+                  },
+                  "typeHandlerVersion": "1.5"
+                }
+              }
+            ]
+          },
+          "networkProfile": {
+            "networkInterfaceConfigurations": [
+              {
+                "name": "[concat(variables('nicName'), '-0')]",
+                "properties": {
+                  "ipConfigurations": [
+                    {
+                      "name": "[concat(variables('nicName'),'-',0)]",
+                      "properties": {
+                        "loadBalancerBackendAddressPools": [
+                          {
+                            "id": "[variables('lbPoolID0')]"
+                          }
+                        ],
+                        "loadBalancerInboundNatPools": [
+                          {
+                            "id": "[variables('lbNatPoolID0')]"
+                          }
+                        ],
+                        "subnet": {
+                          "id": "[variables('subnet0Ref')]"
+                        }
+                      }
+                    }
+                  ],
+                  "primary": true
+                }
+              }
+            ]
+          },
+          "osProfile": {
+            "adminPassword": "[parameters('adminPassword')]",
+            "adminUsername": "[parameters('adminUsername')]",
+            "computernamePrefix": "[parameters('vmNodeType0Name')]",
+            "secrets": [
+              {
+                "sourceVault": {
+                  "id": "[parameters('sourceVaultValue')]"
+                },
+                "vaultCertificates": [
+                  {
+                    "certificateStore": "[parameters('certificateStoreValue')]",
+                    "certificateUrl": "[parameters('certificateUrlValue')]"
+                  }
+                ]
+              }
+            ]
+          },
+          "storageProfile": {
+            "imageReference": {
+              "publisher": "[parameters('vmImagePublisher')]",
+              "offer": "[parameters('vmImageOffer')]",
+              "sku": "[parameters('vmImageSku')]",
+              "version": "[parameters('vmImageVersion')]"
+            },
+            "osDisk": {
+              "caching": "ReadOnly",
+              "createOption": "FromImage",
+              "managedDisk": {
+                "storageAccountType": "[parameters('storageAccountType')]"
+              }
+            },
+            "dataDisks": [
+              {
+                "diskSizeGB": "50",
+                "lun": 0,
+                "createOption": "Empty",
+                "caching": "None",
+                "managedDisk": {
+                  "storageAccountType": "StandardSSD_LRS"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "sku": {
+        "name": "[parameters('vmNodeType0Size')]",
+        "capacity": "[parameters('nt0InstanceCount')]",
+        "tier": "Standard"
+      },
+      "tags": {
+        "resourceType": "Service Fabric",
+        "clusterName": "[parameters('clusterName')]"
+      }
+    },
+    {
+      "apiVersion": "2014-04-01",
+      "name": "[variables('aiName')]",
+      "type": "Microsoft.Insights/components",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "applicationId": "[variables('aiName')]"
+      }
+    },
+    {
+      "apiVersion": "[variables('omsApiVersion')]",
+      "location": "[parameters('computeLocation')]",
+      "name": "[variables('omsName')]",
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "properties": {
+        "sku": {
+          "name": "Free"
+        }
+      },
+      "resources": [
+        {
+          "apiVersion": "[variables('omsApiVersion')]",
+          "name": "[concat(variables('dgstorageName'), variables('omsName'))]",
+          "type": "storageinsightconfigs",
+          "dependsOn": [
+            "[concat('Microsoft.OperationalInsights/workspaces/', variables('omsName'))]",
+            "[concat('Microsoft.Storage/storageAccounts/', variables('dgstorageName'))]"
+          ],
+          "properties": {
+            "containers": [
+            ],
+            "tables": [
+              "WADServiceFabric*EventTable",
+              "WADWindowsEventLogsTable",
+              "WADETWEventTable"
+            ],
+            "storageAccount": {
+              "id": "[resourceId('Microsoft.Storage/storageaccounts/', variables('dgstorageName'))]",
+              "key": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('dgstorageName')), variables('storageApiVersion')).keys[0].value]"   
+            }
+          }
+        },
+        {
+          "apiVersion": "[variables('omsDataSourceVersion')]",
+          "name": "System",
+          "type": "datasources",
+          "dependsOn": [
+            "[concat('Microsoft.OperationalInsights/workspaces/', variables('omsName'))]"
+          ],
+          "kind": "WindowsEvent",
+          "properties": {
+            "eventLogName": "System",
+            "eventTypes": [
+              {
+                "eventType": "Error"
+              },
+              {
+                "eventType": "Warning"
+              },
+              {
+                "eventType": "Information"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "apiVersion": "2019-03-01",
+      "type": "Microsoft.ServiceFabric/clusters",
+      "name": "[parameters('clusterName')]",
+      "location": "[parameters('computeLocation')]",
+      "dependsOn": [
+        "[concat('Microsoft.Storage/storageAccounts/', variables('sfstorageName'))]"
+      ],
+      "properties": {
+        "addonFeatures": [
+          "DnsService",
+          "RepairManager",
+          "BackupRestoreService"
+        ],
+        "certificate": {
+          "thumbprint": "[parameters('certificateThumbprint')]",
+          "x509StoreName": "[parameters('certificateStoreValue')]"
+        },
+        "clientCertificateCommonNames": [
+        ],
+        "clientCertificateThumbprints": [
+        ],
+        "clusterCodeVersion": "[parameters('clusterVersion')]",
+        "clusterState": "Default",
+        "diagnosticsStorageAccountConfig": {
+          "blobEndpoint": "[reference(concat('Microsoft.Storage/storageAccounts/', variables('sfstorageName')), variables('storageApiVersion')).primaryEndpoints.blob]",
+          "protectedAccountKeyName": "StorageAccountKey1",
+          "queueEndpoint": "[reference(concat('Microsoft.Storage/storageAccounts/', variables('sfstorageName')), variables('storageApiVersion')).primaryEndpoints.queue]",
+          "storageAccountName": "[variables('sfstorageName')]",
+          "tableEndpoint": "[reference(concat('Microsoft.Storage/storageAccounts/', variables('sfstorageName')), variables('storageApiVersion')).primaryEndpoints.table]"
+        },
+        "fabricSettings": [
+          {
+            "parameters": [
+              {
+                "name": "ClusterProtectionLevel",
+                "value": "[parameters('clusterProtectionLevel')]"
+              }
+            ],
+            "name": "Security"
+          },
+          {
+            "name": "BackupRestoreService",
+            "parameters":  [{
+                "name": "SecretEncryptionCertThumbprint",
+                "value": "[parameters('certificateThumbprint')]"
+            }]
+          }
+        ],
+        "managementEndpoint": "[concat('https://',reference(concat(variables('lbIpName'),'-','0')).dnsSettings.fqdn,':',parameters('nt0fabricHttpGatewayPort'))]",
+        "nodeTypes": [
+          {
+            "name": "[parameters('vmNodeType0Name')]",
+            "applicationPorts": {
+              "endPort": "[parameters('nt0applicationEndPort')]",
+              "startPort": "[parameters('nt0applicationStartPort')]"
+            },
+            "clientConnectionEndpointPort": "[parameters('nt0fabricTcpGatewayPort')]",
+            "durabilityLevel": "Silver",
+            "ephemeralPorts": {
+              "endPort": "[parameters('nt0ephemeralEndPort')]",
+              "startPort": "[parameters('nt0ephemeralStartPort')]"
+            },
+            "httpGatewayEndpointPort": "[parameters('nt0fabricHttpGatewayPort')]",
+            "reverseProxyEndpointPort": "[parameters('nt0reverseProxyEndpointPort')]",
+            "isPrimary": true,
+            "vmInstanceCount": "[parameters('nt0InstanceCount')]"
+          }
+        ],
+        "provisioningState": "Default",
+        "reliabilityLevel": "Silver",
+        "upgradeDescription": {
+          "forceRestart": false,
+          "upgradeReplicaSetCheckTimeout": "10675199.02:48:05.4775807",
+          "healthCheckWaitDuration": "00:05:00",
+          "healthCheckStableDuration": "00:05:00",
+          "healthCheckRetryTimeout": "00:15:00",
+          "upgradeTimeout": "00:50:00",
+          "upgradeDomainTimeout": "00:25:00",
+          "healthPolicy": {
+            "maxPercentUnhealthyNodes": 40,
+            "maxPercentUnhealthyApplications": 40
+          },
+          "deltaHealthPolicy": {
+            "maxPercentDeltaUnhealthyNodes": 0,
+            "maxPercentUpgradeDomainDeltaUnhealthyNodes": 0,
+            "maxPercentDeltaUnhealthyApplications": 0,
+            "applicationDeltaHealthPolicies": {
+              "fabric:/System": {
+                "defaultServiceTypeDeltaHealthPolicy": {
+                  "maxPercentDeltaUnhealthyServices": 0
+                }
+              }
+            }
+          }
+        },
+        "upgradeMode": "Manual",
+        "vmImage": "Windows"
+      },
+      "tags": {
+        "resourceType": "Service Fabric",
+        "clusterName": "[parameters('clusterName')]"
+      }
+    },
+    {
+      "apiVersion": "2017-06-01",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[concat(parameters('subnet0Name'), '-nsg')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "NRMS-Rule-101",
+            "properties": {
+              "provisioningState": "Succeeded",
+              "description": "Created by Azure Core Security managed policy, rule can be deleted but do not change source ips, please see aka.ms/cainsgpolicy",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "22",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 101,
+              "direction": "Inbound",
+              "sourcePortRanges": [],
+              "destinationPortRanges": [],
+              "sourceAddressPrefixes": [
+                "13.70.105.50",
+                "13.71.184.74",
+                "13.75.218.172",
+                "13.78.19.235",
+                "23.100.0.135",
+                "23.101.152.95",
+                "40.70.58.221",
+                "40.83.178.242",
+                "40.85.223.25",
+                "40.118.174.12",
+                "51.140.203.27",
+                "51.140.204.4",
+                "52.187.0.85",
+                "52.187.145.107",
+                "52.232.19.246",
+                "52.246.160.72",
+                "104.211.89.81",
+                "104.211.101.14"
+              ],
+              "destinationAddressPrefixes": []
+            }
+          },
+          {
+            "name": "NRMS-Rule-102",
+            "properties": {
+              "provisioningState": "Succeeded",
+              "description": "Created by Azure Core Security managed policy, rule can be deleted but do not change source ips, please see aka.ms/cainsgpolicy",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 102,
+              "direction": "Inbound",
+              "sourcePortRanges": [],
+              "destinationPortRanges": [],
+              "sourceAddressPrefixes": [
+                "8.39.53.12/32",
+                "20.42.25.133/32",
+                "40.90.6.0/24",
+                "40.91.77.216/32",
+                "40.91.93.196/32",
+                "40.91.95.146/32",
+                "40.91.114.244/32",
+                "40.91.115.44/32",
+                "52.151.243.229/32",
+                "52.188.221.200/32",
+                "65.54.12.0/25",
+                "65.54.13.0/24",
+                "65.55.188.0/24",
+                "65.113.36.85/32",
+                "66.119.150.128/25",
+                "70.42.230.0/23",
+                "91.225.250.8/32",
+                "94.245.87.0/24",
+                "104.44.112.0/24",
+                "131.107.147.0/24",
+                "131.107.159.0/24",
+                "131.107.160.0/24",
+                "131.107.174.0/24",
+                "144.2.236.0/25",
+                "144.2.237.0/25",
+                "144.2.238.0/25",
+                "144.2.239.0/25",
+                "157.58.30.0/23",
+                "157.58.35.0/26",
+                "157.58.192.0/19",
+                "167.220.0.0/23",
+                "167.220.2.0/24",
+                "167.220.24.0/22",
+                "167.220.56.0/21",
+                "167.220.64.0/19",
+                "167.220.98.0/23",
+                "167.220.100.0/22",
+                "167.220.104.0/23",
+                "167.220.107.0/24",
+                "167.220.148.0/23",
+                "167.220.152.0/24",
+                "167.220.196.0/23",
+                "167.220.226.0/23",
+                "167.220.232.0/22",
+                "167.220.237.128/27",
+                "167.220.238.0/24",
+                "167.220.242.0/24",
+                "167.220.248.32/27",
+                "167.220.248.96/27",
+                "167.220.253.128/29",
+                "167.220.255.0/25",
+                "167.220.255.128/26",
+                "191.234.97.0/25",
+                "194.69.98.0/23",
+                "194.69.102.0/23",
+                "194.69.104.0/25",
+                "194.69.104.128/26",
+                "194.69.105.32/27",
+                "194.69.105.64/27",
+                "194.69.126.128/27",
+                "194.69.126.224/27",
+                "194.69.127.0/27",
+                "194.69.127.96/27",
+                "194.69.127.144/29",
+                "202.4.184.29/32",
+                "207.46.216.0/23",
+                "216.52.20.0/25",
+                "216.52.21.0/25",
+                "216.52.22.0/25",
+                "216.52.23.0/25",
+                "217.29.149.150/32"
+              ],
+              "destinationAddressPrefixes": []
+            }
+          },
+          {
+            "name": "NRMS-Rule-104",
+            "properties": {
+              "provisioningState": "Succeeded",
+              "description": "Created by Azure Core Security managed policy, rule can be deleted but do not change source ips, please see aka.ms/cainsgpolicy",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "CorpNetSaw",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 104,
+              "direction": "Inbound",
+              "sourcePortRanges": [],
+              "destinationPortRanges": [],
+              "sourceAddressPrefixes": [],
+              "destinationAddressPrefixes": []
+            }
+          },
+          {
+            "name": "NRMS-Rule-105",
+            "properties": {
+              "provisioningState": "Succeeded",
+              "description": "DO NOT DELETE - Will result in ICM Sev 2 - Azure Core Security, see aka.ms/cainsgpolicy",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "sourceAddressPrefix": "Internet",
+              "destinationAddressPrefix": "*",
+              "access": "Deny",
+              "priority": 105,
+              "direction": "Inbound",
+              "sourcePortRanges": [],
+              "destinationPortRanges": [
+                "1433",
+                "1434",
+                "3306",
+                "4333",
+                "5432",
+                "6379",
+                "7000",
+                "7001",
+                "7199",
+                "9042",
+                "9160",
+                "9300",
+                "16379",
+                "26379",
+                "27017"
+              ],
+              "sourceAddressPrefixes": [],
+              "destinationAddressPrefixes": []
+            }
+          },
+          {
+            "name": "NRMS-Rule-106",
+            "properties": {
+              "provisioningState": "Succeeded",
+              "description": "DO NOT DELETE - Will result in ICM Sev 2 - Azure Core Security, see aka.ms/cainsgpolicy",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "sourceAddressPrefix": "Internet",
+              "destinationAddressPrefix": "*",
+              "access": "Deny",
+              "priority": 106,
+              "direction": "Inbound",
+              "sourcePortRanges": [],
+              "destinationPortRanges": [
+                "22",
+                "3389"
+              ],
+              "sourceAddressPrefixes": [],
+              "destinationAddressPrefixes": []
+            }
+          },
+          {
+            "name": "NRMS-Rule-107",
+            "properties": {
+              "provisioningState": "Succeeded",
+              "description": "DO NOT DELETE - Will result in ICM Sev 2 - Azure Core Security, see aka.ms/cainsgpolicy",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "sourceAddressPrefix": "Internet",
+              "destinationAddressPrefix": "*",
+              "access": "Deny",
+              "priority": 107,
+              "direction": "Inbound",
+              "sourcePortRanges": [],
+              "destinationPortRanges": [
+                "23",
+                "135",
+                "445",
+                "5985",
+                "5986"
+              ],
+              "sourceAddressPrefixes": [],
+              "destinationAddressPrefixes": []
+            }
+          },
+          {
+            "name": "NRMS-Rule-108",
+            "properties": {
+              "provisioningState": "Succeeded",
+              "description": "DO NOT DELETE - Will result in ICM Sev 2 - Azure Core Security, see aka.ms/cainsgpolicy",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "sourceAddressPrefix": "Internet",
+              "destinationAddressPrefix": "*",
+              "access": "Deny",
+              "priority": 108,
+              "direction": "Inbound",
+              "sourcePortRanges": [],
+              "destinationPortRanges": [
+                "13",
+                "17",
+                "19",
+                "53",
+                "69",
+                "111",
+                "123",
+                "512",
+                "514",
+                "593",
+                "873",
+                "1900",
+                "5353",
+                "11211"
+              ],
+              "sourceAddressPrefixes": [],
+              "destinationAddressPrefixes": []
+            }
+          },
+          {
+            "name": "NRMS-Rule-109",
+            "properties": {
+              "provisioningState": "Succeeded",
+              "description": "DO NOT DELETE - Will result in ICM Sev 2 - Azure Core Security, see aka.ms/cainsgpolicy",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "sourceAddressPrefix": "Internet",
+              "destinationAddressPrefix": "*",
+              "access": "Deny",
+              "priority": 109,
+              "direction": "Inbound",
+              "sourcePortRanges": [],
+              "destinationPortRanges": [
+                "119",
+                "137",
+                "138",
+                "139",
+                "161",
+                "162",
+                "389",
+                "636",
+                "2049",
+                "2301",
+                "2381",
+                "3268",
+                "5800",
+                "5900"
+              ],
+              "sourceAddressPrefixes": [],
+              "destinationAddressPrefixes": []
+            }
+          },
+          {
+            "name": "Rule-Corpnet-3389-530",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "167.220.148.0/23",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 530,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Rule-Corpnet-3389-531",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "131.107.147.0/24",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 531,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Rule-Corpnet-3389-532",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "131.107.159.0/24",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 532,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Rule-Corpnet-3389-533",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "131.107.160.0/24",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 533,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Rule-Corpnet-3389-534",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "131.107.174.0/24",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 534,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Rule-Corpnet-3389-535",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "167.220.24.0/24",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 535,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Rule-Corpnet-3389-536",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "167.220.26.0/24",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 536,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Rule-Corpnet-3389-537",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "167.220.238.0/27",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 537,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Rule-Corpnet-3389-538",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "167.220.238.128/27",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 538,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Rule-Corpnet-3389-539",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "167.220.238.192/27",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 539,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Rule-Corpnet-3389-540",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "167.220.238.64/27",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 540,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Rule-Corpnet-3389-541",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "167.220.232.0/23",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 541,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Rule-Corpnet-3389-542",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "167.220.255.0/25",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 542,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Rule-Corpnet-3389-543",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "167.220.242.0/27",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 543,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Rule-Corpnet-3389-544",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "167.220.242.128/27",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 544,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Rule-Corpnet-3389-545",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "167.220.242.192/27",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 545,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Rule-Corpnet-3389-546",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "167.220.242.64/27",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 546,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Rule-Corpnet-3389-547",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "94.245.87.0/24",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 547,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Rule-Corpnet-3389-548",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "167.220.196.0/23",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 548,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Rule-Corpnet-3389-549",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "194.69.104.0/25",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 549,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Rule-Corpnet-3389-550",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "191.234.97.0/26",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 550,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Rule-Corpnet-3389-551",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "167.220.0.0/23",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 551,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Rule-Corpnet-3389-552",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "167.220.2.0/24",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 552,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Rule-Corpnet-3389-553",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "207.68.190.32/27",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 553,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Rule-Corpnet-3389-554",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "13.106.78.32/27",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 554,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Rule-Corpnet-3389-555",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "10.254.32.0/20",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 555,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Rule-Corpnet-3389-556",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "10.97.136.0/22",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 556,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Rule-Corpnet-3389-557",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "13.106.174.32/27",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 557,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Rule-Corpnet-3389-558",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "13.106.4.96/27",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 558,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "SFX",
+            "properties": {
+              "access": "Allow",
+              "sourceAddressPrefix": "Internet",
+              "sourcePortRange": "*",
+              "sourcePortRanges": [],
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "19080",
+              "destinationPortRanges": [],
+              "direction": "Inbound",
+              "priority": 3900,
+              "protocol": "Tcp",
+              "description": ""
+            }
+          },
+          {
+            "name": "Client",
+            "properties": {
+              "access": "Allow",
+              "sourceAddressPrefix": "Internet",
+              "sourcePortRange": "*",
+              "sourcePortRanges": [],
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "19000",
+              "destinationPortRanges": [],
+              "direction": "Inbound",
+              "priority": 3910,
+              "protocol": "Tcp",
+              "description": ""
+            }
+          },
+          {
+            "name": "Cluster",
+            "properties": {
+              "access": "Allow",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "sourcePortRange": "*",
+              "sourcePortRanges": [],
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "1025-1027",
+              "destinationPortRanges": [],
+              "direction": "Inbound",
+              "priority": 3920,
+              "protocol": "Tcp",
+              "description": ""
+            }
+          },
+          {
+            "name": "Ephemeral",
+            "properties": {
+              "access": "Allow",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "sourcePortRange": "*",
+              "sourcePortRanges": [],
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "49152-65534",
+              "destinationPortRanges": [],
+              "direction": "Inbound",
+              "priority": 3930,
+              "protocol": "Tcp",
+              "description": ""
+            }
+          },
+          {
+            "name": "Application",
+            "properties": {
+              "access": "Allow",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "sourcePortRange": "*",
+              "sourcePortRanges": [],
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "2000-3000",
+              "destinationPortRanges": [],
+              "direction": "Inbound",
+              "priority": 3940,
+              "protocol": "Tcp",
+              "description": ""
+            }
+          },
+          {
+            "name": "SMB",
+            "properties": {
+              "access": "Allow",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "sourcePortRange": "*",
+              "sourcePortRanges": [],
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "445",
+              "destinationPortRanges": [],
+              "direction": "Inbound",
+              "priority": 3950,
+              "protocol": "Tcp",
+              "description": ""
+            }
+          },
+          {
+            "name": "AzureLoadBalancer",
+            "properties": {
+              "access": "Allow",
+              "sourceAddressPrefix": "AzureLoadBalancer",
+              "sourcePortRange": "*",
+              "sourcePortRanges": [],
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "*",
+              "destinationPortRanges": [],
+              "direction": "Inbound",
+              "priority": 3990,
+              "protocol": "Tcp",
+              "description": ""
+            }
+          },
+          {
+            "name": "Network",
+            "properties": {
+              "access": "Allow",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*",
+              "sourcePortRanges": [],
+              "destinationAddressPrefix": "VirtualNetwork",
+              "destinationPortRange": "*",
+              "destinationPortRanges": [],
+              "direction": "Outbound",
+              "priority": 3900,
+              "protocol": "Tcp",
+              "description": ""
+            }
+          },
+          {
+            "name": "ResourceProvider",
+            "properties": {
+              "access": "Allow",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*",
+              "sourcePortRanges": [],
+              "destinationAddressPrefix": "ServiceFabric",
+              "destinationPortRange": "443",
+              "destinationPortRanges": [],
+              "direction": "Outbound",
+              "priority": 3910,
+              "protocol": "Tcp",
+              "description": ""
+            }
+          },
+          {
+            "name": "Upgrade",
+            "properties": {
+              "access": "Allow",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*",
+              "sourcePortRanges": [],
+              "destinationAddressPrefix": "Internet",
+              "destinationPortRange": "",
+              "destinationPortRanges": ["80", "443"],
+              "direction": "Outbound",
+              "priority": 3920,
+              "protocol": "Tcp",
+              "description": ""
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {
+    "clusterProperties": {
+      "value": "[reference(parameters('clusterName'))]",
+      "type": "object"
+    }
+  }
+}

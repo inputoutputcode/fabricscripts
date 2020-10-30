@@ -1,5 +1,5 @@
 ## Declare parameters
-$armTemplate = ".\Cluster-ExternalRoot.json"
+$armTemplate = ".\Cluster-ExternalRootWithOsImageUgrade.json"
 $currentExecutionPath = "D:\Code\FabricMonkey\FabricScripts\Create-GenericCluster\OffCapability"
 
 ## Fixed parameters
@@ -8,6 +8,7 @@ $azureRegion = "westus"
 $localCertificatePath = "D:\Certificates\"
 $machineAdminUser = "Christian"
 $machineAdminPass = "nZ549Ux2MnW6srTvOZsq"
+$clusterVersion = "7.1.409.9590"
 
 ## Set environment
 Try {
@@ -43,27 +44,13 @@ $clusterCertificate.CertificateURL
 
 ## Create storage account
 $containerName = "extensionscripts"
-$fileShareName = "sfdatapath"
-$extensionMountScriptFileName = "Mount-FileShare.ps1"
-$extensionMountScriptFilePath = ".\Mount-FileShare.ps1"
-$extensionImpersonateScriptFileName = "Impersonate-Script.ps1"
-$extensionImpersonateScriptFilePath = ".\Impersonate-Script.ps1"
+$extensionMountScriptFileName = "Mount-ManagedDisk.ps1"
+$extensionMountScriptFilePath = ".\Mount-ManagedDisk.ps1"
 $scriptStorageAccount = New-AzStorageAccount -ResourceGroupName $resourceGroup -Name $scriptStorageName -Location $azureRegion -SkuName Standard_LRS -Kind StorageV2
 $scriptStorageAccountContext = $scriptStorageAccount.Context
 New-AzStorageContainer -Name $containerName -Context $scriptStorageAccountContext -Permission blob
 $uploadedBlobContent1 = Set-AzStorageBlobContent -File $extensionMountScriptFileName -Container $containerName -Blob $extensionMountScriptFilePath -Context $scriptStorageAccountContext 
-$uploadedBlobContent2 = Set-AzStorageBlobContent -File $extensionImpersonateScriptFilePath -Container $containerName -Blob $extensionImpersonateScriptFileName -Context $scriptStorageAccountContext 
-
-$fileShareStorageAccount = New-AzStorageAccount -ResourceGroupName $resourceGroup -Name $fileShareStorageName -Location $azureRegion -SkuName Premium_LRS -Kind FileStorage
-$fileShareStorageAccountContext = $fileShareStorageAccount.Context
-New-AzRmStorageShare -ResourceGroupName $resourceGroup -StorageAccountName $fileShareStorageName -Name $shareName -QuotaGiB 1024
-$fileShare = Get-AzStorageShare -Context $fileShareStorageAccountContext | Where-Object { $_.Name -eq $shareName -and $_.IsSnapshot -eq $false }
-
 $extensionMountScriptFileUri = $uploadedBlobContent1.ICloudBlob.uri.AbsoluteUri
-$extensionImpersonateScriptFileUri =  $uploadedBlobContent2.ICloudBlob.uri.AbsoluteUri
-$fileShareStorageAccountName = $fileShareStorageName
-$fileShareStorageAccountKey = (Get-AzStorageAccountKey -ResourceGroupName $resourceGroup -Name $fileShareStorageName)[0].Value
-$fileShareEndpoint = $fileShare.StorageUri.PrimaryUri.Host
 
 ## Deploy Azure Service Fabric Cluster
 $armParameter = @{}
@@ -75,12 +62,7 @@ $armParameter.Add("adminPassword", $machineAdminPass)
 $armParameter.Add("sourceVaultValue", $clusterCertificate.SourceVault)
 $armParameter.Add("certificateUrlValue", $clusterCertificate.CertificateURL)
 $armParameter.Add("certificateThumbprint", $clusterCertificate.CertificateThumbprint)
-$armParameter.Add("extensionImpersonateScriptFileUri", $extensionImpersonateScriptFileUri)
 $armParameter.Add("extensionMountScriptFileUri", $extensionMountScriptFileUri)
-$armParameter.Add("fileShareStorageAccountName", $fileShareStorageAccountName)
-$armParameter.Add("fileShareStorageAccountKey", $fileShareStorageAccountKey)
-$armParameter.Add("fileShareEndpoint", $fileShareEndpoint)
-$armParameter.Add("fileShareName", $fileShareName)
 
 Test-AzResourceGroupDeployment -ResourceGroupName $resourceGroup -TemplateFile $armTemplate -TemplateParameterObject $armParameter -Verbose -ErrorAction Stop
 
@@ -97,3 +79,13 @@ $output = "Deployment Name: $deploymentName; Thumbprint: " + $clusterCertificate
 Write-Host $output
 $output | Out-File -FilePath "C:\Temp\$deploymentName.txt"
 
+$ConnectArgs = @{  
+        ConnectionEndpoint = $serviceFabricClusterDns + ':19000';  
+        X509Credential = $True;  
+        StoreLocation = 'CurrentUser';  
+        StoreName = "MY";  
+        ServerCommonName = $serviceFabricClusterDns;  
+        FindType = 'FindByThumbprint';  
+        FindValue = $clusterCertificate.CertificateThumbprint   
+    }
+Connect-ServiceFabricCluster @ConnectArgs

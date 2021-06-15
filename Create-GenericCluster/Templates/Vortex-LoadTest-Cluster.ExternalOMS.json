@@ -333,7 +333,7 @@
         "lbNatPoolID1": "[concat(variables('lbID1'),'/inboundNatPools/LoadBalancerBEAddressNatPool')]",
         "vmStorageAccountName1": "[toLower(concat(uniqueString(resourceGroup().id), '1', '1' ))]",
         "omsSolutionNameServiceFabric": "[concat(parameters('omsWorkspaceName'), '-ServiceFabric')]",
-        "omsSolutionServiceFabric": "ServiceFabric"
+        "omsSolutionServiceFabric": "ServiceFabric",
         "omsSolutionNameContainers": "[concat(parameters('omsWorkspaceName'), '-Containers')]",
         "omsSolutionContainers": "Containers"
     },

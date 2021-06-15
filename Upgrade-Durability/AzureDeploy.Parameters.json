@@ -1,0 +1,60 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "clusterLocation": {
+      "value": "westus"
+    },
+    "clusterName": {
+      "value": "chrpap-duraupgd"
+    },
+    "adminUserName": {
+      "value": "Christian"
+    },
+    "adminPassword": {
+      "value": "Corp123!Corp123!"
+    },
+    "vmImagePublisher": {
+      "value": "MicrosoftWindowsServer"
+    },
+    "vmImageOffer": {
+      "value": "WindowsServer"
+    },
+    "vmImageSku": {
+      "value": "2019-Datacenter"
+    },
+    "vmImageVersion": {
+      "value": "latest"
+    },
+    "loadBalancedAppPort1": {
+      "value": 80
+    },
+    "loadBalancedAppPort2": {
+      "value": 443
+    },
+    "clusterProtectionLevel": {
+      "value": "EncryptAndSign"
+    },
+    "certificateStoreValue": {
+      "value": "My"
+    },
+    "certificateThumbprint": {
+      "value": "0676D91247120E2FD0DF3BE59897EF336882BA39"
+    },
+    "sourceVaultValue": {
+      "value": "/subscriptions/13ad2c84-84fa-4798-ad71-e70c07af873f/resourceGroups/chrpap-duraupgd/providers/Microsoft.KeyVault/vaults/chrpap-duraupgd-kv"
+    },
+    "certificateUrlValue": {
+      "value": "https://chrpap-duraupgd-kv.vault.azure.net:443/secrets/chrpap-duraupgd-cert/83c072dc78f243cca1454da3acd72992"
+    },
+    "storageAccountType": {
+      "value": "Standard_LRS"
+    },
+    "supportLogStorageAccountType": {
+      "value": "Standard_LRS"
+    },
+    "applicationDiagnosticsStorageAccountType": {
+      "value": "Standard_LRS"
+    }
+  }
+}

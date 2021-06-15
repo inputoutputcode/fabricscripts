@@ -173,12 +173,13 @@
     }
   },
   "variables": {
-    "sfClusterApiVersion": "2020-03-01",
-    "vmssApiVersion": "2020-06-01",
-    "lbApiVersion": "2020-06-01",
-    "vNetApiVersion": "2020-06-01",
-    "storageApiVersion": "2019-06-01",
-    "publicIPApiVersion": "2020-06-01",
+    "sfClusterApiVersion": "2017-10-01",
+    "vmssApiVersion": "2017-10-01",
+    "lbApiVersion": "2017-10-01",
+    "vNetApiVersion": "2017-10-01",
+    "storageApiVersion": "2017-10-01",
+    "publicIPApiVersion": "2017-10-01",
+    "networkSecurityGroupsApiVersion": "2017-10-01",
 
     "customWebAppPort": "8947",
 
@@ -618,7 +619,7 @@
       }
     },
     {
-      "apiVersion": "2017-06-01",
+      "apiVersion": "[variables('networkSecurityGroupsApiVersion')]",
       "type": "Microsoft.Network/networkSecurityGroups",
       "name": "[concat(parameters('subnet0Name'), '-nsg')]",
       "location": "[resourceGroup().location]",

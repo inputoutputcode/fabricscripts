@@ -13,7 +13,7 @@
     },
     "clusterVersion": {
       "type": "string",
-      "defaultValue": "6.4.617.9590"
+      "defaultValue": "8.0.514.9590"
     },
     "nt0applicationStartPort": {
       "type": "int",
@@ -137,7 +137,7 @@
       "type": "string",
       "defaultValue": "false"
     },
-
+  // Get-AzureRmVMImageSku -Location eastus -PublisherName MicrosoftWindowsServer -Offer WindowsServer
     "vmImagePublisher": {
       "type": "string",
       "defaultValue": "MicrosoftWindowsServer"
@@ -148,8 +148,9 @@
     },
     "vmImageSku": {
       "type": "string",
-      "defaultValue": "2016-Datacenter-with-Containers"
+      "defaultValue": "2019-Datacenter"
     },
+    //az vm image list --location "westus" --publisher "MicrosoftWindowsServer" --offer "WindowsServer" --sku "2019-Datacenter-GS" --all
     "vmImageVersion": {
       "type": "string",
       "defaultValue": "latest"
@@ -241,15 +242,19 @@
     },
     "vmNodeType0Size": {
       "type": "string",
-      "defaultValue": "Standard_D3_v2"
+      "defaultValue": "Standard_D2_v2"
     }
   },
   "variables": {
-    "vmssApiVersion": "2018-10-01",
-    "lbApiVersion": "2018-08-01",
+    "sfApiVersion": "2019-03-01",
+    "vmssApiVersion": "2019-03-01",
+    "lbApiVersion": "2019-09-01",
     "vNetApiVersion": "2018-08-01",
     "storageApiVersion": "2018-07-01",
     "publicIPApiVersion": "2018-08-01",
+    "omsApiVersion": "2017-04-26-preview",
+    "omsDataSourceVersion": "2015-11-01-preview",
+    "aiApiVersion": "2020-02-02-preview",
 
     "customWebAppPort": "8947",
 
@@ -379,12 +384,12 @@
       "type": "Microsoft.Network/loadBalancers",
       "name": "[variables('lbName0')]",
       "location": "[parameters('computeLocation')]",
-      "sku": {
-        "name": "Standard"
-      },
       "dependsOn": [
         "[concat('Microsoft.Network/publicIPAddresses/',concat(variables('lbIpName'),'-','0'))]"
       ],
+            "sku": {
+        "name": "Standard"
+      },
       "properties": {
         "frontendIPConfigurations": [
           {
@@ -782,7 +787,17 @@
         "overprovision": "[parameters('overProvision')]",
         "singlePlacementGroup": true,
         "upgradePolicy": {
-          "mode": "Automatic"
+          "mode": "Automatic",
+          "rollingUpgradePolicy": {
+            "maxBatchInstancePercent": 20,
+            "maxUnhealthyInstancePercent": 20,
+            "maxUnhealthyUpgradedInstancePercent": 20,
+            "pauseTimeBetweenBatches": "PT0S"
+          },
+          "automaticOSUpgradePolicy": {
+            "enableAutomaticOSUpgrade": false,
+            "disableAutomaticRollback": true
+          }
         },
         "virtualMachineProfile": {
           "extensionProfile": {
@@ -793,8 +808,8 @@
                   "type": "ServiceFabricNode",
                   "autoUpgradeMinorVersion": true,
                   "protectedSettings": {
-                    "StorageAccountKey1": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('sfstorageName')),'2015-05-01-preview').key1]",
-                    "StorageAccountKey2": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('sfstorageName')),'2015-05-01-preview').key2]"
+                    "StorageAccountKey1": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('sfstorageName')), variables('storageApiVersion')).keys[0].value]",
+                    "StorageAccountKey2": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('sfstorageName')), variables('storageApiVersion')).keys[1].value]"
                   },
                   "publisher": "Microsoft.Azure.ServiceFabric",
                   "settings": {
@@ -820,10 +835,10 @@
                   "typeHandlerVersion": "1.0",
                   "autoUpgradeMinorVersion": true,
                   "settings": {
-                    "workspaceId": "[reference(resourceId('Microsoft.OperationalInsights/workspaces/', variables('omsName')), '2015-11-01-preview').customerId]"
+                    "workspaceId": "[reference(resourceId('Microsoft.OperationalInsights/workspaces/', variables('omsName')), variables('omsApiVersion')).customerId]"
                   },
                   "protectedSettings": {
-                    "workspaceKey": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces/', variables('omsName')), '2015-11-01-preview').primarySharedKey]"
+                    "workspaceKey": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces/', variables('omsName')), variables('omsApiVersion')).primarySharedKey]"
                   }
                 }
               },
@@ -834,7 +849,7 @@
                   "autoUpgradeMinorVersion": true,
                   "protectedSettings": {
                     "storageAccountName": "[variables('dgstorageName')]",
-                    "storageAccountKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('dgstorageName')),'2015-05-01-preview').key1]",
+                    "storageAccountKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('dgstorageName')), variables('storageApiVersion')).keys[0].value]",
                     "storageAccountEndPoint": "https://core.windows.net/"
                   },
                   "publisher": "Microsoft.Azure.Diagnostics",
@@ -1009,6 +1024,9 @@
             ]
           },
           "osProfile": {
+             "windowsConfiguration": { 
+                "enableAutomaticUpdates": false 
+            },
             "adminPassword": "[parameters('adminPassword')]",
             "adminUsername": "[parameters('adminUsername')]",
             "computernamePrefix": "[parameters('vmNodeType0Name')]",
@@ -1054,7 +1072,7 @@
       }
     },
     {
-      "apiVersion": "2014-04-01",
+      "apiVersion": "[variables('aiApiVersion')]",
       "name": "[variables('aiName')]",
       "type": "Microsoft.Insights/components",
       "location": "[resourceGroup().location]",
@@ -1063,7 +1081,7 @@
       }
     },
     {
-      "apiVersion": "2015-11-01-preview",
+      "apiVersion": "[variables('omsApiVersion')]",
       "location": "[parameters('computeLocation')]",
       "name": "[variables('omsName')]",
       "type": "Microsoft.OperationalInsights/workspaces",
@@ -1074,7 +1092,7 @@
       },
       "resources": [
         {
-          "apiVersion": "2015-11-01-preview",
+          "apiVersion": "[variables('omsApiVersion')]",
           "name": "[concat(variables('dgstorageName'), variables('omsName'))]",
           "type": "storageinsightconfigs",
           "dependsOn": [
@@ -1091,12 +1109,12 @@
             ],
             "storageAccount": {
               "id": "[resourceId('Microsoft.Storage/storageaccounts/', variables('dgstorageName'))]",
-              "key": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('dgstorageName')),'2015-06-15').key1]"
+              "key": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('dgstorageName')), variables('storageApiVersion')).keys[0].value]"
             }
           }
         },
         {
-          "apiVersion": "2015-11-01-preview",
+          "apiVersion": "[variables('omsDataSourceVersion')]",
           "name": "System",
           "type": "datasources",
           "dependsOn": [
@@ -1121,7 +1139,7 @@
       ]
     },
     {
-      "apiVersion": "2018-02-01",
+      "apiVersion": "[variables('sfApiVersion')]",
       "type": "Microsoft.ServiceFabric/clusters",
       "name": "[parameters('clusterName')]",
       "location": "[parameters('computeLocation')]",
@@ -1141,7 +1159,7 @@
         ],
         "clientCertificateThumbprints": [
         ],
-        //"clusterCodeVersion": "[parameters('clusterVersion')]",
+        "clusterCodeVersion": "[parameters('clusterVersion')]",
         "clusterState": "Default",
         "diagnosticsStorageAccountConfig": {
           "blobEndpoint": "[reference(concat('Microsoft.Storage/storageAccounts/', variables('sfstorageName')), variables('storageApiVersion')).primaryEndpoints.blob]",

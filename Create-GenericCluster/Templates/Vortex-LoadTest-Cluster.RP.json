@@ -11,7 +11,7 @@
         },
         "clusterVersion": {
             "type": "string",
-            "defaultValue": "8.0.514.9590"
+            "defaultValue": "5.7.221.9494"
         },
         "nt0applicationStartPort": {
             "type": "int",
@@ -36,6 +36,10 @@
         "nt0fabricHttpGatewayPort": {
             "type": "int",
             "defaultValue": 19080
+        },
+        "nt0reverseProxyEndpointPort": {
+            "type": "int",
+            "defaultValue": 19081
         },
         "subnet0Name": {
             "type": "string",
@@ -68,6 +72,10 @@
         "nt1fabricHttpGatewayPort": {
             "type": "int",
             "defaultValue": 19080
+        },
+        "nt1reverseProxyEndpointPort": {
+            "type": "int",
+            "defaultValue": 19081
         },
         "subnet1Name": {
             "type": "string",
@@ -111,7 +119,7 @@
             "type": "string",
             "defaultValue": "10.0.0.0/16"
         },
-        "clusterName": {
+        "dnsName": {
             "type": "string"
         },
         "nicName": {
@@ -140,7 +148,7 @@
         },
         "vmImageSku": {
             "type": "string",
-            "defaultValue": "2019-Datacenter-GS"
+            "defaultValue": "2012-R2-Datacenter"
         },
         "vmImageVersion": {
             "type": "string",
@@ -181,6 +189,28 @@
             }
         },
         "certificateUrlValue": {
+            "type": "string",
+            "metadata": {
+                "description": "Refers to the location URL in your key vault where the certificate was uploaded, it is should be in the format of https://<name of the vault>.vault.azure.net:443/secrets/<exact location>"
+            }
+        },
+        "reverseProxyCertificateStoreValue": {
+            "type": "string",
+            "allowedValues": [
+                "My"
+            ],
+            "defaultValue": "My",
+            "metadata": {
+                "description": "The store name where the cert will be deployed in the virtual machine"
+            }
+        },
+        "reverseProxyCertificateThumbprint": {
+            "type": "string",
+            "metadata": {
+                "description": "Reverse proxy Certificate Thumbprint"
+            }
+        },
+        "reverseProxyCertificateUrlValue": {
             "type": "string",
             "metadata": {
                 "description": "Refers to the location URL in your key vault where the certificate was uploaded, it is should be in the format of https://<name of the vault>.vault.azure.net:443/secrets/<exact location>"
@@ -265,7 +295,16 @@
             "type": "string",
             "defaultValue": "Standard_D3_v2"
         },
+        "applicationInsightsKey": {
+            "type": "string"
+        },
         "omsWorkspaceName": {
+            "type": "string"
+        },
+        "omsResourceGroupName": {
+            "type": "string"
+        },
+        "subscriptionId": {
             "type": "string"
         }
     },
@@ -293,9 +332,9 @@
         "lbHttpProbeID1": "[concat(variables('lbID1'),'/probes/FabricHttpGatewayProbe')]",
         "lbNatPoolID1": "[concat(variables('lbID1'),'/inboundNatPools/LoadBalancerBEAddressNatPool')]",
         "vmStorageAccountName1": "[toLower(concat(uniqueString(resourceGroup().id), '1', '1' ))]",
-        "omsSolutionNameServiceFabric": "[concat(parameters('omsWorkspaceName'), '-servicefabric')]",
-        "omsSolutionServiceFabric": "ServiceFabric",
-        "omsSolutionNameContainers": "[concat(parameters('omsWorkspaceName'), '-containers')]",
+        "omsSolutionNameServiceFabric": "[concat(parameters('omsWorkspaceName'), '-ServiceFabric')]",
+        "omsSolutionServiceFabric": "ServiceFabric"
+        "omsSolutionNameContainers": "[concat(parameters('omsWorkspaceName'), '-Containers')]",
         "omsSolutionContainers": "Containers"
     },
     "resources": [
@@ -368,12 +407,9 @@
             "type": "Microsoft.Network/publicIPAddresses",
             "name": "[concat(parameters('lbIPName'),'-','0')]",
             "location": "[parameters('computeLocation')]",
-             "sku": {
-                "name": "Standard"
-            },
             "properties": {
                 "dnsSettings": {
-                    "domainNameLabel": "[parameters('clusterName')]"
+                    "domainNameLabel": "[parameters('dnsName')]"
                 },
                 "publicIPAllocationMethod": "Dynamic"
             },
@@ -387,9 +423,6 @@
             "type": "Microsoft.Network/loadBalancers",
             "name": "[concat('LB','-', parameters('clusterName'),'-',parameters('vmNodeType0Name'))]",
             "location": "[parameters('computeLocation')]",
-             "sku": {
-                "name": "Standard"
-            },
             "dependsOn": [
                 "[concat('Microsoft.Network/publicIPAddresses/',concat(parameters('lbIPName'),'-','0'))]"
             ],
@@ -554,6 +587,10 @@
                                         "durabilityLevel": "Bronze",
                                         "enableParallelJobs": true,
                                         "nicPrefixOverride": "[parameters('subnet0Prefix')]",
+                                        "reverseProxyCertificate": {
+                                            "thumbprint": "[parameters('reverseProxyCertificateThumbprint')]",
+                                            "x509StoreName": "[parameters('reverseProxyCertificateStoreValue')]"
+                                        },
                                         "certificate": {
                                             "thumbprint": "[parameters('certificateThumbprint')]",
                                             "x509StoreName": "[parameters('certificateStoreValue')]"
@@ -570,10 +607,10 @@
                                     "typeHandlerVersion": "1.0",
                                     "autoUpgradeMinorVersion": true,
                                     "settings": {
-                                        "workspaceId": "[reference(resourceId('Microsoft.OperationalInsights/workspaces/', parameters('omsWorkspaceName')), '2015-11-01-preview').customerId]"
+                                        "workspaceId": "[reference(resourceId(parameters('subscriptionId'), parameters('omsResourceGroupName'), 'Microsoft.OperationalInsights/workspaces/', parameters('omsWorkspaceName')), '2015-11-01-preview').customerId]"
                                     },
                                     "protectedSettings": {
-                                        "workspaceKey": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces/', parameters('omsWorkspaceName')), '2015-11-01-preview').primarySharedKey]"
+                                        "workspaceKey": "[listKeys(resourceId(parameters('subscriptionId'), parameters('omsResourceGroupName'), 'Microsoft.OperationalInsights/workspaces/', parameters('omsWorkspaceName')), '2015-11-01-preview').primarySharedKey]"
                                     }
                                 }
                             },
@@ -806,6 +843,10 @@
                                     {
                                         "certificateStore": "[parameters('certificateStoreValue')]",
                                         "certificateUrl": "[parameters('certificateUrlValue')]"
+                                    },
+                                    {
+                                        "certificateStore": "[parameters('reverseProxyCertificateStoreValue')]",
+                                        "certificateUrl": "[parameters('reverseProxyCertificateUrlValue')]"
                                     }
                                 ]
                             }
@@ -845,7 +886,7 @@
             "location": "[parameters('computeLocation')]",
             "properties": {
                 "dnsSettings": {
-                    "domainNameLabel": "[concat(parameters('clusterName'),'-','backend')]"
+                    "domainNameLabel": "[concat(parameters('dnsName'),'-','backend')]"
                 },
                 "publicIPAllocationMethod": "Dynamic"
             },
@@ -968,8 +1009,7 @@
                 "[concat('Microsoft.Network/virtualNetworks/', parameters('virtualNetworkName'))]",
                 "[concat('Microsoft.Network/loadBalancers/', concat('LB','-', parameters('clusterName'),'-',parameters('vmNodeType1Name')))]",
                 "[concat('Microsoft.Storage/storageAccounts/', parameters('supportLogStorageAccountName'))]",
-                "[concat('Microsoft.Storage/storageAccounts/', parameters('applicationDiagnosticsStorageAccountName'))]",
-                "[reference(resourceId('Microsoft.Insights/components', 'chrpapai'))]"
+                "[concat('Microsoft.Storage/storageAccounts/', parameters('applicationDiagnosticsStorageAccountName'))]"
             ],
             "properties": {
                 "overprovision": "[parameters('overProvision')]",
@@ -996,6 +1036,10 @@
                                         "durabilityLevel": "Bronze",
                                         "enableParallelJobs": true,
                                         "nicPrefixOverride": "[parameters('subnet1Prefix')]",
+                                        "reverseProxyCertificate": {
+                                            "thumbprint": "[parameters('reverseProxyCertificateThumbprint')]",
+                                            "x509StoreName": "[parameters('reverseProxyCertificateStoreValue')]"
+                                        },
                                         "certificate": {
                                             "thumbprint": "[parameters('certificateThumbprint')]",
                                             "x509StoreName": "[parameters('certificateStoreValue')]"
@@ -1012,10 +1056,10 @@
                                     "typeHandlerVersion": "1.0",
                                     "autoUpgradeMinorVersion": true,
                                     "settings": {
-                                        "workspaceId": "[reference(resourceId('Microsoft.OperationalInsights/workspaces/', parameters('omsWorkspaceName')), '2015-11-01-preview').customerId]"
+                                        "workspaceId": "[reference(resourceId(parameters('subscriptionId'), parameters('omsResourceGroupName'), 'Microsoft.OperationalInsights/workspaces/', parameters('omsWorkspaceName')), '2015-11-01-preview').customerId]"
                                     },
                                     "protectedSettings": {
-                                        "workspaceKey": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces/', parameters('omsWorkspaceName')), '2015-11-01-preview').primarySharedKey]"
+                                        "workspaceKey": "[listKeys(resourceId(parameters('subscriptionId'), parameters('omsResourceGroupName'), 'Microsoft.OperationalInsights/workspaces/', parameters('omsWorkspaceName')), '2015-11-01-preview').primarySharedKey]"
                                     }
                                 }
                             },
@@ -1193,7 +1237,7 @@
                                                 "Sink": [
                                                     {
                                                         "name": "applicationInsights",
-                                                        "ApplicationInsights": "[reference(resourceId('Microsoft.Insights/components', 'chrpapai'), '2020-02-02-preview').InstrumentationKey]"
+                                                        "ApplicationInsights": "[parameters('applicationInsightsKey')]"
                                                     }
                                                 ]
                                             }
@@ -1248,6 +1292,10 @@
                                     {
                                         "certificateStore": "[parameters('certificateStoreValue')]",
                                         "certificateUrl": "[parameters('certificateUrlValue')]"
+                                    },
+                                    {
+                                        "certificateStore": "[parameters('reverseProxyCertificateStoreValue')]",
+                                        "certificateUrl": "[parameters('reverseProxyCertificateUrlValue')]"
                                     }
                                 ]
                             }
@@ -1279,12 +1327,6 @@
                 "resourceType": "Service Fabric",
                 "clusterName": "[parameters('clusterName')]"
             }
-        },
-        {
-            "name": "chrpapai",
-            "type": "microsoft.insights/components",
-            "location": "[parameters('clusterLocation')]",
-            "apiVersion": "2020-02-02-preview"
         },
         {
             "apiVersion": "2015-11-01-preview",
@@ -1434,6 +1476,7 @@
                         },
                         "httpGatewayEndpointPort": "[parameters('nt0fabricHttpGatewayPort')]",
                         "isPrimary": true,
+                        "reverseProxyEndpointPort": "[parameters('nt0reverseProxyEndpointPort')]",
                         "vmInstanceCount": "[parameters('nt0InstanceCount')]"
                     },
                     {
@@ -1450,11 +1493,16 @@
                         },
                         "httpGatewayEndpointPort": "[parameters('nt1fabricHttpGatewayPort')]",
                         "isPrimary": false,
+                        "reverseProxyEndpointPort": "[parameters('nt1reverseProxyEndpointPort')]",
                         "vmInstanceCount": "[parameters('nt1InstanceCount')]"
                     }
                 ],
                 "provisioningState": "Default",
                 "reliabilityLevel": "Silver",
+                "reverseProxyCertificate": {
+                    "thumbprint": "[parameters('reverseProxyCertificateThumbprint')]",
+                    "x509StoreName": "[parameters('reverseProxyCertificateStoreValue')]"
+                },
                 "upgradeMode": "Manual",
                 "vmImage": "Windows"
             },

@@ -1,24 +1,19 @@
 ## Declare parameters
-$armTemplate = ".\Cluster-ExternalRootWithOsImageUgrade.json"
+$armTemplate = ".\Cluster-ExternalRoot.json"
 $currentExecutionPath = "D:\Code\FabricMonkey\FabricScripts\Create-GenericCluster\OffCapability"
 
 ## Fixed parameters
-$subscriptionId = "13ad2c84-84fa-4798-ad71-e70c07af873f"
-$azureRegion = "westus"
+$subscriptionId = "" 
+# MSDN 7e07ba72-cff7-49e5-9099-9ba281f2fea5
+# SF 13ad2c84-84fa-4798-ad71-e70c07af873f
+$azureRegion = "eastus"
 $localCertificatePath = "D:\Certificates\"
 $machineAdminUser = "Christian"
 $machineAdminPass = "nZ549Ux2MnW6srTvOZsq"
 $clusterVersion = "7.1.409.9590"
 
 ## Set environment
-Try {
-  Select-AzSubscription -SubscriptionId $subscriptionId -ErrorAction Stop
-} Catch {
-    Login-AzAccount
-    Set-AzContext -SubscriptionId $subscriptionId
-}
 cd $currentExecutionPath
-Enable-AzureRmAlias
 
 ## Generate unique id strings
 $deploymentName = "chrpap" + (Get-Date).ToString("ddHHmm")
@@ -89,3 +84,6 @@ $ConnectArgs = @{
         FindValue = $clusterCertificate.CertificateThumbprint   
     }
 Connect-ServiceFabricCluster @ConnectArgs
+
+#Stop-ServiceFabricRepairTask -TaskId "Azure/TenantUpdate/093a3bfc-beea-464e-bf18-f9b080bf531e/4/55"
+#Remove-ServiceFabricRepairTask -TaskId "MyRepairTaskID"

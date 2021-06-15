@@ -77,7 +77,7 @@
     },
     "vmImageSku": {
       "type": "string",
-      "defaultValue": "2019-Datacenter-GS"
+      "defaultValue": "2019-Datacenter-with-Containers"
     },
     "vmImageVersion": {
       "type": "string",
@@ -170,14 +170,13 @@
     },
     "vmNodeType0Size": {
       "type": "string",
-      "defaultValue": "Standard_D2_v2"
+      "defaultValue": "Standard_D3_v2"
     },
     "extensionMountScriptFileUri": {
       "type": "string"
     }
   },
   "variables": {
-    "sfApiVersion": "2019-03-01",
     "vmssApiVersion": "2019-03-01",
     "lbApiVersion": "2019-09-01",
     "vNetApiVersion": "2018-08-01",
@@ -185,7 +184,6 @@
     "publicIPApiVersion": "2018-08-01",
     "omsApiVersion": "2017-04-26-preview",
     "omsDataSourceVersion": "2015-11-01-preview",
-    "aiApiVersion": "2020-02-02-preview",
 
     "customWebAppPort": "8180",
 
@@ -196,8 +194,6 @@
     "lbIpName": "[concat(parameters('deploymentId'),'lbip')]",
     "aiName": "[concat(parameters('deploymentId'),'ai')]",
     "omsName": "[concat(parameters('deploymentId'),'oms')]",
-    "omsSolutionNameServiceFabric": "[concat(variables('omsName'), '-ServiceFabric')]",
-    
     "sfstorageName": "[concat(parameters('deploymentId'),'sfstorage')]",
     "dgstorageName": "[concat(parameters('deploymentId'),'dgstorage')]",
 
@@ -220,6 +216,7 @@
       "dependsOn": [
       ],
       "properties": {
+        "supportsHttpsTrafficOnly": true
       },
       "kind": "Storage",
       "sku": {
@@ -238,6 +235,7 @@
       "dependsOn": [
       ],
       "properties": {
+        "supportsHttpsTrafficOnly": true
       },
       "kind": "Storage",
       "sku": {
@@ -756,7 +754,7 @@
       }
     },
     {
-      "apiVersion": "[variables('aiApiVersion')]",
+      "apiVersion": "2014-04-01",
       "name": "[variables('aiName')]",
       "type": "Microsoft.Insights/components",
       "location": "[resourceGroup().location]",
@@ -823,25 +821,7 @@
       ]
     },
     {
-      "apiVersion": "2015-11-01-preview",
-      "location": "[resourceGroup().location]",
-      "name": "[variables('omsSolutionNameServiceFabric')]",
-      "type": "Microsoft.OperationsManagement/solutions",
-      "dependsOn": [
-        "[concat('Microsoft.OperationalInsights/workspaces/', variables('omsName'))]"
-      ],
-      "properties": {
-        "workspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces/', variables('omsName'))]"
-      },
-      "plan": {
-        "name": "[variables('omsSolutionNameServiceFabric')]",
-        "publisher": "Microsoft",
-        "product": "[concat('OMSGallery/', 'ServiceFabric')]",
-        "promotionCode": ""
-      }
-    },
-    {
-      "apiVersion": "[variables('sfApiVersion')]",
+      "apiVersion": "2019-03-01",
       "type": "Microsoft.ServiceFabric/clusters",
       "name": "[parameters('clusterName')]",
       "location": "[parameters('computeLocation')]",
@@ -861,6 +841,7 @@
         ],
         "clientCertificateThumbprints": [
         ],
+        "clusterCodeVersion": "[parameters('clusterVersion')]",
         "clusterState": "Default",
         "diagnosticsStorageAccountConfig": {
           "blobEndpoint": "[reference(concat('Microsoft.Storage/storageAccounts/', variables('sfstorageName')), variables('storageApiVersion')).primaryEndpoints.blob]",

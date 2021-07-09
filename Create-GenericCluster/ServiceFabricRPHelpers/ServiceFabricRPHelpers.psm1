@@ -65,16 +65,24 @@ if($CreateSelfSignedCertificate)
     
     ## Changes to PSPKI version 3.5.2 New-SelfSignedCertificate replaced by New-SelfSignedCertificateEx
     ## 1.0.0.0    PKI 
+    Import-Module PSPKI > $null # supress warnings
     $PspkiVersion = (Get-Module PSPKI).Version
-    if($PSPKIVersion.Major -ieq 3 -And $PspkiVersion.Minor -ieq 2 -And $PspkiVersion.Build -ieq 5) {
+    if($PSPKIVersion.Major -ge 3 -And $PspkiVersion.Minor -ge 5 -And $PspkiVersion.Build -ge 2) 
+    {
+        $provider = "Microsoft Enhanced RSA and AES Cryptographic Provider" # Default/CSP
         New-SelfsignedCertificateEx -Subject "CN=$DnsName" -EKU "Server Authentication", "Client authentication" -KeyUsage "KeyEncipherment, DigitalSignature" -Path $NewPfxFilePath -Password $securePassword -Exportable
     }
     else {
-        $provider = "Microsoft Enhanced RSA and AES Cryptographic Provider"
+	$provider = "Microsoft Enhanced RSA and AES Cryptographic Provider" #Microsoft Strong Cryptographic Provider
         $certPath = "Cert:\CurrentUser\My"
 
-        New-SelfSignedCertificate -CertStoreLocation $certPath -DnsName $DnsName | Export-PfxCertificate -FilePath $NewPfxFilePath -Password $securePassword | Out-Null
-    	##New-SelfSignedCertificate -NotBefore '' -NotAfter '' -DnsName -CertStoreLocation Cert:\LocalMachine\My -Provider "Microsoft Enhanced RSA and AES Cryptographic Provider" -KeyExportPolicy ExportableEncrypted -Type Custom -Subject ""
+
+        $notBeforeDate = Get-Date -Format "yyyy-MM-dd"
+        $notAfterDate = (Get-Date).AddDays(60).ToString("yyyy-MM-dd")
+        New-SelfSignedCertificate -NotBefore $notBeforeDate -NotAfter $notAfterDate -DnsName $DnsName -CertStoreLocation Cert:\CurrentUser\My -Provider "Microsoft Strong Cryptographic Provider" -KeyExportPolicy ExportableEncrypted | Export-PfxCertificate -FilePath $NewPfxFilePath -Password $securePassword | Out-Null
+
+        ##New-SelfSignedCertificate -CertStoreLocation $certPath -DnsName $DnsName | Export-PfxCertificate -FilePath $NewPfxFilePath -Password $securePassword | Out-Null
+    	##New-SelfSignedCertificate -NotBefore '' -NotAfter '' -DnsName -CertStoreLocation $certPath -Provider $provider -KeyExportPolicy ExportableEncrypted -Type Custom -Subject ""
     }
 
     $ExistingPfxFilePath = $NewPfxFilePath
@@ -92,11 +100,11 @@ $jsonBlob = @{
    password = $Password
    } | ConvertTo-Json
 
-    $contentbytes = [System.Text.Encoding]::UTF8.GetBytes($jsonBlob)
-    $content = [System.Convert]::ToBase64String($contentbytes)
+$contentbytes = [System.Text.Encoding]::UTF8.GetBytes($jsonBlob)
+$content = [System.Convert]::ToBase64String($contentbytes)
+$secretValue = ConvertTo-SecureString -String $content -AsPlainText -Force
 
-    $secretValue = ConvertTo-SecureString -String $content -AsPlainText -Force
-
+Set-Item Env:\SuppressAzurePowerShellBreakingChangeWarnings "true"
 Write-Host "Writing secret to $CertificateName in vault $VaultName"
 $secret = Set-AzKeyVaultSecret -VaultName $VaultName -Name $CertificateName -SecretValue $secretValue
 

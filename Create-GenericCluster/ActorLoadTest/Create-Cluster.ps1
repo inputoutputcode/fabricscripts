@@ -1,12 +1,12 @@
 ## Declare parameters
-$armTemplate = ".\Cluster-ExternalRoot.json"
-$currentExecutionPath = "D:\Code\FabricMonkey\FabricScripts\Create-GenericCluster\OffCapability"
+$armTemplate = ".\SixNodeD2.json"
+$currentExecutionPath = "D:\Code\FabricMonkey\FabricScripts\Create-GenericCluster\ActorLoadTest"
 
 ## Fixed parameters
-$subscriptionId = "13ad2c84-84fa-4798-ad71-e70c07af873f" 
+$subscriptionId = "7e07ba72-cff7-49e5-9099-9ba281f2fea5" 
 # MSDN 7e07ba72-cff7-49e5-9099-9ba281f2fea5
 # SF 13ad2c84-84fa-4798-ad71-e70c07af873f
-$azureRegion = "southcentralus"
+$azureRegion = "eastus"
 $localCertificatePath = "D:\Certificates\"
 $machineAdminUser = "Christian"
 $machineAdminPass = "nZ549Ux2MnW6srTvOZsq"
@@ -14,9 +14,6 @@ $clusterVersion = "8.0.514.9590"
 
 ## Set environment
 cd $currentExecutionPath
-
-## stop warnings
-Set-Item Env:\SuppressAzurePowerShellBreakingChangeWarnings "true"
 
 ## Generate unique id strings
 $deploymentName = "chrpap" + (Get-Date).ToString("ddHHmm")
@@ -36,55 +33,29 @@ New-AzKeyVault -VaultName $keyVaultName -ResourceGroupName $resourceGroup -Locat
 Import-Module ".\..\ServiceFabricRPHelpers\ServiceFabricRPHelpers.psm1"
 New-Item -ItemType Directory -Path $localCertificatePath -ErrorAction Ignore
 $clusterCertificate = Invoke-AddCertToKeyVaultAsSecret -SubscriptionId $subscriptionId -ResourceGroupName $resourceGroup -Location $azureRegion -VaultName $keyVaultName -CertificateName $certificateName -CreateSelfSignedCertificate -DnsName $serviceFabricClusterDns -OutputPath $localCertificatePath -Password $machineAdminPass
-$clusterCertificate
+$clusterCertificate.CertificateThumbprint
+$clusterCertificate.SourceVault
+$clusterCertificate.CertificateURL
 
-## Create storage account
-$containerName = "extensionscripts"
-$extensionMountScriptFileName = "Mount-ManagedDisk.ps1"
-$extensionMountScriptFilePath = ".\Mount-ManagedDisk.ps1"
-$scriptStorageAccount = New-AzStorageAccount -ResourceGroupName $resourceGroup -Name $scriptStorageName -Location $azureRegion -SkuName Standard_LRS -Kind StorageV2
-$scriptStorageAccountContext = $scriptStorageAccount.Context
-New-AzStorageContainer -Name $containerName -Context $scriptStorageAccountContext -Permission blob
-$uploadedBlobContent1 = Set-AzStorageBlobContent -File $extensionMountScriptFileName -Container $containerName -Blob $extensionMountScriptFilePath -Context $scriptStorageAccountContext 
-$extensionMountScriptFileUri = $uploadedBlobContent1.ICloudBlob.uri.AbsoluteUri
-
-## Deploy Azure Service Fabric Cluster
 $armParameter = @{}
 $armParameter.Add("deploymentId", $deploymentName)
-$armParameter.Add("clusterVersion", $clusterVersion)
+$armParameter.Add("clusterLocation", $azureRegion)
 $armParameter.Add("computeLocation", $azureRegion)
+$armParameter.Add("clusterVersion", $clusterVersion)
 $armParameter.Add("clusterName", $serviceFabricClusterName)
+$armParameter.Add("dnsName", $serviceFabricClusterName)
 $armParameter.Add("adminPassword", $machineAdminPass)
 $armParameter.Add("sourceVaultValue", $clusterCertificate.SourceVault)
 $armParameter.Add("certificateUrlValue", $clusterCertificate.CertificateURL)
 $armParameter.Add("certificateThumbprint", $clusterCertificate.CertificateThumbprint)
-$armParameter.Add("extensionMountScriptFileUri", $extensionMountScriptFileUri)
+$armParameter.Add("clientCertificateThumbprint", $clusterCertificate.CertificateThumbprint)
 
 Test-AzResourceGroupDeployment -ResourceGroupName $resourceGroup -TemplateFile $armTemplate -TemplateParameterObject $armParameter -Verbose -ErrorAction Stop
+New-AzResourceGroupDeployment -ResourceGroupName $resourceGroup -TemplateFile $armTemplate -TemplateParameterObject $armParameter -Verbose
 
-New-AzResourceGroupDeployment -ResourceGroupName $resourceGroup -TemplateFile $armTemplate -TemplateParameterObject $armParameter -Verbose -Mode Incremental
 
 ## Import certificate in local store
 $certificateFile = $localCertificatePath + $certificateName + ".pfx"
 $certificatePassword = ConvertTo-SecureString $machineAdminPass -AsPlainText -Force
 Import-PfxCertificate -Exportable -CertStoreLocation Cert:\CurrentUser\My -FilePath $certificateFile -Password $certificatePassword
 Import-PfxCertificate -Exportable -CertStoreLocation Cert:\CurrentUser\TrustedPeople -FilePath $certificateFile -Password $certificatePassword
-
-## Output
-$output = "Deployment Name: $deploymentName; Thumbprint: " + $clusterCertificate.CertificateThumbprint
-Write-Host $output
-$output | Out-File -FilePath "C:\Temp\$deploymentName.txt"
-
-$ConnectArgs = @{  
-        ConnectionEndpoint = $serviceFabricClusterDns + ':19000';  
-        X509Credential = $True;  
-        StoreLocation = 'CurrentUser';  
-        StoreName = "MY";  
-        ServerCommonName = $serviceFabricClusterDns;  
-        FindType = 'FindByThumbprint';  
-        FindValue = $clusterCertificate.CertificateThumbprint   
-    }
-#Connect-ServiceFabricCluster @ConnectArgs
-
-#Stop-ServiceFabricRepairTask -TaskId "Azure/TenantUpdate/093a3bfc-beea-464e-bf18-f9b080bf531e/4/55"
-#Remove-ServiceFabricRepairTask -TaskId "MyRepairTaskID"

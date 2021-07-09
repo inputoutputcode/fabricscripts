@@ -387,7 +387,7 @@
       "dependsOn": [
         "[concat('Microsoft.Network/publicIPAddresses/',concat(variables('lbIpName'),'-','0'))]"
       ],
-            "sku": {
+      "sku": {
         "name": "Standard"
       },
       "properties": {

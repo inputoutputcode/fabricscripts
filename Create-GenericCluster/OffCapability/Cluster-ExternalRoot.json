@@ -13,7 +13,7 @@
     },
     "clusterVersion": {
       "type": "string",
-      "defaultValue": "7.1.409.9590"
+      "defaultValue": "8.0.514.9590"
     },
     "nt0applicationStartPort": {
       "type": "int",
@@ -177,12 +177,12 @@
     }
   },
   "variables": {
-    "sfApiVersion": "2019-03-01",
-    "vmssApiVersion": "2019-03-01",
-    "lbApiVersion": "2019-09-01",
-    "vNetApiVersion": "2018-08-01",
-    "storageApiVersion": "2018-07-01",
-    "publicIPApiVersion": "2018-08-01",
+    "vmssApiVersion": "2020-06-01",
+    "lbApiVersion": "2020-07-01",
+    "vNetApiVersion": "2020-07-01",
+    "storageApiVersion": "2019-06-01",
+    "publicIPApiVersion": "2020-07-01",
+    "sfApiVersion": "2020-03-01",
     "omsApiVersion": "2017-04-26-preview",
     "omsDataSourceVersion": "2015-11-01-preview",
     "aiApiVersion": "2020-02-02-preview",
@@ -452,7 +452,10 @@
         "overprovision": "[parameters('overProvision')]",
         "singlePlacementGroup": true,
         "upgradePolicy": {
-          "mode": "Automatic"
+          "mode": "Automatic",
+          "automaticOSUpgradePolicy": {
+            "enableAutomaticOSUpgrade":  true
+          }
         },
         "virtualMachineProfile": {
           "extensionProfile": {
@@ -703,6 +706,9 @@
             "adminPassword": "[parameters('adminPassword')]",
             "adminUsername": "[parameters('adminUsername')]",
             "computernamePrefix": "[parameters('vmNodeType0Name')]",
+            "windowsConfiguration": { 
+                "enableAutomaticUpdates": false 
+            },
             "secrets": [
               {
                 "sourceVault": {
@@ -823,24 +829,6 @@
       ]
     },
     {
-      "apiVersion": "2015-11-01-preview",
-      "location": "[resourceGroup().location]",
-      "name": "[variables('omsSolutionNameServiceFabric')]",
-      "type": "Microsoft.OperationsManagement/solutions",
-      "dependsOn": [
-        "[concat('Microsoft.OperationalInsights/workspaces/', variables('omsName'))]"
-      ],
-      "properties": {
-        "workspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces/', variables('omsName'))]"
-      },
-      "plan": {
-        "name": "[variables('omsSolutionNameServiceFabric')]",
-        "publisher": "Microsoft",
-        "product": "[concat('OMSGallery/', 'ServiceFabric')]",
-        "promotionCode": ""
-      }
-    },
-    {
       "apiVersion": "[variables('sfApiVersion')]",
       "type": "Microsoft.ServiceFabric/clusters",
       "name": "[parameters('clusterName')]",
@@ -861,6 +849,7 @@
         ],
         "clientCertificateThumbprints": [
         ],
+        "clusterCodeVersion": "[parameters('clusterVersion')]",
         "clusterState": "Default",
         "diagnosticsStorageAccountConfig": {
           "blobEndpoint": "[reference(concat('Microsoft.Storage/storageAccounts/', variables('sfstorageName')), variables('storageApiVersion')).primaryEndpoints.blob]",
@@ -1682,7 +1671,7 @@
               "sourcePortRange": "*",
               "sourcePortRanges": [],
               "destinationAddressPrefix": "*",
-              "destinationPortRange": "2000-3000",
+              "destinationPortRange": "20000-30000",
               "destinationPortRanges": [],
               "direction": "Inbound",
               "priority": 3940,

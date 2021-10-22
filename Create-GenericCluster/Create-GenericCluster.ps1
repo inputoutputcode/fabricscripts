@@ -1,5 +1,5 @@
 ﻿## Declare parameters
-$armTemplate = ".\Templates\LoadTestScenario-PhaseCorp5.json"
+$armTemplate = ".\Templates\Vortex-LoadTest-Cluster.json"
 $currentExecutionPath = "D:\Code\FabricMonkey\FabricScripts\Create-GenericCluster"
 $clusterVersion = "8.0.514.9590"
 
@@ -9,14 +9,14 @@ $azureRegion = "eastus"
 $localCertificatePath = "D:\Certificates\"
 $generalPassword = "nZ549Ux2MnW6srTvOZsq"
 
-<# Set environment
+<# Set environment #>
 Try {
   Select-AzSubscription -SubscriptionId $subscriptionId -ErrorAction Stop
 } Catch {
     Login-AzAccount
     Set-AzContext -SubscriptionId $subscriptionId
 }
-#>
+<# #>
 cd $currentExecutionPath
 Enable-AzureRmAlias
 
@@ -44,7 +44,7 @@ $clusterCertificate.CertificateURL
 
 ## Deploy Azure Service Fabric Cluster
 $armParameter = @{}
-#$armParameter.Add("deploymentId", $deploymentName)
+$armParameter.Add("deploymentId", $deploymentName)
 $armParameter.Add("clusterVersion", $clusterVersion)
 $armParameter.Add("computeLocation", $azureRegion)
 $armParameter.Add("clusterName", $serviceFabricClusterName)
@@ -52,7 +52,7 @@ $armParameter.Add("adminPassword", $generalPassword)
 $armParameter.Add("sourceVaultValue", $clusterCertificate.SourceVault)
 $armParameter.Add("certificateUrlValue", $clusterCertificate.CertificateURL)
 $armParameter.Add("certificateThumbprint", $clusterCertificate.CertificateThumbprint)
-$armParameter.Add("omsWorkspaceName", $omsName)
+##$armParameter.Add("omsWorkspaceName", $omsName)
 
 
 Test-AzResourceGroupDeployment -ResourceGroupName $resourceGroup -TemplateFile $armTemplate -TemplateParameterObject $armParameter -Verbose -ErrorAction Stop

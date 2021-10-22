@@ -13,7 +13,7 @@
     },
     "clusterVersion": {
       "type": "string",
-      "defaultValue": "8.0.514.9590"
+      "defaultValue": "8.1.335.9590"
     },
     "nt0applicationStartPort": {
       "type": "int",
@@ -795,8 +795,7 @@
             "pauseTimeBetweenBatches": "PT0S"
           },
           "automaticOSUpgradePolicy": {
-            "enableAutomaticOSUpgrade": false,
-            "disableAutomaticRollback": true
+            "enableAutomaticOSUpgrade": false
           }
         },
         "virtualMachineProfile": {
@@ -814,7 +813,7 @@
                   "publisher": "Microsoft.Azure.ServiceFabric",
                   "settings": {
                     "clusterEndpoint": "[reference(parameters('clusterName')).clusterEndpoint]",
-                    "nodeTypeRef": "[parameters('vmNodeType0Name')]",
+                    "nodeTypeRef": "[concat(parameters('vmNodeType0Name'))]",
                     "dataPath": "D:\\\\SvcFab",
                     "durabilityLevel": "Silver",
                     "enableParallelJobs": true,
@@ -1182,7 +1181,7 @@
         "managementEndpoint": "[concat('https://',reference(concat(variables('lbIpName'),'-','0')).dnsSettings.fqdn,':',parameters('nt0fabricHttpGatewayPort'))]",
         "nodeTypes": [
           {
-            "name": "[parameters('vmNodeType0Name')]",
+            "name": "[concat(parameters('vmNodeType0Name'))]",
             "applicationPorts": {
               "endPort": "[parameters('nt0applicationEndPort')]",
               "startPort": "[parameters('nt0applicationStartPort')]"

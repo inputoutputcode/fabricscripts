@@ -4,7 +4,7 @@ $currentExecutionPath = "D:\Code\inputoutputcode\FabricMonkey\Create-GenericClus
 $clusterVersion = "6.5.676.9590"
 
 ## Fixed parameters
-$subscriptionId = "13ad2c84-84fa-4798-ad71-e70c07af873f"
+$subscriptionId = "7e07ba72-cff7-49e5-9099-9ba281f2fea5"
 $azureRegion = "centralus"
 $localCertificatePath = "D:\Certificates\"
 $generalPassword = "nZ549Ux2MnW6srTvOZsq"

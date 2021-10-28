@@ -65,15 +65,28 @@ if($CreateSelfSignedCertificate)
     
     ## Changes to PSPKI version 3.5.2 New-SelfSignedCertificate replaced by New-SelfSignedCertificateEx
     ## 1.0.0.0    PKI 
-    Import-Module PSPKI > $null # supress warnings
+    <#
+    For publisher validation, current module 'PSPKI' with version '3.2.7.0' with publisher name 'CN=DigiCert Assured ID Root CA, OU=www.digic
+		ert.com, O=DigiCert Inc, C=US'. Is this module signed by Microsoft: 'False'.
+		VERBOSE: For publisher validation, using the previously-installed module 'PSPKI' with version '3.7.2' under 'C:\Program Files\WindowsPowerShell\Mo
+		dules\PSPKI\3.7.2' with publisher name 'CN=USERTrust RSA Certification Authority, O=The USERTRUST Network, L=Jersey City, S=New Jersey, C=US'. Is 
+		this module signed by Microsoft: 'False'.
+		PackageManagement\Install-Package : Authenticode issuer 'CN=DigiCert Assured ID Root CA, OU=www.digicert.com, O=DigiCert Inc, C=US' of the new 
+		module 'PSPKI' with version '3.2.7.0' is not matching with the authenticode issuer 'CN=USERTrust RSA Certification Authority, O=The USERTRUST 
+		Network, L=Jersey City, S=New Jersey, C=US' of the previously-installed module 'PSPKI' with version '3.7.2'. If you still want to install or 
+		update, use -SkipPublisherCheck parameter.
+    
+    ## Import-Module PSPKI > $null # supress warnings
+    Install-Module PSPKI -Scope AllUsers -Force -SkipPublisherCheck # -Verbose -RequiredVersion 3.2.7.0
     $PspkiVersion = (Get-Module PSPKI).Version
+    Write-Host "PSPKI version $PspkiVersion" -ForegroundColor Red -BackgroundColor Yellow
     if($PSPKIVersion.Major -ge 3 -And $PspkiVersion.Minor -ge 5 -And $PspkiVersion.Build -ge 2) 
     {
         $provider = "Microsoft Enhanced RSA and AES Cryptographic Provider" # Default/CSP
         New-SelfsignedCertificateEx -Subject "CN=$DnsName" -EKU "Server Authentication", "Client authentication" -KeyUsage "KeyEncipherment, DigitalSignature" -Path $NewPfxFilePath -Password $securePassword -Exportable
     }
     else {
-	$provider = "Microsoft Enhanced RSA and AES Cryptographic Provider" #Microsoft Strong Cryptographic Provider
+	    $provider = "Microsoft Enhanced RSA and AES Cryptographic Provider" #Microsoft Strong Cryptographic Provider
         $certPath = "Cert:\CurrentUser\My"
 
 
@@ -82,8 +95,13 @@ if($CreateSelfSignedCertificate)
         New-SelfSignedCertificate -NotBefore $notBeforeDate -NotAfter $notAfterDate -DnsName $DnsName -CertStoreLocation Cert:\CurrentUser\My -Provider "Microsoft Strong Cryptographic Provider" -KeyExportPolicy ExportableEncrypted | Export-PfxCertificate -FilePath $NewPfxFilePath -Password $securePassword | Out-Null
 
         ##New-SelfSignedCertificate -CertStoreLocation $certPath -DnsName $DnsName | Export-PfxCertificate -FilePath $NewPfxFilePath -Password $securePassword | Out-Null
-    	##New-SelfSignedCertificate -NotBefore '' -NotAfter '' -DnsName -CertStoreLocation $certPath -Provider $provider -KeyExportPolicy ExportableEncrypted -Type Custom -Subject ""
+    	  ##New-SelfSignedCertificate -NotBefore '' -NotAfter '' -DnsName -CertStoreLocation $certPath -Provider $provider -KeyExportPolicy ExportableEncrypted -Type Custom -Subject ""
     }
+#>
+    $notBeforeDate = Get-Date -Format "yyyy-MM-dd"
+    $notAfterDate = (Get-Date).AddDays(60).ToString("yyyy-MM-dd")
+    New-SelfSignedCertificate -NotBefore $notBeforeDate -NotAfter $notAfterDate -DnsName $DnsName -CertStoreLocation Cert:\LocalMachine\My -Provider "Microsoft Strong Cryptographic Provider" -KeyExportPolicy ExportableEncrypted | Export-PfxCertificate -FilePath $NewPfxFilePath -Password $securePassword | Out-Null
+
 
     $ExistingPfxFilePath = $NewPfxFilePath
 }

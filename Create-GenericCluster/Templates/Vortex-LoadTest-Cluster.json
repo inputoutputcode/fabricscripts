@@ -47,81 +47,6 @@
       "type": "string",
       "defaultValue": "10.0.0.0/24"
     },
-    "nt1applicationStartPort": {
-      "type": "int",
-      "defaultValue": 20000
-    },
-    "nt1applicationEndPort": {
-      "type": "int",
-      "defaultValue": 30000
-    },
-    "nt1ephemeralStartPort": {
-      "type": "int",
-      "defaultValue": 49152
-    },
-    "nt1ephemeralEndPort": {
-      "type": "int",
-      "defaultValue": 65534
-    },
-    "nt1fabricTcpGatewayPort": {
-      "type": "int",
-      "defaultValue": 19000
-    },
-    "nt1fabricHttpGatewayPort": {
-      "type": "int",
-      "defaultValue": 19080
-    },
-    "subnet1Name": {
-      "type": "string",
-      "defaultValue": "Subnet-1"
-    },
-    "subnet1Prefix": {
-      "type": "string",
-      "defaultValue": "10.0.1.0/24"
-    },
-    "nt2applicationStartPort": {
-      "type": "int",
-      "defaultValue": 20000
-    },
-    "nt2applicationEndPort": {
-      "type": "int",
-      "defaultValue": 30000
-    },
-    "nt2ephemeralStartPort": {
-      "type": "int",
-      "defaultValue": 49152
-    },
-    "nt2ephemeralEndPort": {
-      "type": "int",
-      "defaultValue": 65534
-    },
-    "nt2fabricTcpGatewayPort": {
-      "type": "int",
-      "defaultValue": 19000
-    },
-    "nt2fabricHttpGatewayPort": {
-      "type": "int",
-      "defaultValue": 19080
-    },
-    "subnet2Name": {
-      "type": "string",
-      "defaultValue": "Subnet-2"
-    },
-    "subnet2Prefix": {
-      "type": "string",
-      "defaultValue": "10.0.2.0/24"
-    },
-    "publicIPAddressType": {
-      "type": "string",
-      "allowedValues": [
-        "Dynamic"
-      ],
-      "defaultValue": "Dynamic"
-    },
-    "vmStorageAccountContainerName": {
-      "type": "string",
-      "defaultValue": "vhds"
-    },
     "adminUserName": {
       "type": "string",
       "defaultValue": "Christian"
@@ -148,7 +73,7 @@
     },
     "vmImageSku": {
       "type": "string",
-      "defaultValue": "2019-Datacenter"
+      "defaultValue": "2019-Datacenter-with-Containers"
     },
     //az vm image list --location "westus" --publisher "MicrosoftWindowsServer" --offer "WindowsServer" --sku "2019-Datacenter-GS" --all
     "vmImageVersion": {
@@ -246,26 +171,23 @@
     }
   },
   "variables": {
-    "sfApiVersion": "2019-03-01",
-    "vmssApiVersion": "2019-03-01",
-    "lbApiVersion": "2019-09-01",
-    "vNetApiVersion": "2018-08-01",
-    "storageApiVersion": "2018-07-01",
-    "publicIPApiVersion": "2018-08-01",
-    "omsApiVersion": "2017-04-26-preview",
-    "omsDataSourceVersion": "2015-11-01-preview",
-    "aiApiVersion": "2020-02-02-preview",
+    "vmssApiVersion": "2021-07-01",
+    "sfApiVersion": "2021-06-01",
+    "lbApiVersion": "2021-05-01",
+    "vNetApiVersion": "2021-03-01",
+    "storageApiVersion": "2019-06-01",
+    "publicIPApiVersion": "2021-03-01",
+    "omsApiVersion": "2020-08-01",
+    "omsDataSourceVersion": "2020-08-01",
+    "aiApiVersion": "2020-02-02",
+    "nsgApiVersion": "2021-03-01",
 
     "customWebAppPort": "8947",
 
     "vnetName": "[concat(parameters('deploymentId'),'-','vnet')]",
     "vnetId": "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]",
     "subnet0Ref": "[concat(variables('vnetId'),'/subnets/',parameters('subnet0Name'))]",
-    "subnet1Ref": "[concat(variables('vnetId'),'/subnets/',parameters('subnet1Name'))]",
-    "subnet2Ref": "[concat(variables('vnetId'),'/subnets/',parameters('subnet2Name'))]",
     "nicName": "[concat(parameters('deploymentId'),'-nic')]",
-    "pubIpName": "[concat(parameters('deploymentId'),'-pubip')]",
-    "lbName": "[concat(parameters('deploymentId'),'-lb')]",
     "lbIpName": "[concat(parameters('deploymentId'),'-lbip')]",
     "aiName": "[concat(parameters('deploymentId'),'-ai')]",
     "omsName": "[concat(parameters('deploymentId'),'-oms')]",
@@ -339,18 +261,6 @@
               "networkSecurityGroup": {
                 "id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat('nsg', parameters('subnet0Name')))]"
               }
-            }
-          },
-          {
-            "name": "[parameters('subnet1Name')]",
-            "properties": {
-              "addressPrefix": "[parameters('subnet1Prefix')]"
-            }
-          },
-          {
-            "name": "[parameters('subnet2Name')]",
-            "properties": {
-              "addressPrefix": "[parameters('subnet2Prefix')]"
             }
           }
         ]
@@ -517,14 +427,14 @@
       }
     },
     {
-      "apiVersion": "2018-08-01",
+      "apiVersion": "[variables('nsgApiVersion')]",
       "type": "Microsoft.Network/networkSecurityGroups",
       "name": "[concat('nsg', parameters('subnet0Name'))]",
       "location": "[resourceGroup().location]",
       "properties": {
         "securityRules": [
           {
-            "name": "SFX",
+            "name": "Service Fabric Explorer",
             "properties": {
               "access": "Allow",
               "sourceAddressPrefix": "Internet",
@@ -540,7 +450,23 @@
             }
           },
           {
-            "name": "Client",
+            "name": "Azure portal",
+            "properties": {
+              "access": "Allow",
+              "sourceAddressPrefix": "ServiceFabric",
+              "sourcePortRange": "*",
+              "sourcePortRanges": [],
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "19080",
+              "destinationPortRanges": [],
+              "direction": "Inbound",
+              "priority": 3910,
+              "protocol": "Tcp",
+              "description": ""
+            }
+          },
+          {
+            "name": "Client APIs",
             "properties": {
               "access": "Allow",
               "sourceAddressPrefix": "Internet",
@@ -550,7 +476,7 @@
               "destinationPortRange": "19000",
               "destinationPortRanges": [],
               "direction": "Inbound",
-              "priority": 3910,
+              "priority": 3920,
               "protocol": "Tcp",
               "description": ""
             }
@@ -566,7 +492,7 @@
               "destinationPortRange": "1025-1027",
               "destinationPortRanges": [],
               "direction": "Inbound",
-              "priority": 3920,
+              "priority": 3930,
               "protocol": "Tcp",
               "description": ""
             }
@@ -582,7 +508,7 @@
               "destinationPortRange": "49152-65534",
               "destinationPortRanges": [],
               "direction": "Inbound",
-              "priority": 3930,
+              "priority": 3940,
               "protocol": "Tcp",
               "description": ""
             }
@@ -598,7 +524,7 @@
               "destinationPortRange": "2000-3000",
               "destinationPortRanges": [],
               "direction": "Inbound",
-              "priority": 3940,
+              "priority": 3950,
               "protocol": "Tcp",
               "description": ""
             }
@@ -614,7 +540,7 @@
               "destinationPortRange": "445",
               "destinationPortRanges": [],
               "direction": "Inbound",
-              "priority": 3950,
+              "priority": 3960,
               "protocol": "Tcp",
               "description": ""
             }
@@ -622,7 +548,7 @@
           {
             "name": "RDP",
             "properties": {
-              "access": "Allow",
+              "access": "Deny",
               "sourceAddressPrefix": "Internet",
               "sourcePortRange": "*",
               "sourcePortRanges": [],
@@ -630,7 +556,7 @@
               "destinationPortRange": "3389-3488",
               "destinationPortRanges": [],
               "direction": "Inbound",
-              "priority": 3960,
+              "priority": 3970,
               "protocol": "Tcp",
               "description": ""
             }
@@ -646,7 +572,7 @@
               "destinationPortRange": "22",
               "destinationPortRanges": [],
               "direction": "Inbound",
-              "priority": 3970,
+              "priority": 3980,
               "protocol": "Tcp",
               "description": ""
             }
@@ -654,7 +580,7 @@
           {
             "name": "CustomEndpoint",
             "properties": {
-              "access": "Deny",
+              "access": "Allow",
               "sourceAddressPrefix": "Internet",
               "sourcePortRange": "*",
               "sourcePortRanges": [],
@@ -662,55 +588,7 @@
               "destinationPortRange": "80",
               "destinationPortRanges": [],
               "direction": "Inbound",
-              "priority": 3980,
-              "protocol": "Tcp",
-              "description": ""
-            }
-          },
-          {
-            "name": "AzureLoadBalancer",
-            "properties": {
-              "access": "Allow",
-              "sourceAddressPrefix": "AzureLoadBalancer",
-              "sourcePortRange": "*",
-              "sourcePortRanges": [],
-              "destinationAddressPrefix": "*",
-              "destinationPortRange": "*",
-              "destinationPortRanges": [],
-              "direction": "Inbound",
               "priority": 3990,
-              "protocol": "Tcp",
-              "description": ""
-            }
-          },
-          {
-            "name": "BlockInbound",
-            "properties": {
-              "access": "Deny",
-              "sourceAddressPrefix": "*",
-              "sourcePortRange": "*",
-              "sourcePortRanges": [],
-              "destinationAddressPrefix": "*",
-              "destinationPortRange": "*",
-              "destinationPortRanges": [],
-              "direction": "Inbound",
-              "priority": 4000,
-              "protocol": "*",
-              "description": ""
-            }
-          },
-          {
-            "name": "Network",
-            "properties": {
-              "access": "Allow",
-              "sourceAddressPrefix": "*",
-              "sourcePortRange": "*",
-              "sourcePortRanges": [],
-              "destinationAddressPrefix": "VirtualNetwork",
-              "destinationPortRange": "*",
-              "destinationPortRanges": [],
-              "direction": "Outbound",
-              "priority": 3900,
               "protocol": "Tcp",
               "description": ""
             }
@@ -726,40 +604,24 @@
               "destinationPortRange": "443",
               "destinationPortRanges": [],
               "direction": "Outbound",
-              "priority": 3910,
+              "priority": 4000,
               "protocol": "Tcp",
               "description": ""
             }
           },
           {
-            "name": "Upgrade",
+            "name": "Download Binaries",
             "properties": {
               "access": "Allow",
               "sourceAddressPrefix": "*",
               "sourcePortRange": "*",
               "sourcePortRanges": [],
-              "destinationAddressPrefix": "Internet",
-              "destinationPortRange": "",
-              "destinationPortRanges": ["80", "443"],
-              "direction": "Outbound",
-              "priority": 3920,
-              "protocol": "Tcp",
-              "description": ""
-            }
-          },
-          {
-            "name": "BlockOutbound",
-            "properties": {
-              "access": "Deny",
-              "sourceAddressPrefix": "*",
-              "sourcePortRange": "*",
-              "sourcePortRanges": [],
-              "destinationAddressPrefix": "*",
-              "destinationPortRange": "*",
+              "destinationAddressPrefix": "AzureFrontDoor.FirstParty",
+              "destinationPortRange": "443",
               "destinationPortRanges": [],
               "direction": "Outbound",
-              "priority": 3950,
-              "protocol": "*",
+              "priority": 4010,
+              "protocol": "Tcp",
               "description": ""
             }
           }
@@ -1086,7 +948,7 @@
       "type": "Microsoft.OperationalInsights/workspaces",
       "properties": {
         "sku": {
-          "name": "Free"
+          "name": "pergb2018"
         }
       },
       "resources": [

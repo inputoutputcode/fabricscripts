@@ -39,10 +39,6 @@
             "type": "int",
             "defaultValue": 19080
         },
-        "nt0reverseProxyEndpointPort": {
-            "type": "int",
-            "defaultValue": 19081
-        },
         "subnet0Name": {
             "type": "string",
             "defaultValue": "Subnet-0"
@@ -75,10 +71,6 @@
             "type": "int",
             "defaultValue": 19080
         },
-        "nt1reverseProxyEndpointPort": {
-            "type": "int",
-            "defaultValue": 19081
-        },
         "subnet1Name": {
             "type": "string",
             "defaultValue": "Subnet-1"
@@ -89,21 +81,6 @@
         },
         "computeLocation": {
             "type": "string"
-        },
-        "publicIPAddressName": {
-            "type": "string",
-            "defaultValue": "PublicIP-VM"
-        },
-        "publicIPAddressType": {
-            "type": "string",
-            "allowedValues": [
-                "Dynamic"
-            ],
-            "defaultValue": "Dynamic"
-        },
-        "vmStorageAccountContainerName": {
-            "type": "string",
-            "defaultValue": "vhds"
         },
         "adminUserName": {
             "type": "string",
@@ -201,28 +178,6 @@
                 "description": "Refers to the location URL in your key vault where the certificate was uploaded, it is should be in the format of https://<name of the vault>.vault.azure.net:443/secrets/<exact location>"
             }
         },
-        "reverseProxyCertificateStoreValue": {
-            "type": "string",
-            "allowedValues": [
-                "My"
-            ],
-            "defaultValue": "My",
-            "metadata": {
-                "description": "The store name where the cert will be deployed in the virtual machine"
-            }
-        },
-        "reverseProxyCertificateThumbprint": {
-            "type": "string",
-            "metadata": {
-                "description": "Reverse proxy Certificate Thumbprint"
-            }
-        },
-        "reverseProxyCertificateUrlValue": {
-            "type": "string",
-            "metadata": {
-                "description": "Refers to the location URL in your key vault where the certificate was uploaded, it is should be in the format of https://<name of the vault>.vault.azure.net:443/secrets/<exact location>"
-            }
-        },
         "storageAccountType": {
             "type": "string",
             "allowedValues": [
@@ -284,7 +239,7 @@
         },
         "vmNodeType0Size": {
             "type": "string",
-            "defaultValue": "Standard_D3_v2"
+            "defaultValue": "Standard_D2_v2"
         },
         "nt1InstanceCount": {
             "type": "int",
@@ -300,18 +255,16 @@
         },
         "vmNodeType1Size": {
             "type": "string",
-            "defaultValue": "Standard_D3_v2"
-        },
-        "applicationInsightsKey": {
-            "type": "string"
+            "defaultValue": "Standard_D2_v2"
         }
     },
     "variables": {
-        "vmssApiVersion": "2017-03-30",
-        "lbApiVersion": "2015-06-15",
-        "vNetApiVersion": "2015-06-15",
-        "storageApiVersion": "2016-01-01",
-        "publicIPApiVersion": "2015-06-15",
+        "vmssApiVersion": "2020-06-01",
+        "sfApiVersion": "2020-03-01",
+        "lbApiVersion": "2020-07-01",
+        "vNetApiVersion": "2020-07-01",
+        "storageApiVersion": "2019-06-01",
+        "publicIPApiVersion": "2020-07-01",
         "DispatcherServiceInternalPort": "8947",
         "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',parameters('virtualNetworkName'))]",
         "subnet0Ref": "[concat(variables('vnetID'),'/subnets/',parameters('subnet0Name'))]",
@@ -322,14 +275,12 @@
         "lbProbeID0": "[concat(variables('lbID0'),'/probes/FabricGatewayProbe')]",
         "lbHttpProbeID0": "[concat(variables('lbID0'),'/probes/FabricHttpGatewayProbe')]",
         "lbNatPoolID0": "[concat(variables('lbID0'),'/inboundNatPools/LoadBalancerBEAddressNatPool')]",
-        "vmStorageAccountName0": "[toLower(concat(uniqueString(resourceGroup().id), '1', '0' ))]",
         "lbID1": "[resourceId('Microsoft.Network/loadBalancers', concat('LB','-', parameters('clusterName'),'-',parameters('vmNodeType1Name')))]",
         "lbIPConfig1": "[concat(variables('lbID1'),'/frontendIPConfigurations/LoadBalancerIPConfig')]",
         "lbPoolID1": "[concat(variables('lbID1'),'/backendAddressPools/LoadBalancerBEAddressPool')]",
         "lbProbeID1": "[concat(variables('lbID1'),'/probes/FabricGatewayProbe')]",
         "lbHttpProbeID1": "[concat(variables('lbID1'),'/probes/FabricHttpGatewayProbe')]",
         "lbNatPoolID1": "[concat(variables('lbID1'),'/inboundNatPools/LoadBalancerBEAddressNatPool')]",
-        "vmStorageAccountName1": "[toLower(concat(uniqueString(resourceGroup().id), '1', '1' ))]"
     },
     "resources": [
         {
@@ -369,7 +320,9 @@
             "type": "Microsoft.Network/virtualNetworks",
             "name": "[parameters('virtualNetworkName')]",
             "location": "[parameters('computeLocation')]",
-            "dependsOn": [],
+            "dependsOn": [
+                "[concat('Microsoft.Network/networkSecurityGroups/', concat('nsg', parameters('subnet0Name')))]"
+            ],            
             "properties": {
                 "addressSpace": {
                     "addressPrefixes": [
@@ -380,13 +333,19 @@
                     {
                         "name": "[parameters('subnet0Name')]",
                         "properties": {
-                            "addressPrefix": "[parameters('subnet0Prefix')]"
+                            "addressPrefix": "[parameters('subnet0Prefix')]",
+                            "networkSecurityGroup": {
+                                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat('nsg', parameters('subnet0Name')))]"
+                            }
                         }
                     },
                     {
                         "name": "[parameters('subnet1Name')]",
                         "properties": {
-                            "addressPrefix": "[parameters('subnet1Prefix')]"
+                            "addressPrefix": "[parameters('subnet1Prefix')]",
+                            "networkSecurityGroup": {
+                                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat('nsg', parameters('subnet0Name')))]"
+                            }
                         }
                     }
                 ]
@@ -546,6 +505,260 @@
             }
         },
         {
+            "apiVersion": "2018-08-01",
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "name": "[concat('nsg', parameters('subnet0Name'))]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "securityRules": [
+                {
+                    "name": "SFX",
+                    "properties": {
+                    "access": "Allow",
+                    "sourceAddressPrefix": "Internet",
+                    "sourcePortRange": "*",
+                    "sourcePortRanges": [],
+                    "destinationAddressPrefix": "*",
+                    "destinationPortRange": "19080",
+                    "destinationPortRanges": [],
+                    "direction": "Inbound",
+                    "priority": 3900,
+                    "protocol": "Tcp",
+                    "description": ""
+                    }
+                },
+                {
+                    "name": "Client",
+                    "properties": {
+                    "access": "Allow",
+                    "sourceAddressPrefix": "Internet",
+                    "sourcePortRange": "*",
+                    "sourcePortRanges": [],
+                    "destinationAddressPrefix": "*",
+                    "destinationPortRange": "19000",
+                    "destinationPortRanges": [],
+                    "direction": "Inbound",
+                    "priority": 3910,
+                    "protocol": "Tcp",
+                    "description": ""
+                    }
+                },
+                {
+                    "name": "Cluster",
+                    "properties": {
+                    "access": "Allow",
+                    "sourceAddressPrefix": "VirtualNetwork",
+                    "sourcePortRange": "*",
+                    "sourcePortRanges": [],
+                    "destinationAddressPrefix": "*",
+                    "destinationPortRange": "1025-1027",
+                    "destinationPortRanges": [],
+                    "direction": "Inbound",
+                    "priority": 3920,
+                    "protocol": "Tcp",
+                    "description": ""
+                    }
+                },
+                {
+                    "name": "Ephemeral",
+                    "properties": {
+                    "access": "Allow",
+                    "sourceAddressPrefix": "VirtualNetwork",
+                    "sourcePortRange": "*",
+                    "sourcePortRanges": [],
+                    "destinationAddressPrefix": "*",
+                    "destinationPortRange": "49152-65534",
+                    "destinationPortRanges": [],
+                    "direction": "Inbound",
+                    "priority": 3930,
+                    "protocol": "Tcp",
+                    "description": ""
+                    }
+                },
+                {
+                    "name": "Application",
+                    "properties": {
+                    "access": "Allow",
+                    "sourceAddressPrefix": "VirtualNetwork",
+                    "sourcePortRange": "*",
+                    "sourcePortRanges": [],
+                    "destinationAddressPrefix": "*",
+                    "destinationPortRange": "2000-3000",
+                    "destinationPortRanges": [],
+                    "direction": "Inbound",
+                    "priority": 3940,
+                    "protocol": "Tcp",
+                    "description": ""
+                    }
+                },
+                {
+                    "name": "SMB",
+                    "properties": {
+                    "access": "Allow",
+                    "sourceAddressPrefix": "VirtualNetwork",
+                    "sourcePortRange": "*",
+                    "sourcePortRanges": [],
+                    "destinationAddressPrefix": "*",
+                    "destinationPortRange": "445",
+                    "destinationPortRanges": [],
+                    "direction": "Inbound",
+                    "priority": 3950,
+                    "protocol": "Tcp",
+                    "description": ""
+                    }
+                },
+                {
+                    "name": "RDP",
+                    "properties": {
+                    "access": "Allow",
+                    "sourceAddressPrefix": "Internet",
+                    "sourcePortRange": "*",
+                    "sourcePortRanges": [],
+                    "destinationAddressPrefix": "*",
+                    "destinationPortRange": "3389-3488",
+                    "destinationPortRanges": [],
+                    "direction": "Inbound",
+                    "priority": 3960,
+                    "protocol": "Tcp",
+                    "description": ""
+                    }
+                },
+                {
+                    "name": "SSH",
+                    "properties": {
+                    "access": "Deny",
+                    "sourceAddressPrefix": "Internet",
+                    "sourcePortRange": "*",
+                    "sourcePortRanges": [],
+                    "destinationAddressPrefix": "*",
+                    "destinationPortRange": "22",
+                    "destinationPortRanges": [],
+                    "direction": "Inbound",
+                    "priority": 3970,
+                    "protocol": "Tcp",
+                    "description": ""
+                    }
+                },
+                {
+                    "name": "CustomEndpoint",
+                    "properties": {
+                    "access": "Deny",
+                    "sourceAddressPrefix": "Internet",
+                    "sourcePortRange": "*",
+                    "sourcePortRanges": [],
+                    "destinationAddressPrefix": "*",
+                    "destinationPortRange": "80",
+                    "destinationPortRanges": [],
+                    "direction": "Inbound",
+                    "priority": 3980,
+                    "protocol": "Tcp",
+                    "description": ""
+                    }
+                },
+                {
+                    "name": "AzureLoadBalancer",
+                    "properties": {
+                    "access": "Allow",
+                    "sourceAddressPrefix": "AzureLoadBalancer",
+                    "sourcePortRange": "*",
+                    "sourcePortRanges": [],
+                    "destinationAddressPrefix": "*",
+                    "destinationPortRange": "*",
+                    "destinationPortRanges": [],
+                    "direction": "Inbound",
+                    "priority": 3990,
+                    "protocol": "Tcp",
+                    "description": ""
+                    }
+                },
+                {
+                    "name": "BlockInbound",
+                    "properties": {
+                    "access": "Deny",
+                    "sourceAddressPrefix": "*",
+                    "sourcePortRange": "*",
+                    "sourcePortRanges": [],
+                    "destinationAddressPrefix": "*",
+                    "destinationPortRange": "*",
+                    "destinationPortRanges": [],
+                    "direction": "Inbound",
+                    "priority": 4000,
+                    "protocol": "*",
+                    "description": ""
+                    }
+                },
+                {
+                    "name": "Network",
+                    "properties": {
+                    "access": "Allow",
+                    "sourceAddressPrefix": "*",
+                    "sourcePortRange": "*",
+                    "sourcePortRanges": [],
+                    "destinationAddressPrefix": "VirtualNetwork",
+                    "destinationPortRange": "*",
+                    "destinationPortRanges": [],
+                    "direction": "Outbound",
+                    "priority": 3900,
+                    "protocol": "Tcp",
+                    "description": ""
+                    }
+                },
+                {
+                    "name": "ResourceProvider",
+                    "properties": {
+                    "access": "Allow",
+                    "sourceAddressPrefix": "*",
+                    "sourcePortRange": "*",
+                    "sourcePortRanges": [],
+                    "destinationAddressPrefix": "ServiceFabric",
+                    "destinationPortRange": "443",
+                    "destinationPortRanges": [],
+                    "direction": "Outbound",
+                    "priority": 3910,
+                    "protocol": "Tcp",
+                    "description": ""
+                    }
+                },
+                {
+                    "name": "Upgrade",
+                    "properties": {
+                    "access": "Allow",
+                    "sourceAddressPrefix": "*",
+                    "sourcePortRange": "*",
+                    "sourcePortRanges": [],
+                    "destinationAddressPrefix": "Internet",
+                    "destinationPortRange": "",
+                    "destinationPortRanges": ["80", "443"],
+                    "direction": "Outbound",
+                    "priority": 3920,
+                    "protocol": "Tcp",
+                    "description": ""
+                    }
+                },
+                {
+                    "name": "BlockOutbound",
+                    "properties": {
+                    "access": "Deny",
+                    "sourceAddressPrefix": "*",
+                    "sourcePortRange": "*",
+                    "sourcePortRanges": [],
+                    "destinationAddressPrefix": "*",
+                    "destinationPortRange": "*",
+                    "destinationPortRanges": [],
+                    "direction": "Outbound",
+                    "priority": 3950,
+                    "protocol": "*",
+                    "description": ""
+                    }
+                }
+                ]
+            },
+            "tags": {
+                "resourceType": "Service Fabric",
+                "clusterName": "[parameters('clusterName')]"
+            }
+        },
+        {
             "apiVersion": "[variables('vmssApiVersion')]",
             "type": "Microsoft.Compute/virtualMachineScaleSets",
             "name": "[parameters('vmNodeType0Name')]",
@@ -578,178 +791,15 @@
                                         "clusterEndpoint": "[reference(parameters('clusterName')).clusterEndpoint]",
                                         "nodeTypeRef": "[parameters('vmNodeType0Name')]",
                                         "dataPath": "D:\\\\SvcFab",
-                                        "durabilityLevel": "Bronze",
+                                        "durabilityLevel": "Silver",
                                         "enableParallelJobs": true,
                                         "nicPrefixOverride": "[parameters('subnet0Prefix')]",
-                                        "reverseProxyCertificate": {
-                                            "thumbprint": "[parameters('reverseProxyCertificateThumbprint')]",
-                                            "x509StoreName": "[parameters('reverseProxyCertificateStoreValue')]"
-                                        },
                                         "certificate": {
                                             "thumbprint": "[parameters('certificateThumbprint')]",
                                             "x509StoreName": "[parameters('certificateStoreValue')]"
                                         }
                                     },
                                     "typeHandlerVersion": "1.0"
-                                }
-                            },
-                            {
-                                "name": "[concat('VMDiagnosticsVmExt','_vmNodeType0Name')]",
-                                "properties": {
-                                    "type": "IaaSDiagnostics",
-                                    "autoUpgradeMinorVersion": true,
-                                    "protectedSettings": {
-                                        "storageAccountName": "[parameters('applicationDiagnosticsStorageAccountName')]",
-                                        "storageAccountKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('applicationDiagnosticsStorageAccountName')),'2015-05-01-preview').key1]",
-                                        "storageAccountEndPoint": "https://core.windows.net/"
-                                    },
-                                    "publisher": "Microsoft.Azure.Diagnostics",
-                                    "settings": {
-                                        "WadCfg": {
-                                            "DiagnosticMonitorConfiguration": {
-                                                "PerformanceCounters": {
-                                                    "PerformanceCounterConfiguration": [
-                                                      {
-                                                        "annotation": [],
-                                                        "counterSpecifier": "\\Processor(_Total)\\% Processor Time",
-                                                        "sampleRate": "PT3M"
-                                                      },
-                                                      {
-                                                        "annotation": [],
-                                                        "counterSpecifier": "\\Memory\\Available MBytes",
-                                                        "sampleRate": "PT3M"
-                                                      }
-                                                    ]
-                                                  },
-                                                "WindowsEventLog": {
-                                                    "DataSource": [
-                                                        {
-                                                        "name": "System!*[System[(Level=1 or Level=2)]]"
-                                                        }
-                                                    ]
-                                                },
-                                                "EtwProviders": {
-                                                    "EtwEventSourceProviderConfiguration": [
-                                                        {
-                                                            "provider": "Microsoft-ServiceFabric-Actors",
-                                                            "scheduledTransferKeywordFilter": "1",
-                                                            "scheduledTransferPeriod": "PT5M",
-                                                            "DefaultEvents": {
-                                                                "eventDestination": "ServiceFabricReliableActorEventTable"
-                                                            }
-                                                        },
-                                                        {
-                                                            "provider": "Microsoft-ServiceFabric-Services",
-                                                            "scheduledTransferPeriod": "PT5M",
-                                                            "DefaultEvents": {
-                                                                "eventDestination": "ServiceFabricReliableServiceEventTable"
-                                                            }
-                                                        },
-                                                        {
-                                                            "provider": "DPDHL-GeneralModuleControlApp-Dispatcher",
-                                                            "scheduledTransferPeriod": "PT5M",
-                                                            "DefaultEvents": {
-                                                            "eventDestination": "LoadTestEventTable"
-                                                            }
-                                                        },
-                                                        {
-                                                            "provider": "DPDHL-GeneralModuleControlApp-ClientContainersActor",
-                                                            "scheduledTransferPeriod": "PT5M",
-                                                            "DefaultEvents": {
-                                                            "eventDestination": "LoadTestEventTable"
-                                                            }
-                                                        },
-                                                        {
-                                                            "provider": "DPDHL-GeneralModuleControlApp-TransactionContainersActor",
-                                                            "scheduledTransferPeriod": "PT5M",
-                                                            "DefaultEvents": {
-                                                            "eventDestination": "LoadTestEventTable"
-                                                            }
-                                                        },
-                                                        {
-                                                            "provider": "DPDHL-GeneralModuleControlApp-TransactionManagerService",
-                                                            "scheduledTransferPeriod": "PT5M",
-                                                            "DefaultEvents": {
-                                                            "eventDestination": "LoadTestEventTable"
-                                                            }
-                                                        },
-                                                        {
-                                                            "provider": "DPDHL-ClientOpenCloseFinalizeApp-ClientCloseActor10",
-                                                            "scheduledTransferPeriod": "PT5M",
-                                                            "DefaultEvents": {
-                                                            "eventDestination": "LoadTestEventTable"
-                                                            }
-                                                        },
-                                                        {
-                                                            "provider": "DPDHL-ClientOpenCloseFinalizeApp-ClientFinalizeActor10",
-                                                            "scheduledTransferPeriod": "PT5M",
-                                                            "DefaultEvents": {
-                                                            "eventDestination": "LoadTestEventTable"
-                                                            }
-                                                        },
-                                                        {
-                                                            "provider": "DPDHL-ClientOpenCloseFinalizeApp-ClientOpenActor10",
-                                                            "scheduledTransferPeriod": "PT5M",
-                                                            "DefaultEvents": {
-                                                            "eventDestination": "LoadTestEventTable"
-                                                            }
-                                                        },
-                                                        {
-                                                            "provider": "DPDHL-FunctionalComponentsApp-SendungsausgabeActor10",
-                                                            "scheduledTransferPeriod": "PT5M",
-                                                            "DefaultEvents": {
-                                                            "eventDestination": "LoadTestEventTable"
-                                                            }
-                                                        },
-                                                        {
-                                                            "provider": "DPDHL-PdlModuleControlApp-PdlDispatcherActor",
-                                                            "scheduledTransferPeriod": "PT5M",
-                                                            "DefaultEvents": {
-                                                            "eventDestination": "LoadTestEventTable"
-                                                            }
-                                                        },
-                                                        {
-                                                            "provider": "DPDHL-SessionManagementApp-ClientActor",
-                                                            "scheduledTransferPeriod": "PT5M",
-                                                            "DefaultEvents": {
-                                                            "eventDestination": "LoadTestEventTable"
-                                                            }
-                                                        },
-                                                        {
-                                                            "provider": "DPDHL-SessionManagementApp-ReceiptActor",
-                                                            "scheduledTransferPeriod": "PT5M",
-                                                            "DefaultEvents": {
-                                                            "eventDestination": "LoadTestEventTable"
-                                                            }
-                                                        }
-                                                    ],
-                                                    "EtwManifestProviderConfiguration": [
-                                                        {
-                                                            "provider": "cbd93bc2-71e5-4566-b3a7-595d8eeca6e8",
-                                                            "scheduledTransferLogLevelFilter": "Information",
-                                                            "scheduledTransferKeywordFilter": "4611686018427387936", 
-                                                            "scheduledTransferPeriod": "PT5M",
-                                                            "DefaultEvents": {
-                                                                "eventDestination": "ServiceFabricSystemEventTable"
-                                                            }
-                                                        }
-                                                    ]
-                                                },
-                                                "overallQuotaInMB": "50000",
-                                                "sinks": "applicationInsights"
-                                            },
-                                            "SinksConfig": {
-                                                "Sink": [
-                                                    {
-                                                        "name": "applicationInsights",
-                                                        "ApplicationInsights": "[parameters('applicationInsightsKey')]"
-                                                    }
-                                                ]
-                                            }
-                                        },
-                                        "StorageAccount": "[parameters('applicationDiagnosticsStorageAccountName')]"
-                                    },
-                                    "typeHandlerVersion": "1.5"
                                 }
                             }
                         ]
@@ -797,10 +847,6 @@
                                     {
                                         "certificateStore": "[parameters('certificateStoreValue')]",
                                         "certificateUrl": "[parameters('certificateUrlValue')]"
-                                    },
-                                    {
-                                        "certificateStore": "[parameters('reverseProxyCertificateStoreValue')]",
-                                        "certificateUrl": "[parameters('reverseProxyCertificateUrlValue')]"
                                     }
                                 ]
                             }
@@ -987,178 +1033,15 @@
                                         "clusterEndpoint": "[reference(parameters('clusterName')).clusterEndpoint]",
                                         "nodeTypeRef": "[parameters('vmNodeType1Name')]",
                                         "dataPath": "D:\\\\SvcFab",
-                                        "durabilityLevel": "Bronze",
+                                        "durabilityLevel": "Silver",
                                         "enableParallelJobs": true,
                                         "nicPrefixOverride": "[parameters('subnet1Prefix')]",
-                                        "reverseProxyCertificate": {
-                                            "thumbprint": "[parameters('reverseProxyCertificateThumbprint')]",
-                                            "x509StoreName": "[parameters('reverseProxyCertificateStoreValue')]"
-                                        },
                                         "certificate": {
                                             "thumbprint": "[parameters('certificateThumbprint')]",
                                             "x509StoreName": "[parameters('certificateStoreValue')]"
                                         }
                                     },
                                     "typeHandlerVersion": "1.0"
-                                }
-                            },
-                            {
-                                "name": "[concat('VMDiagnosticsVmExt','_vmNodeType1Name')]",
-                                "properties": {
-                                    "type": "IaaSDiagnostics",
-                                    "autoUpgradeMinorVersion": true,
-                                    "protectedSettings": {
-                                        "storageAccountName": "[parameters('applicationDiagnosticsStorageAccountName')]",
-                                        "storageAccountKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('applicationDiagnosticsStorageAccountName')),'2015-05-01-preview').key1]",
-                                        "storageAccountEndPoint": "https://core.windows.net/"
-                                    },
-                                    "publisher": "Microsoft.Azure.Diagnostics",
-                                    "settings": {
-                                        "WadCfg": {
-                                            "DiagnosticMonitorConfiguration": {
-                                                "PerformanceCounters": {
-                                                    "PerformanceCounterConfiguration": [
-                                                      {
-                                                        "annotation": [],
-                                                        "counterSpecifier": "\\Processor(_Total)\\% Processor Time",
-                                                        "sampleRate": "PT3M"
-                                                      },
-                                                      {
-                                                        "annotation": [],
-                                                        "counterSpecifier": "\\Memory\\Available MBytes",
-                                                        "sampleRate": "PT3M"
-                                                      }
-                                                    ]
-                                                  },
-                                                "WindowsEventLog": {
-                                                    "DataSource": [
-                                                        {
-                                                        "name": "System!*[System[(Level=1 or Level=2)]]"
-                                                        }
-                                                    ]
-                                                },
-                                                "EtwProviders": {
-                                                    "EtwEventSourceProviderConfiguration": [
-                                                        {
-                                                            "provider": "Microsoft-ServiceFabric-Actors",
-                                                            "scheduledTransferKeywordFilter": "1",
-                                                            "scheduledTransferPeriod": "PT5M",
-                                                            "DefaultEvents": {
-                                                                "eventDestination": "ServiceFabricReliableActorEventTable"
-                                                            }
-                                                        },
-                                                        {
-                                                            "provider": "Microsoft-ServiceFabric-Services",
-                                                            "scheduledTransferPeriod": "PT5M",
-                                                            "DefaultEvents": {
-                                                                "eventDestination": "ServiceFabricReliableServiceEventTable"
-                                                            }
-                                                        },
-                                                        {
-                                                            "provider": "DPDHL-GeneralModuleControlApp-Dispatcher",
-                                                            "scheduledTransferPeriod": "PT5M",
-                                                            "DefaultEvents": {
-                                                            "eventDestination": "LoadTestEventTable"
-                                                            }
-                                                        },
-                                                        {
-                                                            "provider": "DPDHL-GeneralModuleControlApp-ClientContainersActor",
-                                                            "scheduledTransferPeriod": "PT5M",
-                                                            "DefaultEvents": {
-                                                            "eventDestination": "LoadTestEventTable"
-                                                            }
-                                                        },
-                                                        {
-                                                            "provider": "DPDHL-GeneralModuleControlApp-TransactionContainersActor",
-                                                            "scheduledTransferPeriod": "PT5M",
-                                                            "DefaultEvents": {
-                                                            "eventDestination": "LoadTestEventTable"
-                                                            }
-                                                        },
-                                                        {
-                                                            "provider": "DPDHL-GeneralModuleControlApp-TransactionManagerService",
-                                                            "scheduledTransferPeriod": "PT5M",
-                                                            "DefaultEvents": {
-                                                            "eventDestination": "LoadTestEventTable"
-                                                            }
-                                                        },
-                                                        {
-                                                            "provider": "DPDHL-ClientOpenCloseFinalizeApp-ClientCloseActor10",
-                                                            "scheduledTransferPeriod": "PT5M",
-                                                            "DefaultEvents": {
-                                                            "eventDestination": "LoadTestEventTable"
-                                                            }
-                                                        },
-                                                        {
-                                                            "provider": "DPDHL-ClientOpenCloseFinalizeApp-ClientFinalizeActor10",
-                                                            "scheduledTransferPeriod": "PT5M",
-                                                            "DefaultEvents": {
-                                                            "eventDestination": "LoadTestEventTable"
-                                                            }
-                                                        },
-                                                        {
-                                                            "provider": "DPDHL-ClientOpenCloseFinalizeApp-ClientOpenActor10",
-                                                            "scheduledTransferPeriod": "PT5M",
-                                                            "DefaultEvents": {
-                                                            "eventDestination": "LoadTestEventTable"
-                                                            }
-                                                        },
-                                                        {
-                                                            "provider": "DPDHL-FunctionalComponentsApp-SendungsausgabeActor10",
-                                                            "scheduledTransferPeriod": "PT5M",
-                                                            "DefaultEvents": {
-                                                            "eventDestination": "LoadTestEventTable"
-                                                            }
-                                                        },
-                                                        {
-                                                            "provider": "DPDHL-PdlModuleControlApp-PdlDispatcherActor",
-                                                            "scheduledTransferPeriod": "PT5M",
-                                                            "DefaultEvents": {
-                                                            "eventDestination": "LoadTestEventTable"
-                                                            }
-                                                        },
-                                                        {
-                                                            "provider": "DPDHL-SessionManagementApp-ClientActor",
-                                                            "scheduledTransferPeriod": "PT5M",
-                                                            "DefaultEvents": {
-                                                            "eventDestination": "LoadTestEventTable"
-                                                            }
-                                                        },
-                                                        {
-                                                            "provider": "DPDHL-SessionManagementApp-ReceiptActor",
-                                                            "scheduledTransferPeriod": "PT5M",
-                                                            "DefaultEvents": {
-                                                            "eventDestination": "LoadTestEventTable"
-                                                            }
-                                                        }
-                                                    ],
-                                                    "EtwManifestProviderConfiguration": [
-                                                        {
-                                                            "provider": "cbd93bc2-71e5-4566-b3a7-595d8eeca6e8",
-                                                            "scheduledTransferLogLevelFilter": "Information",
-                                                            "scheduledTransferKeywordFilter": "4611686018427387936", 
-                                                            "scheduledTransferPeriod": "PT5M",
-                                                            "DefaultEvents": {
-                                                                "eventDestination": "ServiceFabricSystemEventTable"
-                                                            }
-                                                        }
-                                                    ]
-                                                },
-                                                "overallQuotaInMB": "50000",
-                                                "sinks": "applicationInsights"
-                                            },
-                                            "SinksConfig": {
-                                                "Sink": [
-                                                    {
-                                                        "name": "applicationInsights",
-                                                        "ApplicationInsights": "[parameters('applicationInsightsKey')]"
-                                                    }
-                                                ]
-                                            }
-                                        },
-                                        "StorageAccount": "[parameters('applicationDiagnosticsStorageAccountName')]"
-                                    },
-                                    "typeHandlerVersion": "1.5"
                                 }
                             }
                         ]
@@ -1206,12 +1089,7 @@
                                     {
                                         "certificateStore": "[parameters('certificateStoreValue')]",
                                         "certificateUrl": "[parameters('certificateUrlValue')]"
-                                    },
-                                    {
-                                        "certificateStore": "[parameters('reverseProxyCertificateStoreValue')]",
-                                        "certificateUrl": "[parameters('reverseProxyCertificateUrlValue')]"
-                                    }
-                                ]
+                                    }                                ]
                             }
                         ]
                     },
@@ -1243,7 +1121,7 @@
             }
         },
         {
-            "apiVersion": "2017-07-01-preview",
+            "apiVersion": "[variables('sfApiVersion')]",
             "type": "Microsoft.ServiceFabric/clusters",
             "name": "[parameters('clusterName')]",
             "location": "[parameters('clusterLocation')]",
@@ -1261,7 +1139,7 @@
                 },
                 "clientCertificateCommonNames": [],
                 "clientCertificateThumbprints": [],
-                "clusterCodeVersion": "5.7.221.9494",
+                //"clusterCodeVersion": "5.7.221.9494",
                 "clusterState": "Default",
                 "diagnosticsStorageAccountConfig": {
                     "blobEndpoint": "[reference(concat('Microsoft.Storage/storageAccounts/', parameters('supportLogStorageAccountName')), variables('storageApiVersion')).primaryEndpoints.blob]",
@@ -1290,14 +1168,13 @@
                             "startPort": "[parameters('nt0applicationStartPort')]"
                         },
                         "clientConnectionEndpointPort": "[parameters('nt0fabricTcpGatewayPort')]",
-                        "durabilityLevel": "Bronze",
+                        "durabilityLevel": "Silver",
                         "ephemeralPorts": {
                             "endPort": "[parameters('nt0ephemeralEndPort')]",
                             "startPort": "[parameters('nt0ephemeralStartPort')]"
                         },
                         "httpGatewayEndpointPort": "[parameters('nt0fabricHttpGatewayPort')]",
                         "isPrimary": true,
-                        "reverseProxyEndpointPort": "[parameters('nt0reverseProxyEndpointPort')]",
                         "vmInstanceCount": "[parameters('nt0InstanceCount')]"
                     },
                     {
@@ -1307,23 +1184,18 @@
                             "startPort": "[parameters('nt1applicationStartPort')]"
                         },
                         "clientConnectionEndpointPort": "[parameters('nt1fabricTcpGatewayPort')]",
-                        "durabilityLevel": "Bronze",
+                        "durabilityLevel": "Silver",
                         "ephemeralPorts": {
                             "endPort": "[parameters('nt1ephemeralEndPort')]",
                             "startPort": "[parameters('nt1ephemeralStartPort')]"
                         },
                         "httpGatewayEndpointPort": "[parameters('nt1fabricHttpGatewayPort')]",
                         "isPrimary": false,
-                        "reverseProxyEndpointPort": "[parameters('nt1reverseProxyEndpointPort')]",
                         "vmInstanceCount": "[parameters('nt1InstanceCount')]"
                     }
                 ],
                 "provisioningState": "Default",
                 "reliabilityLevel": "Silver",
-                "reverseProxyCertificate": {
-                    "thumbprint": "[parameters('reverseProxyCertificateThumbprint')]",
-                    "x509StoreName": "[parameters('reverseProxyCertificateStoreValue')]"
-                },
                 "upgradeMode": "Manual",
                 "vmImage": "Windows"
             },

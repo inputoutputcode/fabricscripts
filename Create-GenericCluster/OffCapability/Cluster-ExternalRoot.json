@@ -1696,9 +1696,25 @@
             }
           },
           {
-            "name": "AzureLoadBalancer",
+            "name": "OverwriteAllowVnetInBound",
             "properties": {
-              "access": "Allow",
+              "access": "Deny",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "sourcePortRange": "*",
+              "sourcePortRanges": [],
+              "destinationAddressPrefix": "VirtualNetwork",
+              "destinationPortRange": "*",
+              "destinationPortRanges": [],
+              "direction": "Inbound",
+              "priority": 3960,
+              "protocol": "*",
+              "description": ""
+            }
+          },
+          {
+            "name": "OverwriteAllowAzureLoadBalancerInBound",
+            "properties": {
+              "access": "Deny",
               "sourceAddressPrefix": "AzureLoadBalancer",
               "sourcePortRange": "*",
               "sourcePortRanges": [],
@@ -1706,8 +1722,24 @@
               "destinationPortRange": "*",
               "destinationPortRanges": [],
               "direction": "Inbound",
-              "priority": 3990,
-              "protocol": "Tcp",
+              "priority": 3970,
+              "protocol": "*",
+              "description": ""
+            }
+          },
+          {
+            "name": "OverwriteDenyAllInBound",
+            "properties": {
+              "access": "Deny",
+              "sourceAddressPrefix": "Any",
+              "sourcePortRange": "*",
+              "sourcePortRanges": [],
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "*",
+              "destinationPortRanges": [],
+              "direction": "Inbound",
+              "priority": 3980,
+              "protocol": "*",
               "description": ""
             }
           },
@@ -1756,6 +1788,22 @@
               "direction": "Outbound",
               "priority": 3920,
               "protocol": "Tcp",
+              "description": ""
+            }
+          },
+          {
+            "name": "OverwriteDenyAllOutBound",
+            "properties": {
+              "access": "Deny",
+              "sourceAddressPrefix": "Any",
+              "sourcePortRange": "*",
+              "sourcePortRanges": [],
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "*",
+              "destinationPortRanges": [],
+              "direction": "Outbound",
+              "priority": 3930,
+              "protocol": "*",
               "description": ""
             }
           }

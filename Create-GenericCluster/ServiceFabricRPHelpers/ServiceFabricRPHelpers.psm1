@@ -63,7 +63,7 @@ if($CreateSelfSignedCertificate)
   $provider = "Microsoft Enhanced RSA and AES Cryptographic Provider"
   $certPath = "Cert:\CurrentUser\My"
   $notBeforeDate = Get-Date -Format "yyyy-MM-dd"
-  $notAfterDate = (Get-Date).AddDays(1).ToString("yyyy-MM-dd")
+  $notAfterDate = (Get-Date).AddDays(2).ToString("yyyy-MM-dd")
   New-SelfSignedCertificate -NotBefore $notBeforeDate -NotAfter $notAfterDate -DnsName $DnsName -CertStoreLocation $certPath -Provider $provider -KeyExportPolicy ExportableEncrypted | Export-PfxCertificate -FilePath $NewPfxFilePath -Password $securePassword | Out-Null
   $ExistingPfxFilePath = $NewPfxFilePath
 }

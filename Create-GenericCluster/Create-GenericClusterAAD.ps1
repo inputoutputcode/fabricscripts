@@ -1,32 +1,27 @@
 ﻿## Declare parameters
-$armTemplate = ".\Templates\Vortex-LoadTest-ClusterBronzeSeedNodeTest.json" # 
+$armTemplate = ".\Templates\Vortex-LoadTest-Cluster.json" # 
 $currentExecutionPath = "D:\Code\FabricMonkey\FabricScripts\Create-GenericCluster"
 $clusterVersion = "8.2.1235.9590"
+$azureRegion = "eastus"
+$localCertificatePath = "D:\Certificates\"
+$generalPassword = "nZ549Ux2MnW6srTvOZsq"
 
-## COPR subscription
-$subscriptionId = "13ad2c84-84fa-4798-ad71-e70c07af873f" 
-# Set environment 
+## Auth
+<#
+$subscriptionId = "13ad2c84-84fa-4798-ad71-e70c07af873f"
 Try {
   Select-AzSubscription -SubscriptionId $subscriptionId -ErrorAction Stop
 } Catch {
     Login-AzAccount
     Set-AzContext -SubscriptionId $subscriptionId
 }
-
-# MSDN (Disconnect-AzAccount, Connect-AzAccount with christian@poststev.onmicrosoft.com)
-<#
-$subscriptionId = "d715466f-2653-406f-be2f-495f7fd4e1b7"
-$tenantId = "7459bed2-8ead-4b9b-84ff-38402c19a97d"
-Disconnect-AzAccount
-Login-AzAccount -Tenant $tenantId
-Connect-AzAccount -Tenant $tenantId
-Select-AzSubscription -SubscriptionId $subscriptionId -Tenant $tenantId -ErrorAction Stop
-Set-AzContext -SubscriptionId $subscriptionId
 #>
+# MSDN 
+$subscriptionId = "d715466f-2653-406f-be2f-495f7fd4e1b7"
+Connect-AzAccount -Tenant "7459bed2-8ead-4b9b-84ff-38402c19a97d"
+Select-AzSubscription -SubscriptionId $subscriptionId -ErrorAction Stop
+Set-AzContext -SubscriptionId $subscriptionId
 
-$azureRegion = "eastus"
-$localCertificatePath = "D:\Certificates\"
-$generalPassword = "nZ549Ux2MnW6srTvOZsq"
 
 cd $currentExecutionPath
 Enable-AzureRmAlias
@@ -48,7 +43,11 @@ $resourceGroup = $deploymentName + "-group"
 $keyVaultName = $deploymentName + "-keyvault"
 $serviceFabricClusterName = $deploymentName + "-servicefabric"
 $serviceFabricClusterDns = $serviceFabricClusterName + "." + $azureRegion + ".cloudapp.azure.com"
+$webapplicationReplyUrl = "https://" + $serviceFabricClusterDns + ":19080/Explorer/index.html"
 $omsName = $deploymentName + "-oms"
+
+# AAD tenant id from the portal
+$tenantId = 'f1c9b125-e2bf-48c0-b025-23e47c410293'
 
 ## Deploy Azure Key Vault
 New-AzResourceGroup -Name $resourceGroup -Location $azureRegion -Force
@@ -60,6 +59,28 @@ $clusterCertificate = Invoke-AddCertToKeyVaultAsSecret -SubscriptionId $subscrip
 $clusterCertificate.CertificateThumbprint
 $clusterCertificate.SourceVault
 $clusterCertificate.CertificateURL
+
+# AAD setup
+cd "C:\Code\MicrosoftAzureServiceFabric-AADHelpers"
+$Configobj = .\SetupApplications.ps1 -TenantId $tenantId -ClusterName $clusterName -WebApplicationReplyUrl $webapplicationReplyUrl
+.\SetupUser.ps1 -ConfigObj $Configobj -UserName 'DemoLocalUser' -Password $generalPassword
+.\SetupUser.ps1 -ConfigObj $Configobj -UserName 'DemoLocalAdmin' -Password $generalPassword -IsAdmin
+
+<#
+TenantId                       f1c9b125-e2bf-48c0-b025-23e47c410293                                                                                                                                                                                              
+WebAppId                       9e776163-2766-4ea7-ae77-c74653b5e9b5                                                                                                                                                                                              
+NativeClientAppId              248ccd52-abb1-403e-a53a-86711e151f31                                                                                                                                                                                              
+ServicePrincipalId             2b84b565-f530-4143-a075-c2dbb291cfc2                                                                                                                                                                                              
+
+-----ARM template-----
+"azureActiveDirectory": {
+  "tenantId":"f1c9b125-e2bf-48c0-b025-23e47c410293",
+  "clusterApplication":"9e776163-2766-4ea7-ae77-c74653b5e9b5",
+  "clientApplication":"248ccd52-abb1-403e-a53a-86711e151f31"
+},
+#>
+
+cd $currentExecutionPath
 
 ## Deploy Azure Service Fabric Cluster
 $armParameter = @{}

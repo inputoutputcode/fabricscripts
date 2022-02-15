@@ -2,14 +2,14 @@
 $armTemplate = ".\Templates\patch-orchestration-application.json"
 $currentExecutionPath = "D:\Code\inputoutputcode\FabricMonkey\Create-GenericCluster"
 $subscriptionId = "13ad2c84-84fa-4798-ad71-e70c07af873f"
-$clusterVersion = "7.1.409.9590"
+$clusterVersion = "8.2.1235.9590"
 $azureRegion = "westus"
 $generalPassword = "nZ549Ux2MnW6srTvOZsq"
 
 cd $currentExecutionPath
 Enable-AzureRmAlias
 
-$deploymentName = "chrpap050920"
+$deploymentName = "chrpap071116"
 
 # Define dynamic parameters
 $certificateName = $deploymentName + "-cert"
@@ -19,9 +19,9 @@ $keyVaultName = $deploymentName + "-keyvault"
 $serviceFabricClusterName = $deploymentName + "-servicefabric"
 $serviceFabricClusterDns = $serviceFabricClusterName + "." + $azureRegion + ".cloudapp.azure.com"
 
-$sourceVault = "/subscriptions/13ad2c84-84fa-4798-ad71-e70c07af873f/resourceGroups/chrpap311337-group/providers/Microsoft.KeyVault/vaults/chrpap311337-keyvault"
-$certificateURL = "https://chrpap311337-keyvault.vault.azure.net/secrets/chrpap311337-cert/c5cded107eb941a2832b829ecb8301ba"
-$certificateThumbprint = "CAB8D58228BE2247038206DE2564E141CE519D7E"
+$sourceVault = "/subscriptions/13ad2c84-84fa-4798-ad71-e70c07af873f/resourceGroups/chrpap071116-group/providers/Microsoft.KeyVault/vaults/chrpap071116-keyvault"
+$certificateURL = "https://chrpap071116-keyvault.vault.azure.net/secrets/chrpap071116-cert/95a82b262e0045478257444edde2beec"
+$certificateThumbprint = "ECCB3B18883A166AA7B40D93A6B2FEBC737883C6"
 
 ## Deploy Azure Service Fabric Cluster
 $armParameter = @{}

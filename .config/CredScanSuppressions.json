@@ -1,0 +1,9 @@
+{
+    "tool": "Credential Scanner",
+    "suppressions": [
+      {
+        "placeholder": "nZ549Ux2MnW6srTvOZsq",
+        "_justification": "This is the secret which is only used for the purpose of demonstration and it is not used anywhere else."
+      }
+    ]
+  }

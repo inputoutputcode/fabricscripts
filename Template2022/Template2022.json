@@ -153,7 +153,7 @@
     },
     "vmNodeType0Size": {
       "type": "string",
-      "defaultValue": "Standard_D2_v2"
+      "defaultValue": "Standard_D4_v5"
     },
     "subnet0Name": {
       "type": "string",
@@ -178,7 +178,7 @@
     },
     "vmNodeType1Size": {
       "type": "string",
-      "defaultValue": "Standard_D2_v2"
+      "defaultValue": "Standard_D4_v5"
     },
     "subnet1Name": {
       "type": "string",
@@ -266,9 +266,18 @@
     "lbPoolID1": "[concat(variables('lbID1'),'/backendAddressPools/LoadBalancerBEAddressPool')]",
     "lbProbeID1": "[concat(variables('lbID1'),'/probes/FabricGatewayProbe')]",
     "lbHttpProbeID1": "[concat(variables('lbID1'),'/probes/FabricHttpGatewayProbe')]",
-    "lbNatPoolID1": "[concat(variables('lbID1'),'/inboundNatPools/LoadBalancerBEAddressNatPool')]"
+    "lbNatPoolID1": "[concat(variables('lbID1'),'/inboundNatPools/LoadBalancerBEAddressNatPool')]",
+
+    "wadlogs": "<WadCfg> <DiagnosticMonitorConfiguration overallQuotaInMB=\"50000\" xmlns=\"http://schemas.microsoft.com/ServiceHosting/2010/10/DiagnosticsConfiguration\"> <DiagnosticInfrastructureLogs scheduledTransferLogLevelFilter=\"Error\"/> <WindowsEventLog scheduledTransferPeriod=\"PT1M\" > <DataSource name=\"Application!*[System[(Level = 1 or Level = 2)]]\" /> <DataSource name=\"Security!*[System[(Level = 1 or Level = 2)]]\" /> <DataSource name=\"System!*[System[(Level = 1 or Level = 2)]]\" /></WindowsEventLog>",
+    "wadperfcounters1": "<PerformanceCounters scheduledTransferPeriod=\"PT1M\"><PerformanceCounterConfiguration counterSpecifier=\"\\Processor(_Total)\\% Processor Time\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU utilization\" locale=\"en-us\"/></PerformanceCounterConfiguration<PerformanceCounterConfiguration counterSpecifier=\"\\Process(_Total)\\Thread Count\" sampleRate=\"PT15S\" unit=\"Count\"><annotation displayName=\"Threads\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Process(_Total)\\Handle Count\" sampleRate=\"PT15S\" unit=\"Count\"><annotation displayName=\"Handles\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\Available Bytes\" sampleRate=\"PT15S\" unit=\"Bytes\"><annotation displayName=\"Memory available\" locale=\"en-us\"/></PerformanceCounterConfiguration>",
+    "wadperfcounters2": "<PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk(_Total)\\% Disk Read Time\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Disk active read time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk(_Total)\\% Disk Write Time\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Disk active write time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk(_Total)\\Disk Reads/sec\" sampleRate=\"PT15S\" unit=\"CountPerSecond\"><annotation displayName=\"Disk read operations\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk(_Total)\\Disk Writes/sec\" sampleRate=\"PT15S\" unit=\"CountPerSecond\"><annotation displayName=\"Disk write operations\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk(_Total)\\Disk Bytes/sec\" sampleRate=\"PT15S\" unit=\"BytesPerSecond\"><annotation displayName=\"Disk speed\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk(_Total)\\Disk Read Bytes/sec\" sampleRate=\"PT15S\" unit=\"BytesPerSecond\"><annotation displayName=\"Disk read speed\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk(_Total)\\Disk Write Bytes/sec\" sampleRate=\"PT15S\" unit=\"BytesPerSecond\"><annotation displayName=\"Disk write speed\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\LogicalDisk(_Total)\\% Free Space\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Disk free space (percentage)\" locale=\"en-us\"/></PerformanceCounterConfiguration></PerformanceCounters>",
+    "wadcfgxstart": "[concat(variables('wadlogs'), variables('wadperfcounters1'), variables('wadperfcounters2'), '<Metrics resourceId=\"')]",
+    "wadmetricsresourceid": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name , '/providers/', 'Microsoft.Compute/virtualMachines/')]",
+    "wadetwproviders": "<EtwProviders><EtwEventSourceProviderConfiguration provider=\"Microsoft-ServiceFabric-Actors\" scheduledTransferKeywordFilter=\"1\" scheduledTransferPeriod=\"PT1M\"><DefaultEvents eventDestination=\"ServiceFabricReliableActorEventTable\"></EtwEventSourceProviderConfiguration><EtwEventSourceProviderConfiguration provider=\"Microsoft-ServiceFabric-Services\" scheduledTransferPeriod=\"PT1M\"><DefaultEvents eventDestination=\"ServiceFabricReliableServiceEventTable\"></EtwEventSourceProviderConfiguration><EtwEventSourceProviderConfiguration provider=\"Contoso-CustomProvider\" scheduledTransferPeriod=\"PT1M\"><DefaultEvents eventDestination=\"ETWEventTable\"></EtwEventSourceProviderConfiguration><EtwManifestProviderConfiguration provider=\"cbd93bc2-71e5-4566-b3a7-595d8eeca6e8\" scheduledTransferLogLevelFilter=\"Information\"  scheduledTransferPeriod=\"PT1M\"><DefaultEvents eventDestination=\"ServiceFabricSystemEventTable\"></EtwManifestProviderConfiguration></EtwProviders>",
+    "wadcfgxend": "\"><MetricAggregation scheduledTransferPeriod=\"PT10M\"/><MetricAggregation scheduledTransferPeriod=\"PT1M\"/></Metrics></DiagnosticMonitorConfiguration></WadCfg>"  
   },
   "resources": [
+
     {
       "apiVersion": "[variables('storageApiVersion')]",
       "type": "Microsoft.Storage/storageAccounts",
@@ -419,12 +428,12 @@
               "backendAddressPool": {
                 "id": "[variables('lbPoolID0')]"
               },
-              "backendPort": "[parameters('nt0fabricTcpGatewayPort')]",
+              "backendPort": "[parameters('fabricTcpGatewayPort')]",
               "enableFloatingIP": "false",
               "frontendIPConfiguration": {
                 "id": "[variables('lbIPConfig0')]"
               },
-              "frontendPort": "[parameters('nt0fabricTcpGatewayPort')]",
+              "frontendPort": "[parameters('fabricTcpGatewayPort')]",
               "idleTimeoutInMinutes": "5",
               "probe": {
                 "id": "[variables('lbProbeID0')]"
@@ -438,12 +447,12 @@
               "backendAddressPool": {
                 "id": "[variables('lbPoolID0')]"
               },
-              "backendPort": "[parameters('nt0fabricHttpGatewayPort')]",
+              "backendPort": "[parameters('fabricHttpGatewayPort')]",
               "enableFloatingIP": "false",
               "frontendIPConfiguration": {
                 "id": "[variables('lbIPConfig0')]"
               },
-              "frontendPort": "[parameters('nt0fabricHttpGatewayPort')]",
+              "frontendPort": "[parameters('fabricHttpGatewayPort')]",
               "idleTimeoutInMinutes": "5",
               "probe": {
                 "id": "[variables('lbHttpProbeID0')]"
@@ -477,7 +486,7 @@
             "properties": {
               "intervalInSeconds": 5,
               "numberOfProbes": 2,
-              "port": "[parameters('nt0fabricTcpGatewayPort')]",
+              "port": "[parameters('fabricTcpGatewayPort')]",
               "protocol": "tcp"
             }
           },
@@ -495,7 +504,7 @@
             "properties": {
               "intervalInSeconds": 5,
               "numberOfProbes": 2,
-              "port": "[parameters('nt0fabricHttpGatewayPort')]",
+              "port": "[parameters('fabricHttpGatewayPort')]",
               "protocol": "tcp"
             }
           }
@@ -580,12 +589,12 @@
               "backendAddressPool": {
                 "id": "[variables('lbPoolID1')]"
               },
-              "backendPort": "[parameters('nt1fabricTcpGatewayPort')]",
+              "backendPort": "[parameters('fabricTcpGatewayPort')]",
               "enableFloatingIP": "false",
               "frontendIPConfiguration": {
                 "id": "[variables('lbIPConfig1')]"
               },
-              "frontendPort": "[parameters('nt1fabricTcpGatewayPort')]",
+              "frontendPort": "[parameters('fabricTcpGatewayPort')]",
               "idleTimeoutInMinutes": "5",
               "probe": {
                 "id": "[variables('lbProbeID1')]"
@@ -599,12 +608,12 @@
               "backendAddressPool": {
                 "id": "[variables('lbPoolID1')]"
               },
-              "backendPort": "[parameters('nt1fabricHttpGatewayPort')]",
+              "backendPort": "[parameters('fabricHttpGatewayPort')]",
               "enableFloatingIP": "false",
               "frontendIPConfiguration": {
                 "id": "[variables('lbIPConfig1')]"
               },
-              "frontendPort": "[parameters('nt1fabricHttpGatewayPort')]",
+              "frontendPort": "[parameters('fabricHttpGatewayPort')]",
               "idleTimeoutInMinutes": "5",
               "probe": {
                 "id": "[variables('lbHttpProbeID1')]"
@@ -638,7 +647,7 @@
             "properties": {
               "intervalInSeconds": 5,
               "numberOfProbes": 2,
-              "port": "[parameters('nt1fabricTcpGatewayPort')]",
+              "port": "[parameters('fabricTcpGatewayPort')]",
               "protocol": "tcp"
             }
           },
@@ -656,7 +665,7 @@
             "properties": {
               "intervalInSeconds": 5,
               "numberOfProbes": 2,
-              "port": "[parameters('nt1fabricHttpGatewayPort')]",
+              "port": "[parameters('fabricHttpGatewayPort')]",
               "protocol": "tcp"
             }
           }
@@ -882,7 +891,7 @@
     {
       "apiVersion": "[variables('vmssApiVersion')]",
       "type": "Microsoft.Compute/virtualMachineScaleSets",
-      "name": "[concat(parameters('vmNodeType2Name'), '1')]",
+      "name": "[concat(parameters('vmNodeType0Name'), copyIndex())]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "[concat('Microsoft.Network/virtualNetworks/', variables('vnetName'))]",
@@ -893,8 +902,12 @@
         "[concat('Microsoft.OperationalInsights/workspaces/', variables('omsName'))]"
       ],
       "zones": [
-        "1"
+        "[copyIndex()]"
       ],
+      "copy": {
+        "name": "vmms1",
+        "count": 3
+      },
       "properties": {
         "overprovision": false,
         "singlePlacementGroup": true,
@@ -927,7 +940,8 @@
                   "settings": {
                     "clusterEndpoint": "[reference(parameters('clusterName')).clusterEndpoint]",
                     "nodeTypeRef": "[parameters('vmNodeType2Name')]",
-                    "dataPath": "D:\\\\SvcFab",
+                    "dataPath": "S:\\\\SvcFab",
+                    "useManagedDataDisk": true,
                     "durabilityLevel": "[parameters('durabilitystateless')]",
                     "enableParallelJobs": true,
                     "nicPrefixOverride": "[parameters('subnet2Prefix')]",
@@ -938,7 +952,7 @@
                     "systemLogUploadSettings": {
                       "Enabled": true
                     },
-                    "faultDomainOverride": "az1"
+                    "faultDomainOverride": "[concat('az', copyIndex())]"
                   },
                   "typeHandlerVersion": "1.1"
                 }
@@ -957,155 +971,6 @@
                     "workspaceKey": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces/', variables('omsName')), variables('omsApiVersion')).primarySharedKey]"
                   }
                 }
-              },
-              {
-                "name": "[concat('VMDiagnosticsVmExt','_vmNodeType0Name')]",
-                "properties": {
-                  "type": "IaaSDiagnostics",
-                  "autoUpgradeMinorVersion": true,
-                  "protectedSettings": {
-                    "storageAccountName": "[variables('dgstorageName')]",
-                    "storageAccountKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('dgstorageName')), variables('storageApiVersion')).keys[0].value]",
-                    "storageAccountEndPoint": "https://core.windows.net/"
-                  },
-                  "publisher": "Microsoft.Azure.Diagnostics",
-                  "settings": {
-                    "WadCfg": {
-                      "DiagnosticMonitorConfiguration": {
-                        "PerformanceCounters": {
-                          "PerformanceCounterConfiguration": [
-                            {
-                              "annotation": [
-                              ],
-                              "counterSpecifier": "\\Processor(_Total)\\% Processor Time",
-                              "sampleRate": "PT10S"
-                            },
-                            {
-                              "annotation": [
-                              ],
-                              "counterSpecifier": "\\Memory\\Available MBytes",
-                              "sampleRate": "PT10S"
-                            },
-                            {
-                              "annotation": [
-                              ],
-                              "counterSpecifier": "\\LogicalDisk(_Total)\\Disk Read Bytes/sec",
-                              "sampleRate": "PT10S"
-                            },
-                            {
-                              "annotation": [
-                              ],
-                              "counterSpecifier": "\\LogicalDisk(C:)\\Disk Write Bytes/sec",
-                              "sampleRate": "PT10S"
-                            },
-                            {
-                              "annotation": [
-                              ],
-                              "counterSpecifier": "\\LogicalDisk(C:)\\Disk Read Bytes/sec",
-                              "sampleRate": "PT10S"
-                            },
-                            {
-                              "annotation": [
-                              ],
-                              "counterSpecifier": "\\LogicalDisk(D:)\\Disk Write Bytes/sec",
-                              "sampleRate": "PT10S"
-                            },
-                            {
-                              "annotation": [
-                              ],
-                              "counterSpecifier": "\\LogicalDisk(D:)\\Disk Read Bytes/sec",
-                              "sampleRate": "PT10S"
-                            }
-                          ]
-                        },
-                        "WindowsEventLog": {
-                          "DataSource": [
-                            {
-                              "name": "System!*[System[(Level=1 or Level=2)]]"
-                            }
-                          ]
-                        },
-                        "EtwProviders": {
-                          "EtwEventSourceProviderConfiguration": [
-                            {
-                              "provider": "Microsoft-ServiceFabric-Actors",
-                              "scheduledTransferKeywordFilter": "1",
-                              "scheduledTransferPeriod": "PT1M",
-                              "DefaultEvents": {
-                                "eventDestination": "ServiceFabricReliableActorEventTable"
-                              }
-                            },
-                            {
-                              "provider": "Microsoft-ServiceFabric-Services",
-                              "scheduledTransferPeriod": "PT1M",
-                              "DefaultEvents": {
-                                "eventDestination": "ServiceFabricReliableServiceEventTable"
-                              }
-                            },
-                            {
-                              "provider": "Contoso-CustomProvider",
-                              "scheduledTransferPeriod": "PT1M",
-                              "DefaultEvents": {
-                                "eventDestination": "ETWEventTable"
-                              }
-                            },
-                            {
-                              "provider": "e39b723c-590c-4090-abb0-11e3e6616346",
-                              "scheduledTransferPeriod": "PT5M",
-                              "DefaultEvents": {
-                                "eventDestination": "ServiceFabricPatchOrchestrationAppEventTable"
-                              }
-                            },
-                            {
-                              "provider": "fc0028ff-bfdc-499f-80dc-ed922c52c5e9",
-                              "scheduledTransferPeriod": "PT5M",
-                              "DefaultEvents": {
-                                "eventDestination": "ServiceFabricPatchOrchestrationAppEventTable"
-                              }
-                            },
-                            {
-                              "provider": "24afa313-0d3b-4c7c-b485-1047fd964b60",
-                              "scheduledTransferPeriod": "PT5M",
-                              "DefaultEvents": {
-                                "eventDestination": "ServiceFabricPatchOrchestrationAppEventTable"
-                              }
-                            },
-                            {
-                              "provider": "05dc046c-60e9-4ef7-965e-91660adffa68",
-                              "scheduledTransferPeriod": "PT5M",
-                              "DefaultEvents": {
-                                "eventDestination": "ServiceFabricPatchOrchestrationAppEventTable"
-                              }
-                            }
-                          ],
-                          "EtwManifestProviderConfiguration": [
-                            {
-                              "provider": "cbd93bc2-71e5-4566-b3a7-595d8eeca6e8",
-                              "scheduledTransferLogLevelFilter": "Information",
-                              "scheduledTransferKeywordFilter": "4611686018427387936",
-                              "scheduledTransferPeriod": "PT1M",
-                              "DefaultEvents": {
-                                "eventDestination": "ServiceFabricSystemEventTable"
-                              }
-                            }
-                          ]
-                        },
-                        "overallQuotaInMB": "50000",
-                        "sinks": "applicationInsights"
-                      },
-                      "SinksConfig": {
-                        "Sink": [
-                          {
-                            "name": "applicationInsights",
-                            "ApplicationInsights": "[reference(resourceId('Microsoft.Insights/components', variables('aiName')), '2014-04-01').InstrumentationKey]"
-                          }
-                        ]
-                      }
-                    },
-                    "StorageAccount": "[variables('dgstorageName')]"
-                  },
-                  "typeHandlerVersion": "1.5"
-                }
               }
             ]
           },
@@ -1114,6 +979,7 @@
               {
                 "name": "[concat(variables('nicName'), '-0')]",
                 "properties": {
+                  "enableAcceleratedNetworking": true,
                   "ipConfigurations": [
                     {
                       "name": "[concat(variables('nicName'),'-',0)]",
@@ -1173,7 +1039,15 @@
               "managedDisk": {
                 "storageAccountType": "[parameters('storageAccountType')]"
               }
-            }
+            },
+            "datadisks": [
+              {
+                  "lun": "1",
+                  "createOption": "empty",
+                  "diskSizeGB": "100",
+                  "managedDisk": { "storageAccountType": "Standard_LRS" }
+              }
+            ]
           }
         }
       },
@@ -1188,13 +1062,17 @@
       }
     },
     {
-      "type": "Microsoft.Compute/virtualMachines/extensions",
-      "apiVersion": "2021-04-01",
-      "name": "[concat(variables('vmName'),'/', 'InstallWebServer')]",
+      "type": "Microsoft.Compute/virtualMachineScaleSets/extensions",
+      "apiVersion": "2021-07-01",
+      "name": "[concat(parameters('vmNodeType0Name'),'/', 'ApplicationHealthWindows', copyIndex())]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[concat('Microsoft.Compute/virtualMachines/',variables('vmName'))]"
+        "[concat('Microsoft.Compute/virtualMachineScaleSets/', parameters('vmNodeType0Name'), copyIndex())]"
       ],
+      "copy": {
+        "name": "apphealthextension1",
+        "count": 3
+      },
       "properties": {
         "publisher": "Microsoft.ManagedServices",
         "type": "ApplicationHealthWindows",
@@ -1203,6 +1081,35 @@
         "settings": {
           "protocol": "tcp",
           "port": "19000"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachineScaleSets/extensions",
+      "apiVersion": "2021-07-01",
+      "name": "[concat(parameters('vmNodeType0Name'),'/', 'IaaSDiagnostics', copyIndex())]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachineScaleSets/', parameters('vmNodeType0Name'), copyIndex())]"
+      ],
+      "copy": {
+        "name": "diagextension1",
+        "count": 3
+      },
+      "properties": {
+        "publisher": "Microsoft.Azure.Diagnostics",
+        "name": "[concat('VMDiagnosticsVmExt', '_vmNodeType0Name', copyIndex())]",
+        "typeHandlerVersion": "1.5",
+        "type": "IaaSDiagnostics",
+        "autoUpgradeMinorVersion": true,
+        "protectedSettings": {
+          "storageAccountName": "[variables('dgstorageName')]",
+          "storageAccountKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('dgstorageName')), variables('storageApiVersion')).keys[0].value]",
+          "storageAccountEndPoint": "https://core.windows.net/"
+        },
+        "settings": {
+          "xmlCfg": "[base64(concat(variables('wadcfgxstart'), variables('wadmetricsresourceid'), concat(parameters('vmNodeType0Name'), copyindex()), variables('wadetwproviders'), variables('wadcfgxend')))]",
+          "StorageAccount": "[variables('dgstorageName')]"
         }
       }
     },
@@ -1253,7 +1160,8 @@
                   "settings": {
                     "clusterEndpoint": "[reference(parameters('clusterName')).clusterEndpoint]",
                     "nodeTypeRef": "[parameters('vmNodeType0Name')]",
-                    "dataPath": "D:\\\\SvcFab",
+                    "dataPath": "S:\\\\SvcFab",
+                    "useManagedDataDisk": true,
                     "durabilityLevel": "[parameters('durability')]",
                     "enableParallelJobs": true,
                     "nicPrefixOverride": "[parameters('subnet0Prefix')]",
@@ -1440,6 +1348,7 @@
               {
                 "name": "[concat(variables('nicName'), '-0')]",
                 "properties": {
+                  "enableAcceleratedNetworking": true,
                   "ipConfigurations": [
                     {
                       "name": "[concat(variables('nicName'),'-',0)]",
@@ -1499,7 +1408,15 @@
               "managedDisk": {
                 "storageAccountType": "[parameters('storageAccountType')]"
               }
-            }
+            },
+            "datadisks": [
+              {
+                  "lun": "1",
+                  "createOption": "empty",
+                  "diskSizeGB": "100",
+                  "managedDisk": { "storageAccountType": "Standard_LRS" }
+              }
+            ]
           }
         }
       },
@@ -1560,7 +1477,8 @@
                   "settings": {
                     "clusterEndpoint": "[reference(parameters('clusterName')).clusterEndpoint]",
                     "nodeTypeRef": "[parameters('vmNodeType0Name')]",
-                    "dataPath": "D:\\\\SvcFab",
+                    "dataPath": "S:\\\\SvcFab",
+                    "useManagedDataDisk": true,
                     "durabilityLevel": "[parameters('durability')]",
                     "enableParallelJobs": true,
                     "nicPrefixOverride": "[parameters('subnet0Prefix')]",
@@ -1747,6 +1665,7 @@
               {
                 "name": "[concat(variables('nicName'), '-0')]",
                 "properties": {
+                  "enableAcceleratedNetworking": true,
                   "ipConfigurations": [
                     {
                       "name": "[concat(variables('nicName'),'-',0)]",
@@ -1806,7 +1725,15 @@
               "managedDisk": {
                 "storageAccountType": "[parameters('storageAccountType')]"
               }
-            }
+            },
+            "datadisks": [
+              {
+                  "lun": "1",
+                  "createOption": "empty",
+                  "diskSizeGB": "100",
+                  "managedDisk": { "storageAccountType": "Standard_LRS" }
+              }
+            ]
           }
         }
       },
@@ -1823,7 +1750,7 @@
     {
       "apiVersion": "[variables('vmssApiVersion')]",
       "type": "Microsoft.Compute/virtualMachineScaleSets",
-      "name": "[parameters('vmNodeType1Name')]",
+      "name": "[concat(parameters('vmNodeType1Name'), '1')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "[concat('Microsoft.Network/virtualNetworks/', variables('vnetName'))]",
@@ -1832,6 +1759,9 @@
         "[concat('Microsoft.Storage/storageAccounts/', variables('dgstorageName'))]",
         "[concat('Microsoft.Insights/components/', variables('aiName'))]",
         "[concat('Microsoft.OperationalInsights/workspaces/', variables('omsName'))]"
+      ],
+      "zones": [
+        "1"
       ],
       "properties": {
         "overprovision": false,
@@ -1864,14 +1794,19 @@
                   "settings": {
                     "clusterEndpoint": "[reference(parameters('clusterName')).clusterEndpoint]",
                     "nodeTypeRef": "[parameters('vmNodeType1Name')]",
-                    "dataPath": "D:\\\\SvcFab",
+                    "dataPath": "S:\\\\SvcFab",
+                    "useManagedDataDisk": true,
                     "durabilityLevel": "[parameters('durability')]",
                     "enableParallelJobs": true,
                     "nicPrefixOverride": "[parameters('subnet1Prefix')]",
                     "certificate": {
                       "thumbprint": "[parameters('certificateThumbprint')]",
                       "x509StoreName": "[parameters('certificateStoreValue')]"
-                    }
+                    },
+                    "systemLogUploadSettings": {
+                      "Enabled": true
+                    },
+                    "faultDomainOverride": "az1"
                   },
                   "typeHandlerVersion": "1.1"
                 }
@@ -2047,6 +1982,7 @@
               {
                 "name": "[concat(variables('nicName'), '-1')]",
                 "properties": {
+                  "enableAcceleratedNetworking": true,
                   "ipConfigurations": [
                     {
                       "name": "[concat(variables('nicName'),'-',1)]",
@@ -2106,7 +2042,15 @@
               "managedDisk": {
                 "storageAccountType": "[parameters('storageAccountType')]"
               }
-            }
+            },
+            "datadisks": [
+              {
+                  "lun": "1",
+                  "createOption": "empty",
+                  "diskSizeGB": "100",
+                  "managedDisk": { "storageAccountType": "Standard_LRS" }
+              }
+            ]
           }
         }
       },
@@ -2123,7 +2067,7 @@
     {
       "apiVersion": "[variables('vmssApiVersion')]",
       "type": "Microsoft.Compute/virtualMachineScaleSets",
-      "name": "[parameters('vmNodeType1Name')]",
+      "name": "[concat(parameters('vmNodeType1Name'), '2')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "[concat('Microsoft.Network/virtualNetworks/', variables('vnetName'))]",
@@ -2132,6 +2076,9 @@
         "[concat('Microsoft.Storage/storageAccounts/', variables('dgstorageName'))]",
         "[concat('Microsoft.Insights/components/', variables('aiName'))]",
         "[concat('Microsoft.OperationalInsights/workspaces/', variables('omsName'))]"
+      ],
+      "zones": [
+        "2"
       ],
       "properties": {
         "overprovision": false,
@@ -2164,14 +2111,19 @@
                   "settings": {
                     "clusterEndpoint": "[reference(parameters('clusterName')).clusterEndpoint]",
                     "nodeTypeRef": "[parameters('vmNodeType1Name')]",
-                    "dataPath": "D:\\\\SvcFab",
+                    "dataPath": "S:\\\\SvcFab",
+                    "useManagedDataDisk": true,
                     "durabilityLevel": "[parameters('durability')]",
                     "enableParallelJobs": true,
                     "nicPrefixOverride": "[parameters('subnet1Prefix')]",
                     "certificate": {
                       "thumbprint": "[parameters('certificateThumbprint')]",
                       "x509StoreName": "[parameters('certificateStoreValue')]"
-                    }
+                    },
+                    "systemLogUploadSettings": {
+                      "Enabled": true
+                    },
+                    "faultDomainOverride": "az2"
                   },
                   "typeHandlerVersion": "1.1"
                 }
@@ -2347,6 +2299,7 @@
               {
                 "name": "[concat(variables('nicName'), '-1')]",
                 "properties": {
+                  "enableAcceleratedNetworking": true,
                   "ipConfigurations": [
                     {
                       "name": "[concat(variables('nicName'),'-',1)]",
@@ -2406,7 +2359,15 @@
               "managedDisk": {
                 "storageAccountType": "[parameters('storageAccountType')]"
               }
-            }
+            },
+            "datadisks": [
+              {
+                  "lun": "1",
+                  "createOption": "empty",
+                  "diskSizeGB": "100",
+                  "managedDisk": { "storageAccountType": "Standard_LRS" }
+              }
+            ]
           }
         }
       },
@@ -2423,7 +2384,7 @@
     {
       "apiVersion": "[variables('vmssApiVersion')]",
       "type": "Microsoft.Compute/virtualMachineScaleSets",
-      "name": "[parameters('vmNodeType1Name')]",
+      "name": "[concat(parameters('vmNodeType1Name'), '2')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "[concat('Microsoft.Network/virtualNetworks/', variables('vnetName'))]",
@@ -2432,6 +2393,9 @@
         "[concat('Microsoft.Storage/storageAccounts/', variables('dgstorageName'))]",
         "[concat('Microsoft.Insights/components/', variables('aiName'))]",
         "[concat('Microsoft.OperationalInsights/workspaces/', variables('omsName'))]"
+      ],
+      "zones": [
+        "3"
       ],
       "properties": {
         "overprovision": false,
@@ -2464,14 +2428,19 @@
                   "settings": {
                     "clusterEndpoint": "[reference(parameters('clusterName')).clusterEndpoint]",
                     "nodeTypeRef": "[parameters('vmNodeType1Name')]",
-                    "dataPath": "D:\\\\SvcFab",
+                    "dataPath": "S:\\\\SvcFab",
+                    "useManagedDataDisk": true,
                     "durabilityLevel": "[parameters('durability')]",
                     "enableParallelJobs": true,
                     "nicPrefixOverride": "[parameters('subnet1Prefix')]",
                     "certificate": {
                       "thumbprint": "[parameters('certificateThumbprint')]",
                       "x509StoreName": "[parameters('certificateStoreValue')]"
-                    }
+                    },
+                    "systemLogUploadSettings": {
+                      "Enabled": true
+                    },
+                    "faultDomainOverride": "az3"
                   },
                   "typeHandlerVersion": "1.1"
                 }
@@ -2647,6 +2616,7 @@
               {
                 "name": "[concat(variables('nicName'), '-1')]",
                 "properties": {
+                  "enableAcceleratedNetworking": true,
                   "ipConfigurations": [
                     {
                       "name": "[concat(variables('nicName'),'-',1)]",
@@ -2706,7 +2676,15 @@
               "managedDisk": {
                 "storageAccountType": "[parameters('storageAccountType')]"
               }
-            }
+            },
+            "datadisks": [
+              {
+                  "lun": "1",
+                  "createOption": "empty",
+                  "diskSizeGB": "100",
+                  "managedDisk": { "storageAccountType": "Standard_LRS" }
+              }
+            ]
           }
         }
       },
@@ -2723,7 +2701,7 @@
     {
       "apiVersion": "[variables('vmssApiVersion')]",
       "type": "Microsoft.Compute/virtualMachineScaleSets",
-      "name": "[parameters('vmNodeType2Name')]",
+      "name": "[concat(parameters('vmNodeType2Name'), '1')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "[concat('Microsoft.Network/virtualNetworks/', variables('vnetName'))]",
@@ -2732,12 +2710,15 @@
         "[concat('Microsoft.Storage/storageAccounts/', variables('dgstorageName'))]",
         "[concat('Microsoft.Insights/components/', variables('aiName'))]",
         "[concat('Microsoft.OperationalInsights/workspaces/', variables('omsName'))]"
+      ],
+      "zones": [
+        "1"
       ],
       "properties": {
         "overprovision": false,
         "singlePlacementGroup": false,
         "upgradePolicy": {
-          "mode": "Automatic",
+          "mode": "Rolling",
           "rollingUpgradePolicy": {
             "maxBatchInstancePercent": 20,
             "maxUnhealthyInstancePercent": 20,
@@ -2771,7 +2752,11 @@
                     "certificate": {
                       "thumbprint": "[parameters('certificateThumbprint')]",
                       "x509StoreName": "[parameters('certificateStoreValue')]"
-                    }
+                    },
+                    "systemLogUploadSettings": {
+                      "Enabled": true
+                    },
+                    "faultDomainOverride": "az1"
                   },
                   "typeHandlerVersion": "1.1"
                 }
@@ -2790,154 +2775,164 @@
                     "workspaceKey": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces/', variables('omsName')), variables('omsApiVersion')).primarySharedKey]"
                   }
                 }
-              },
+              }
+            ]
+          },
+          "networkProfile": {
+            "networkInterfaceConfigurations": [
               {
-                "name": "[concat('VMDiagnosticsVmExt','_vmNodeType0Name')]",
+                "name": "[concat(variables('nicName'), '-1')]",
                 "properties": {
-                  "type": "IaaSDiagnostics",
+                  "enableAcceleratedNetworking": true,
+                  "ipConfigurations": [
+                    {
+                      "name": "[concat(variables('nicName'),'-',1)]",
+                      "properties": {
+                        "loadBalancerBackendAddressPools": [
+                          {
+                            "id": "[variables('lbPoolID1')]"
+                          }
+                        ],
+                        "loadBalancerInboundNatPools": [
+                          {
+                            "id": "[variables('lbNatPoolID1')]"
+                          }
+                        ],
+                        "subnet": {
+                          "id": "[variables('subnet1Ref')]"
+                        }
+                      }
+                    }
+                  ],
+                  "primary": true
+                }
+              }
+            ]
+          },
+          "osProfile": {
+            "windowsConfiguration": { 
+                "enableAutomaticUpdates": false 
+            },
+            "adminPassword": "[parameters('adminPassword')]",
+            "adminUsername": "[parameters('adminUsername')]",
+            "computernamePrefix": "[parameters('vmNodeType1Name')]",
+            "secrets": [
+              {
+                "sourceVault": {
+                  "id": "[parameters('sourceVaultValue')]"
+                },
+                "vaultCertificates": [
+                  {
+                    "certificateStore": "[parameters('certificateStoreValue')]",
+                    "certificateUrl": "[parameters('certificateUrlValue')]"
+                  }
+                ]
+              }
+            ]
+          },
+          "storageProfile": {
+            "imageReference": {
+              "publisher": "[parameters('vmImagePublisher')]",
+              "offer": "[parameters('vmImageOffer')]",
+              "sku": "[parameters('vmImageSku')]",
+              "version": "[parameters('vmImageVersion')]"
+            },
+            "osDisk": {
+              "caching": "ReadOnly",
+              "createOption": "FromImage",
+              "managedDisk": {
+                "storageAccountType": "[parameters('storageAccountType')]"
+              }
+            }
+          }
+        }
+      },
+      "sku": {
+        "name": "[parameters('vmNodeType1Size')]",
+        "capacity": "[parameters('nt1InstanceCount')]",
+        "tier": "Standard"
+      },
+      "tags": {
+        "resourceType": "Service Fabric",
+        "clusterName": "[parameters('clusterName')]"
+      }
+    },
+    {
+      "apiVersion": "[variables('vmssApiVersion')]",
+      "type": "Microsoft.Compute/virtualMachineScaleSets",
+      "name": "[concat(parameters('vmNodeType2Name'), '2')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/virtualNetworks/', variables('vnetName'))]",
+        "[concat('Microsoft.Network/loadBalancers/', variables('lbName0'))]",
+        "[concat('Microsoft.Storage/storageAccounts/', variables('sfstorageName'))]",
+        "[concat('Microsoft.Storage/storageAccounts/', variables('dgstorageName'))]",
+        "[concat('Microsoft.Insights/components/', variables('aiName'))]",
+        "[concat('Microsoft.OperationalInsights/workspaces/', variables('omsName'))]"
+      ],
+      "zones": [
+        "2"
+      ],
+      "properties": {
+        "overprovision": false,
+        "singlePlacementGroup": false,
+        "upgradePolicy": {
+          "mode": "Rolling",
+          "rollingUpgradePolicy": {
+            "maxBatchInstancePercent": 20,
+            "maxUnhealthyInstancePercent": 20,
+            "maxUnhealthyUpgradedInstancePercent": 20,
+            "pauseTimeBetweenBatches": "PT0S"
+          },
+          "automaticOSUpgradePolicy": {
+            "enableAutomaticOSUpgrade": true
+          }
+        },
+        "virtualMachineProfile": {
+          "extensionProfile": {
+            "extensions": [
+              {
+                "name": "[concat(parameters('vmNodeType1Name'),'_ServiceFabricNode')]",
+                "properties": {
+                  "type": "ServiceFabricNode",
                   "autoUpgradeMinorVersion": true,
                   "protectedSettings": {
-                    "storageAccountName": "[variables('dgstorageName')]",
-                    "storageAccountKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('dgstorageName')), variables('storageApiVersion')).keys[0].value]",
-                    "storageAccountEndPoint": "https://core.windows.net/"
+                    "StorageAccountKey1": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('sfstorageName')), variables('storageApiVersion')).keys[0].value]",
+                    "StorageAccountKey2": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('sfstorageName')), variables('storageApiVersion')).keys[1].value]"
                   },
-                  "publisher": "Microsoft.Azure.Diagnostics",
+                  "publisher": "Microsoft.Azure.ServiceFabric",
                   "settings": {
-                    "WadCfg": {
-                      "DiagnosticMonitorConfiguration": {
-                        "PerformanceCounters": {
-                          "PerformanceCounterConfiguration": [
-                            {
-                              "annotation": [
-                              ],
-                              "counterSpecifier": "\\Processor(_Total)\\% Processor Time",
-                              "sampleRate": "PT10S"
-                            },
-                            {
-                              "annotation": [
-                              ],
-                              "counterSpecifier": "\\Memory\\Available MBytes",
-                              "sampleRate": "PT10S"
-                            },
-                            {
-                              "annotation": [
-                              ],
-                              "counterSpecifier": "\\LogicalDisk(_Total)\\Disk Read Bytes/sec",
-                              "sampleRate": "PT10S"
-                            },
-                            {
-                              "annotation": [
-                              ],
-                              "counterSpecifier": "\\LogicalDisk(C:)\\Disk Write Bytes/sec",
-                              "sampleRate": "PT10S"
-                            },
-                            {
-                              "annotation": [
-                              ],
-                              "counterSpecifier": "\\LogicalDisk(C:)\\Disk Read Bytes/sec",
-                              "sampleRate": "PT10S"
-                            },
-                            {
-                              "annotation": [
-                              ],
-                              "counterSpecifier": "\\LogicalDisk(D:)\\Disk Write Bytes/sec",
-                              "sampleRate": "PT10S"
-                            },
-                            {
-                              "annotation": [
-                              ],
-                              "counterSpecifier": "\\LogicalDisk(D:)\\Disk Read Bytes/sec",
-                              "sampleRate": "PT10S"
-                            }
-                          ]
-                        },
-                        "WindowsEventLog": {
-                          "DataSource": [
-                            {
-                              "name": "System!*[System[(Level=1 or Level=2)]]"
-                            }
-                          ]
-                        },
-                        "EtwProviders": {
-                          "EtwEventSourceProviderConfiguration": [
-                            {
-                              "provider": "Microsoft-ServiceFabric-Actors",
-                              "scheduledTransferKeywordFilter": "1",
-                              "scheduledTransferPeriod": "PT1M",
-                              "DefaultEvents": {
-                                "eventDestination": "ServiceFabricReliableActorEventTable"
-                              }
-                            },
-                            {
-                              "provider": "Microsoft-ServiceFabric-Services",
-                              "scheduledTransferPeriod": "PT1M",
-                              "DefaultEvents": {
-                                "eventDestination": "ServiceFabricReliableServiceEventTable"
-                              }
-                            },
-                            {
-                              "provider": "Contoso-CustomProvider",
-                              "scheduledTransferPeriod": "PT1M",
-                              "DefaultEvents": {
-                                "eventDestination": "ETWEventTable"
-                              }
-                            },
-                            {
-                              "provider": "e39b723c-590c-4090-abb0-11e3e6616346",
-                              "scheduledTransferPeriod": "PT5M",
-                              "DefaultEvents": {
-                                "eventDestination": "ServiceFabricPatchOrchestrationAppEventTable"
-                              }
-                            },
-                            {
-                              "provider": "fc0028ff-bfdc-499f-80dc-ed922c52c5e9",
-                              "scheduledTransferPeriod": "PT5M",
-                              "DefaultEvents": {
-                                "eventDestination": "ServiceFabricPatchOrchestrationAppEventTable"
-                              }
-                            },
-                            {
-                              "provider": "24afa313-0d3b-4c7c-b485-1047fd964b60",
-                              "scheduledTransferPeriod": "PT5M",
-                              "DefaultEvents": {
-                                "eventDestination": "ServiceFabricPatchOrchestrationAppEventTable"
-                              }
-                            },
-                            {
-                              "provider": "05dc046c-60e9-4ef7-965e-91660adffa68",
-                              "scheduledTransferPeriod": "PT5M",
-                              "DefaultEvents": {
-                                "eventDestination": "ServiceFabricPatchOrchestrationAppEventTable"
-                              }
-                            }
-                          ],
-                          "EtwManifestProviderConfiguration": [
-                            {
-                              "provider": "cbd93bc2-71e5-4566-b3a7-595d8eeca6e8",
-                              "scheduledTransferLogLevelFilter": "Information",
-                              "scheduledTransferKeywordFilter": "4611686018427387936",
-                              "scheduledTransferPeriod": "PT1M",
-                              "DefaultEvents": {
-                                "eventDestination": "ServiceFabricSystemEventTable"
-                              }
-                            }
-                          ]
-                        },
-                        "overallQuotaInMB": "50000",
-                        "sinks": "applicationInsights"
-                      },
-                      "SinksConfig": {
-                        "Sink": [
-                          {
-                            "name": "applicationInsights",
-                            "ApplicationInsights": "[reference(resourceId('Microsoft.Insights/components', variables('aiName')), '2014-04-01').InstrumentationKey]"
-                          }
-                        ]
-                      }
+                    "clusterEndpoint": "[reference(parameters('clusterName')).clusterEndpoint]",
+                    "nodeTypeRef": "[parameters('vmNodeType1Name')]",
+                    "dataPath": "D:\\\\SvcFab",
+                    "durabilityLevel": "[parameters('durabilitystateless')]",
+                    "enableParallelJobs": true,
+                    "nicPrefixOverride": "[parameters('subnet2Prefix')]",
+                    "certificate": {
+                      "thumbprint": "[parameters('certificateThumbprint')]",
+                      "x509StoreName": "[parameters('certificateStoreValue')]"
                     },
-                    "StorageAccount": "[variables('dgstorageName')]"
+                    "systemLogUploadSettings": {
+                      "Enabled": true
+                    },
+                    "faultDomainOverride": "az2"
                   },
-                  "typeHandlerVersion": "1.5"
+                  "typeHandlerVersion": "1.1"
+                }
+              },
+              {
+                "name": "[concat('VMOmsExt','_vmNodeType0Name')]",
+                "properties": {
+                  "publisher": "Microsoft.EnterpriseCloud.Monitoring",
+                  "type": "MicrosoftMonitoringAgent",
+                  "typeHandlerVersion": "1.0",
+                  "autoUpgradeMinorVersion": true,
+                  "settings": {
+                    "workspaceId": "[reference(resourceId('Microsoft.OperationalInsights/workspaces/', variables('omsName')), variables('omsApiVersion')).customerId]"
+                  },
+                  "protectedSettings": {
+                    "workspaceKey": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces/', variables('omsName')), variables('omsApiVersion')).primarySharedKey]"
+                  }
                 }
               }
             ]
@@ -2947,6 +2942,166 @@
               {
                 "name": "[concat(variables('nicName'), '-1')]",
                 "properties": {
+                  "enableAcceleratedNetworking": true,
+                  "ipConfigurations": [
+                    {
+                      "name": "[concat(variables('nicName'),'-',1)]",
+                      "properties": {
+                        "loadBalancerBackendAddressPools": [
+                          {
+                            "id": "[variables('lbPoolID1')]"
+                          }
+                        ],
+                        "loadBalancerInboundNatPools": [
+                          {
+                            "id": "[variables('lbNatPoolID1')]"
+                          }
+                        ],
+                        "subnet": {
+                          "id": "[variables('subnet1Ref')]"
+                        }
+                      }
+                    }
+                  ],
+                  "primary": true
+                }
+              }
+            ]
+          },
+          "osProfile": {
+            "windowsConfiguration": { 
+                "enableAutomaticUpdates": false 
+            },
+            "adminPassword": "[parameters('adminPassword')]",
+            "adminUsername": "[parameters('adminUsername')]",
+            "computernamePrefix": "[parameters('vmNodeType1Name')]",
+            "secrets": [
+              {
+                "sourceVault": {
+                  "id": "[parameters('sourceVaultValue')]"
+                },
+                "vaultCertificates": [
+                  {
+                    "certificateStore": "[parameters('certificateStoreValue')]",
+                    "certificateUrl": "[parameters('certificateUrlValue')]"
+                  }
+                ]
+              }
+            ]
+          },
+          "storageProfile": {
+            "imageReference": {
+              "publisher": "[parameters('vmImagePublisher')]",
+              "offer": "[parameters('vmImageOffer')]",
+              "sku": "[parameters('vmImageSku')]",
+              "version": "[parameters('vmImageVersion')]"
+            },
+            "osDisk": {
+              "caching": "ReadOnly",
+              "createOption": "FromImage",
+              "managedDisk": {
+                "storageAccountType": "[parameters('storageAccountType')]"
+              }
+            }
+          }
+        }
+      },
+      "sku": {
+        "name": "[parameters('vmNodeType1Size')]",
+        "capacity": "[parameters('nt1InstanceCount')]",
+        "tier": "Standard"
+      },
+      "tags": {
+        "resourceType": "Service Fabric",
+        "clusterName": "[parameters('clusterName')]"
+      }
+    },
+    {
+      "apiVersion": "[variables('vmssApiVersion')]",
+      "type": "Microsoft.Compute/virtualMachineScaleSets",
+      "name": "[concat(parameters('vmNodeType2Name'), '3')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/virtualNetworks/', variables('vnetName'))]",
+        "[concat('Microsoft.Network/loadBalancers/', variables('lbName0'))]",
+        "[concat('Microsoft.Storage/storageAccounts/', variables('sfstorageName'))]",
+        "[concat('Microsoft.Storage/storageAccounts/', variables('dgstorageName'))]",
+        "[concat('Microsoft.Insights/components/', variables('aiName'))]",
+        "[concat('Microsoft.OperationalInsights/workspaces/', variables('omsName'))]"
+      ],
+      "zones": [
+        "3"
+      ],
+      "properties": {
+        "overprovision": false,
+        "singlePlacementGroup": false,
+        "upgradePolicy": {
+          "mode": "Rolling",
+          "rollingUpgradePolicy": {
+            "maxBatchInstancePercent": 20,
+            "maxUnhealthyInstancePercent": 20,
+            "maxUnhealthyUpgradedInstancePercent": 20,
+            "pauseTimeBetweenBatches": "PT0S"
+          },
+          "automaticOSUpgradePolicy": {
+            "enableAutomaticOSUpgrade": true
+          }
+        },
+        "virtualMachineProfile": {
+          "extensionProfile": {
+            "extensions": [
+              {
+                "name": "[concat(parameters('vmNodeType1Name'),'_ServiceFabricNode')]",
+                "properties": {
+                  "type": "ServiceFabricNode",
+                  "autoUpgradeMinorVersion": true,
+                  "protectedSettings": {
+                    "StorageAccountKey1": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('sfstorageName')), variables('storageApiVersion')).keys[0].value]",
+                    "StorageAccountKey2": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('sfstorageName')), variables('storageApiVersion')).keys[1].value]"
+                  },
+                  "publisher": "Microsoft.Azure.ServiceFabric",
+                  "settings": {
+                    "clusterEndpoint": "[reference(parameters('clusterName')).clusterEndpoint]",
+                    "nodeTypeRef": "[parameters('vmNodeType1Name')]",
+                    "dataPath": "D:\\\\SvcFab",
+                    "durabilityLevel": "[parameters('durabilitystateless')]",
+                    "enableParallelJobs": true,
+                    "nicPrefixOverride": "[parameters('subnet2Prefix')]",
+                    "certificate": {
+                      "thumbprint": "[parameters('certificateThumbprint')]",
+                      "x509StoreName": "[parameters('certificateStoreValue')]"
+                    },
+                    "systemLogUploadSettings": {
+                      "Enabled": true
+                    },
+                    "faultDomainOverride": "az3"
+                  },
+                  "typeHandlerVersion": "1.1"
+                }
+              },
+              {
+                "name": "[concat('VMOmsExt','_vmNodeType0Name')]",
+                "properties": {
+                  "publisher": "Microsoft.EnterpriseCloud.Monitoring",
+                  "type": "MicrosoftMonitoringAgent",
+                  "typeHandlerVersion": "1.0",
+                  "autoUpgradeMinorVersion": true,
+                  "settings": {
+                    "workspaceId": "[reference(resourceId('Microsoft.OperationalInsights/workspaces/', variables('omsName')), variables('omsApiVersion')).customerId]"
+                  },
+                  "protectedSettings": {
+                    "workspaceKey": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces/', variables('omsName')), variables('omsApiVersion')).primarySharedKey]"
+                  }
+                }
+              }
+            ]
+          },
+          "networkProfile": {
+            "networkInterfaceConfigurations": [
+              {
+                "name": "[concat(variables('nicName'), '-1')]",
+                "properties": {
+                  "enableAcceleratedNetworking": true,
                   "ipConfigurations": [
                     {
                       "name": "[concat(variables('nicName'),'-',1)]",
@@ -3129,117 +3284,117 @@
             ]
           }
         ],
-        "managementEndpoint": "[concat('https://',reference(concat(variables('lbIpName'),'-','0')).dnsSettings.fqdn,':',parameters('nt0fabricHttpGatewayPort'))]",
+        "managementEndpoint": "[concat('https://',reference(concat(variables('lbIpName'),'-','0')).dnsSettings.fqdn,':',parameters('fabricHttpGatewayPort'))]",
         "nodeTypes": [
           {
             "name": "[concat(parameters('vmNodeType0Name'), '1')]",
             "applicationPorts": {
-              "endPort": "[parameters('nt0applicationEndPort')]",
-              "startPort": "[parameters('nt0applicationStartPort')]"
+              "endPort": "[parameters('applicationEndPort')]",
+              "startPort": "[parameters('applicationStartPort')]"
             },
-            "clientConnectionEndpointPort": "[parameters('nt0fabricTcpGatewayPort')]",
+            "clientConnectionEndpointPort": "[parameters('fabricTcpGatewayPort')]",
             "durabilityLevel": "[parameters('durability')]",
             "ephemeralPorts": {
-              "endPort": "[parameters('nt0ephemeralEndPort')]",
-              "startPort": "[parameters('nt0ephemeralStartPort')]"
+              "endPort": "[parameters('ephemeralEndPort')]",
+              "startPort": "[parameters('ephemeralStartPort')]"
             },
-            "httpGatewayEndpointPort": "[parameters('nt0fabricHttpGatewayPort')]",
+            "httpGatewayEndpointPort": "[parameters('fabricHttpGatewayPort')]",
             "isPrimary": true,
             "vmInstanceCount": "[parameters('nt0InstanceCount')]"
           },
           {
             "name": "[concat(parameters('vmNodeType0Name'), '2')]",
             "applicationPorts": {
-              "endPort": "[parameters('nt0applicationEndPort')]",
-              "startPort": "[parameters('nt0applicationStartPort')]"
+              "endPort": "[parameters('applicationEndPort')]",
+              "startPort": "[parameters('applicationStartPort')]"
             },
-            "clientConnectionEndpointPort": "[parameters('nt0fabricTcpGatewayPort')]",
+            "clientConnectionEndpointPort": "[parameters('fabricTcpGatewayPort')]",
             "durabilityLevel": "[parameters('durability')]",
             "ephemeralPorts": {
-              "endPort": "[parameters('nt0ephemeralEndPort')]",
-              "startPort": "[parameters('nt0ephemeralStartPort')]"
+              "endPort": "[parameters('ephemeralEndPort')]",
+              "startPort": "[parameters('ephemeralStartPort')]"
             },
-            "httpGatewayEndpointPort": "[parameters('nt0fabricHttpGatewayPort')]",
+            "httpGatewayEndpointPort": "[parameters('fabricHttpGatewayPort')]",
             "isPrimary": true,
             "vmInstanceCount": "[parameters('nt0InstanceCount')]"
           },
           {
             "name": "[concat(parameters('vmNodeType0Name'), '3')]",
             "applicationPorts": {
-              "endPort": "[parameters('nt0applicationEndPort')]",
-              "startPort": "[parameters('nt0applicationStartPort')]"
+              "endPort": "[parameters('applicationEndPort')]",
+              "startPort": "[parameters('applicationStartPort')]"
             },
-            "clientConnectionEndpointPort": "[parameters('nt0fabricTcpGatewayPort')]",
+            "clientConnectionEndpointPort": "[parameters('fabricTcpGatewayPort')]",
             "durabilityLevel": "[parameters('durability')]",
             "ephemeralPorts": {
-              "endPort": "[parameters('nt0ephemeralEndPort')]",
-              "startPort": "[parameters('nt0ephemeralStartPort')]"
+              "endPort": "[parameters('ephemeralEndPort')]",
+              "startPort": "[parameters('ephemeralStartPort')]"
             },
-            "httpGatewayEndpointPort": "[parameters('nt0fabricHttpGatewayPort')]",
+            "httpGatewayEndpointPort": "[parameters('fabricHttpGatewayPort')]",
             "isPrimary": true,
             "vmInstanceCount": "[parameters('nt0InstanceCount')]"
           },
           {
             "name": "[concat(parameters('vmNodeType1Name'), '1')]",
             "applicationPorts": {
-              "endPort": "[parameters('nt1applicationEndPort')]",
-              "startPort": "[parameters('nt1applicationStartPort')]"
+              "endPort": "[parameters('applicationEndPort')]",
+              "startPort": "[parameters('applicationStartPort')]"
             },
-            "clientConnectionEndpointPort": "[parameters('nt1fabricTcpGatewayPort')]",
+            "clientConnectionEndpointPort": "[parameters('fabricTcpGatewayPort')]",
             "durabilityLevel": "[parameters('durability')]",
             "ephemeralPorts": {
-              "endPort": "[parameters('nt1ephemeralEndPort')]",
-              "startPort": "[parameters('nt1ephemeralStartPort')]"
+              "endPort": "[parameters('ephemeralEndPort')]",
+              "startPort": "[parameters('ephemeralStartPort')]"
             },
-            "httpGatewayEndpointPort": "[parameters('nt1fabricHttpGatewayPort')]",
+            "httpGatewayEndpointPort": "[parameters('fabricHttpGatewayPort')]",
             "isPrimary": false,
             "vmInstanceCount": "[parameters('nt1InstanceCount')]"
           },
           {
             "name": "[concat(parameters('vmNodeType1Name'), '2')]",
             "applicationPorts": {
-              "endPort": "[parameters('nt1applicationEndPort')]",
-              "startPort": "[parameters('nt1applicationStartPort')]"
+              "endPort": "[parameters('applicationEndPort')]",
+              "startPort": "[parameters('applicationStartPort')]"
             },
-            "clientConnectionEndpointPort": "[parameters('nt1fabricTcpGatewayPort')]",
+            "clientConnectionEndpointPort": "[parameters('fabricTcpGatewayPort')]",
             "durabilityLevel": "[parameters('durability')]",
             "ephemeralPorts": {
-              "endPort": "[parameters('nt1ephemeralEndPort')]",
-              "startPort": "[parameters('nt1ephemeralStartPort')]"
+              "endPort": "[parameters('ephemeralEndPort')]",
+              "startPort": "[parameters('ephemeralStartPort')]"
             },
-            "httpGatewayEndpointPort": "[parameters('nt1fabricHttpGatewayPort')]",
+            "httpGatewayEndpointPort": "[parameters('fabricHttpGatewayPort')]",
             "isPrimary": false,
             "vmInstanceCount": "[parameters('nt1InstanceCount')]"
           },
           {
             "name": "[concat(parameters('vmNodeType1Name'), '3')]",
             "applicationPorts": {
-              "endPort": "[parameters('nt1applicationEndPort')]",
-              "startPort": "[parameters('nt1applicationStartPort')]"
+              "endPort": "[parameters('applicationEndPort')]",
+              "startPort": "[parameters('applicationStartPort')]"
             },
-            "clientConnectionEndpointPort": "[parameters('nt1fabricTcpGatewayPort')]",
+            "clientConnectionEndpointPort": "[parameters('fabricTcpGatewayPort')]",
             "durabilityLevel": "[parameters('durability')]",
             "ephemeralPorts": {
-              "endPort": "[parameters('nt1ephemeralEndPort')]",
-              "startPort": "[parameters('nt1ephemeralStartPort')]"
+              "endPort": "[parameters('ephemeralEndPort')]",
+              "startPort": "[parameters('ephemeralStartPort')]"
             },
-            "httpGatewayEndpointPort": "[parameters('nt1fabricHttpGatewayPort')]",
+            "httpGatewayEndpointPort": "[parameters('fabricHttpGatewayPort')]",
             "isPrimary": false,
             "vmInstanceCount": "[parameters('nt1InstanceCount')]"
           },
           {
             "name": "[concat(parameters('vmNodeType2Name'), '1')]",
             "applicationPorts": {
-              "endPort": "[parameters('nt1applicationEndPort')]",
-              "startPort": "[parameters('nt1applicationStartPort')]"
+              "endPort": "[parameters('applicationEndPort')]",
+              "startPort": "[parameters('applicationStartPort')]"
             },
-            "clientConnectionEndpointPort": "[parameters('nt1fabricTcpGatewayPort')]",
+            "clientConnectionEndpointPort": "[parameters('fabricTcpGatewayPort')]",
             "durabilityLevel": "[parameters('durabilitystateless')]",
             "ephemeralPorts": {
-              "endPort": "[parameters('nt1ephemeralEndPort')]",
-              "startPort": "[parameters('nt1ephemeralStartPort')]"
+              "endPort": "[parameters('ephemeralEndPort')]",
+              "startPort": "[parameters('ephemeralStartPort')]"
             },
-            "httpGatewayEndpointPort": "[parameters('nt1fabricHttpGatewayPort')]",
+            "httpGatewayEndpointPort": "[parameters('fabricHttpGatewayPort')]",
             "isPrimary": false,
             "isStateless": true,
             "vmInstanceCount": "[parameters('nt2InstanceCount')]"
@@ -3247,16 +3402,16 @@
           {
             "name": "[concat(parameters('vmNodeType2Name'), '2')]",
             "applicationPorts": {
-              "endPort": "[parameters('nt1applicationEndPort')]",
-              "startPort": "[parameters('nt1applicationStartPort')]"
+              "endPort": "[parameters('applicationEndPort')]",
+              "startPort": "[parameters('applicationStartPort')]"
             },
-            "clientConnectionEndpointPort": "[parameters('nt1fabricTcpGatewayPort')]",
+            "clientConnectionEndpointPort": "[parameters('fabricTcpGatewayPort')]",
             "durabilityLevel": "[parameters('durabilitystateless')]",
             "ephemeralPorts": {
-              "endPort": "[parameters('nt1ephemeralEndPort')]",
-              "startPort": "[parameters('nt1ephemeralStartPort')]"
+              "endPort": "[parameters('ephemeralEndPort')]",
+              "startPort": "[parameters('ephemeralStartPort')]"
             },
-            "httpGatewayEndpointPort": "[parameters('nt1fabricHttpGatewayPort')]",
+            "httpGatewayEndpointPort": "[parameters('fabricHttpGatewayPort')]",
             "isPrimary": false,
             "isStateless": true,
             "vmInstanceCount": "[parameters('nt2InstanceCount')]"
@@ -3264,16 +3419,16 @@
           {
             "name": "[concat(parameters('vmNodeType2Name'), '3')]",
             "applicationPorts": {
-              "endPort": "[parameters('nt1applicationEndPort')]",
-              "startPort": "[parameters('nt1applicationStartPort')]"
+              "endPort": "[parameters('applicationEndPort')]",
+              "startPort": "[parameters('applicationStartPort')]"
             },
-            "clientConnectionEndpointPort": "[parameters('nt1fabricTcpGatewayPort')]",
+            "clientConnectionEndpointPort": "[parameters('fabricTcpGatewayPort')]",
             "durabilityLevel": "[parameters('durabilitystateless')]",
             "ephemeralPorts": {
-              "endPort": "[parameters('nt1ephemeralEndPort')]",
-              "startPort": "[parameters('nt1ephemeralStartPort')]"
+              "endPort": "[parameters('ephemeralEndPort')]",
+              "startPort": "[parameters('ephemeralStartPort')]"
             },
-            "httpGatewayEndpointPort": "[parameters('nt1fabricHttpGatewayPort')]",
+            "httpGatewayEndpointPort": "[parameters('fabricHttpGatewayPort')]",
             "isPrimary": false,
             "isStateless": true,
             "vmInstanceCount": "[parameters('nt2InstanceCount')]"

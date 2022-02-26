@@ -11,6 +11,9 @@
     "clusterName": {
       "type": "string"
     },
+    "clusterDNSname": {
+      "type": "string"
+    },
     "clusterVersion": {
       "type": "string",
       "defaultValue": "6.4.617.9590"
@@ -183,6 +186,7 @@
     "vNetApiVersion": "2020-07-01",
     "storageApiVersion": "2019-06-01",
     "publicIPApiVersion": "2020-07-01",
+    "nsgApiVersion": "2021-03-01",    
 
     "customWebAppPort": "8947",
 
@@ -245,6 +249,7 @@
       "name": "[variables('vnetName')]",
       "location": "[parameters('computeLocation')]",
       "dependsOn": [
+        "[concat('Microsoft.Network/networkSecurityGroups/', concat('nsg', parameters('subnet0Name')))]"
       ],
       "properties": {
         "addressSpace": {
@@ -256,13 +261,10 @@
           {
             "name": "[parameters('subnet0Name')]",
             "properties": {
-              "addressPrefix": "[parameters('subnet0Prefix')]"
-            }
-          },
-          {
-            "name": "[parameters('subnet1Name')]",
-            "properties": {
-              "addressPrefix": "[parameters('subnet1Prefix')]"
+              "addressPrefix": "[parameters('subnet0Prefix')]",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat('nsg', parameters('subnet0Name')))]"
+              }
             }
           }
         ]
@@ -429,6 +431,212 @@
       }
     },
     {
+      "apiVersion": "[variables('nsgApiVersion')]",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[concat('nsg', parameters('subnet0Name'))]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "Azure Portal",
+            "properties": {
+              "access": "Deny",
+              "sourceAddressPrefix": "ServiceFabric",
+              "sourcePortRange": "*",
+              "sourcePortRanges": [],
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "19080",
+              "destinationPortRanges": [],
+              "direction": "Inbound",
+              "priority": 3900,
+              "protocol": "Tcp",
+              "description": ""
+            }
+          },
+          {
+            "name": "Client API",
+            "properties": {
+              "access": "Deny",
+              "sourceAddressPrefix": "Internet",
+              "sourcePortRange": "*",
+              "sourcePortRanges": [],
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "19000",
+              "destinationPortRanges": [],
+              "direction": "Inbound",
+              "priority": 3910,
+              "protocol": "Tcp",
+              "description": ""
+            }
+          },
+          {
+            "name": "NodeToNode",
+            "properties": {
+              "access": "Allow",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "sourcePortRange": "*",
+              "sourcePortRanges": [],
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "19000",
+              "destinationPortRanges": [],
+              "direction": "Inbound",
+              "priority": 3990,
+              "protocol": "Tcp",
+              "description": ""
+            }
+          },
+          {
+            "name": "SFX + Client API",
+            "properties": {
+              "access": "Deny",
+              "sourceAddressPrefix": "Internet",
+              "sourcePortRange": "*",
+              "sourcePortRanges": [],
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "19080",
+              "destinationPortRanges": [],
+              "direction": "Inbound",
+              "priority": 3920,
+              "protocol": "Tcp",
+              "description": ""
+            }
+          },
+          {
+            "name": "Cluster",
+            "properties": {
+              "access": "Allow",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "sourcePortRange": "*",
+              "sourcePortRanges": [],
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "1025-1027",
+              "destinationPortRanges": [],
+              "direction": "Inbound",
+              "priority": 3930,
+              "protocol": "Tcp",
+              "description": ""
+            }
+          },
+          {
+            "name": "Ephemeral",
+            "properties": {
+              "access": "Allow",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "sourcePortRange": "*",
+              "sourcePortRanges": [],
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "49152-65534",
+              "destinationPortRanges": [],
+              "direction": "Inbound",
+              "priority": 3940,
+              "protocol": "Tcp",
+              "description": ""
+            }
+          },
+          {
+            "name": "Application",
+            "properties": {
+              "access": "Allow",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "sourcePortRange": "*",
+              "sourcePortRanges": [],
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "2000-3000",
+              "destinationPortRanges": [],
+              "direction": "Inbound",
+              "priority": 3950,
+              "protocol": "Tcp",
+              "description": ""
+            }
+          },
+          {
+            "name": "RDP",
+            "properties": {
+              "access": "Allow",
+              "sourceAddressPrefix": "Internet",
+              "sourcePortRange": "*",
+              "sourcePortRanges": [],
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "3389-3488",
+              "destinationPortRanges": [],
+              "direction": "Inbound",
+              "priority": 3960,
+              "protocol": "Tcp",
+              "description": ""
+            }
+          },
+          {
+            "name": "SSH",
+            "properties": {
+              "access": "Deny",
+              "sourceAddressPrefix": "Internet",
+              "sourcePortRange": "*",
+              "sourcePortRanges": [],
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "22",
+              "destinationPortRanges": [],
+              "direction": "Inbound",
+              "priority": 3970,
+              "protocol": "Tcp",
+              "description": ""
+            }
+          },
+          {
+            "name": "Custom Endpoint",
+            "properties": {
+              "access": "Deny",
+              "sourceAddressPrefix": "Internet",
+              "sourcePortRange": "*",
+              "sourcePortRanges": [],
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "80",
+              "destinationPortRanges": [],
+              "direction": "Inbound",
+              "priority": 3980,
+              "protocol": "Tcp",
+              "description": ""
+            }
+          },
+          {
+            "name": "Resource Provider",
+            "properties": {
+              "access": "Allow",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*",
+              "sourcePortRanges": [],
+              "destinationAddressPrefix": "ServiceFabric",
+              "destinationPortRange": "443",
+              "destinationPortRanges": [],
+              "direction": "Outbound",
+              "priority": 4000,
+              "protocol": "Tcp",
+              "description": ""
+            }
+          },
+          {
+            "name": "Download Binaries",
+            "properties": {
+              "access": "Allow",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*",
+              "sourcePortRanges": [],
+              "destinationAddressPrefix": "AzureFrontDoor.FirstParty",
+              "destinationPortRange": "",
+              "destinationPortRanges": [ "443" ], //, "80"
+              "direction": "Outbound",
+              "priority": 4010,
+              "protocol": "Tcp",
+              "description": ""
+            }
+          }
+        ]
+      },
+      "tags": {
+        "resourceType": "Service Fabric",
+        "clusterName": "[parameters('clusterName')]"
+      }
+    },
+    {
       "apiVersion": "[variables('vmssApiVersion')]",
       "type": "Microsoft.Compute/virtualMachineScaleSets",
       "name": "[parameters('vmNodeType0Name')]",
@@ -570,6 +778,7 @@
         ],
         "clientCertificateThumbprints": [
         ],
+        "clusterCodeVersion": "[parameters('clusterVersion')]",
         "clusterState": "Default",
         "diagnosticsStorageAccountConfig": {
           "blobEndpoint": "[reference(concat('Microsoft.Storage/storageAccounts/', variables('sfstorageName')), variables('storageApiVersion')).primaryEndpoints.blob]",
@@ -589,7 +798,7 @@
             "name": "Security"
           }
         ],
-        "managementEndpoint": "[concat('https://',reference(concat(variables('lbIpName'),'-','0')).dnsSettings.fqdn,':',parameters('nt0fabricHttpGatewayPort'))]",
+        "managementEndpoint": "[concat('https://',parameters('clusterDNSname'),':',parameters('nt0fabricHttpGatewayPort'))]",
         "nodeTypes": [
           {
             "name": "[parameters('vmNodeType0Name')]",
@@ -612,15 +821,15 @@
         "reliabilityLevel": "Silver",
         "upgradeDescription": {
           "forceRestart": false,
-          "upgradeReplicaSetCheckTimeout": "00:05:00",
-          "healthCheckWaitDuration": "00:05:00",
-          "healthCheckStableDuration": "00:05:00",
-          "healthCheckRetryTimeout": "00:45:00",
-          "upgradeTimeout": "12:00:00",
-          "upgradeDomainTimeout": "02:00:00",
+          "upgradeReplicaSetCheckTimeout": "10675199.02:48:05.4775807",
+          "healthCheckWaitDuration": "00:02:00",
+          "healthCheckStableDuration": "00:02:00",
+          "healthCheckRetryTimeout": "00:05:00",
+          "upgradeTimeout": "00:30:00",
+          "upgradeDomainTimeout": "00:10:00",
           "healthPolicy": {
-            "maxPercentUnhealthyNodes": 100,
-            "maxPercentUnhealthyApplications": 100
+            "maxPercentUnhealthyNodes": 20,
+            "maxPercentUnhealthyApplications": 20
           },
           "deltaHealthPolicy": {
             "maxPercentDeltaUnhealthyNodes": 0,

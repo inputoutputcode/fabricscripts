@@ -1,7 +1,7 @@
 ﻿## Declare parameters
-$armTemplate = ".\Templates\Vortex-LoadTest-Cluster-FabricObserver.json" # 
-$currentExecutionPath = "D:\Code\FabricMonkey\FabricScripts\Create-GenericCluster"
-$clusterVersion = "8.2.1235.9590"
+$armTemplate = ".\Templates\Vortex-LoadTest-Cluster_VMSS1.json" # 
+$currentExecutionPath = "D:\Code\FabricMonkey\FabricScripts\GenericCluster"
+$clusterVersion = "8.2.1486.9590"
 
 ## COPR subscription
 $subscriptionId = "13ad2c84-84fa-4798-ad71-e70c07af873f" 
@@ -64,6 +64,7 @@ $clusterCertificate.CertificateURL
 ## Deploy Azure Service Fabric Cluster
 $armParameter = @{}
 $armParameter.Add("deploymentId", $deploymentName)
+$armParameter.Add("clusterDNSname", $serviceFabricClusterDns)
 $armParameter.Add("clusterVersion", $clusterVersion)
 $armParameter.Add("computeLocation", $azureRegion)
 $armParameter.Add("clusterName", $serviceFabricClusterName)

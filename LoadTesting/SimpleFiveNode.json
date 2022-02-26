@@ -1175,7 +1175,7 @@
         "provisioningState": "Default",
         "serviceKind": "Stateless",
         "serviceTypeName": "[variables('serviceTypeNameClusterObserver')]",
-        "instanceCount": "-1",
+        "instanceCount": "1",
         "partitionDescription": {
           "partitionScheme": "Singleton"
         },

@@ -1,0 +1,395 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "deploymentId": {
+      "type": "string"
+    },
+    "clusterName": {
+      "type": "string"
+    },
+    "clusterDNSname": {
+      "type": "string",
+      "metadata": {
+        "description": "Cluster DNS name"
+      }
+    },
+
+    "secCertificateThumbprint": {
+      "type": "string",
+      "metadata": {
+        "description": "Certificate Thumbprint"
+      }
+    },
+    "secCertificateUrlValue": {
+      "type": "string",
+      "metadata": {
+        "description": "Refers to the location URL in your key vault where the certificate was uploaded, it is should be in the format of https://<name of the vault>.vault.azure.net:443/secrets/<exact location>"
+      }
+    },
+    "clusterVersion": {
+      "type": "string",
+      "defaultValue": "6.4.617.9590"
+    },
+    "nt0applicationStartPort": {
+      "type": "int",
+      "defaultValue": 20000
+    },
+    "nt0applicationEndPort": {
+      "type": "int",
+      "defaultValue": 30000
+    },
+    "nt0ephemeralStartPort": {
+      "type": "int",
+      "defaultValue": 49152
+    },
+    "nt0ephemeralEndPort": {
+      "type": "int",
+      "defaultValue": 65534
+    },
+    "nt0fabricTcpGatewayPort": {
+      "type": "int",
+      "defaultValue": 19000
+    },
+    "nt0fabricHttpGatewayPort": {
+      "type": "int",
+      "defaultValue": 19080
+    },
+    "subnet0Prefix": {
+      "type": "string",
+      "defaultValue": "10.0.0.0/24"
+    },
+    "adminUserName": {
+      "type": "string",
+      "defaultValue": "Christian"
+    },
+    "adminPassword": {
+      "type": "securestring"
+    },
+    "overProvision": {
+      "type": "string",
+      "defaultValue": "false"
+    },
+    "vmImagePublisher": {
+      "type": "string",
+      "defaultValue": "MicrosoftWindowsServer"
+    },
+    "vmImageOffer": {
+      "type": "string",
+      "defaultValue": "WindowsServer"
+    },
+    "vmImageSku": {
+      "type": "string",
+      "defaultValue": "2016-Datacenter-with-Containers"
+    },
+    "vmImageVersion": {
+      "type": "string",
+      "defaultValue": "latest"
+    },
+    "clusterProtectionLevel": {
+      "type": "string",
+      "allowedValues": [
+        "None",
+        "Sign",
+        "EncryptAndSign"
+      ],
+      "defaultValue": "EncryptAndSign",
+      "metadata": {
+        "description": "Protection level.Three values are allowed - EncryptAndSign, Sign, None. It is best to keep the default of EncryptAndSign, unless you have a need not to"
+      }
+    },
+    "certificateStoreValue": {
+      "type": "string",
+      "allowedValues": [
+        "My"
+      ],
+      "defaultValue": "My",
+      "metadata": {
+        "description": "The store name where the cert will be deployed in the virtual machine"
+      }
+    },
+    "certificateThumbprint": {
+      "type": "string",
+      "metadata": {
+        "description": "Certificate Thumbprint"
+      }
+    },
+    "sourceVaultValue": {
+      "type": "string",
+      "metadata": {
+        "description": "Resource Id of the key vault, is should be in the format of /subscriptions/<Sub ID>/resourceGroups/<Resource group name>/providers/Microsoft.KeyVault/vaults/<vault name>"
+      }
+    },
+    "certificateUrlValue": {
+      "type": "string",
+      "metadata": {
+        "description": "Refers to the location URL in your key vault where the certificate was uploaded, it is should be in the format of https://<name of the vault>.vault.azure.net:443/secrets/<exact location>"
+      }
+    },
+    "storageAccountType": {
+      "type": "string",
+      "allowedValues": [
+        "Standard_LRS",
+        "Standard_GRS"
+      ],
+      "defaultValue": "Standard_LRS",
+      "metadata": {
+        "description": "Replication option for the VM image storage account"
+      }
+    },
+    "nt0InstanceCount": {
+      "type": "int",
+      "defaultValue": 5,
+      "metadata": {
+        "description": "Instance count for node type"
+      }
+    },
+    "vmNodeType0Name": {
+      "type": "string",
+      "defaultValue": "mngmt",
+      "maxLength": 9
+    },
+    "vmNodeType0Size": {
+      "type": "string",
+      "defaultValue": "Standard_D2_v2"
+    }  
+  },
+  "variables": {
+    "vmssApiVersion": "2020-06-01",
+    "sfrpApiVersion": "2020-03-01",
+    "storageApiVersion": "2019-06-01",
+    "nicName": "[concat(parameters('deploymentId'),'-nic')]",
+    "sfstorageName": "[concat(parameters('deploymentId'),'sfstorage')]",
+
+    "lbName0": "[concat(parameters('deploymentId'),'-','lb','-',parameters('vmNodeType0Name'))]",
+    "lbID0": "[resourceId('Microsoft.Network/loadBalancers', variables('lbName0'))]",
+    "lbPoolID0": "[concat(variables('lbID0'),'/backendAddressPools/LoadBalancerBEAddressPool')]",
+    "lbNatPoolID0": "[concat(variables('lbID0'),'/inboundNatPools/LoadBalancerBEAddressNatPool')]"
+  },
+  "resources": [
+    
+    {
+      "apiVersion": "[variables('vmssApiVersion')]",
+      "type": "Microsoft.Compute/virtualMachineScaleSets",
+      "name": "[parameters('vmNodeType0Name')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "overprovision": "[parameters('overProvision')]",
+        "singlePlacementGroup": true,
+        "upgradePolicy": {
+          "mode": "Automatic"
+        },
+        "virtualMachineProfile": {
+          "extensionProfile": {
+            "extensions": [
+              {
+                "name": "[concat(parameters('vmNodeType0Name'),'_ServiceFabricNode')]",
+                "properties": {
+                  "type": "ServiceFabricNode",
+                  "autoUpgradeMinorVersion": true,
+                  "protectedSettings": {
+                    "StorageAccountKey1": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('sfstorageName')),'2015-05-01-preview').key1]",
+                    "StorageAccountKey2": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('sfstorageName')),'2015-05-01-preview').key2]"
+                  },
+                  "publisher": "Microsoft.Azure.ServiceFabric",
+                  "settings": {
+                    "clusterEndpoint": "[reference(parameters('clusterName')).clusterEndpoint]",
+                    "nodeTypeRef": "[parameters('vmNodeType0Name')]",
+                    "dataPath": "D:\\\\SvcFab",
+                    "durabilityLevel": "Silver",
+                    "enableParallelJobs": true,
+                    "nicPrefixOverride": "[parameters('subnet0Prefix')]",
+                    "certificate": {
+                      "thumbprint": "[parameters('secCertificateThumbprint')]",
+                      "x509StoreName": "[parameters('certificateStoreValue')]"
+                    },
+                    "certificateSecondary": {
+                      "thumbprint": "[parameters('certificateThumbprint')]",
+                      "x509StoreName": "[parameters('certificateStoreValue')]"
+                    }
+                  },
+                  "typeHandlerVersion": "1.1"
+                }
+              }
+            ]
+          },
+          "networkProfile": {
+            "networkInterfaceConfigurations": [
+              {
+                "name": "[concat(variables('nicName'), '-0')]",
+                "properties": {
+                  "ipConfigurations": [
+                    {
+                      "name": "[concat(variables('nicName'),'-',0)]",
+                      "properties": {
+                        "loadBalancerBackendAddressPools": [
+                          {
+                            "id": "[variables('lbPoolID0')]"
+                          }
+                        ],
+                        "loadBalancerInboundNatPools": [
+                          {
+                            "id": "[variables('lbNatPoolID0')]"
+                          }
+                        ],
+                        "subnet": {
+                          "id": "[subscriptionResourceId('Microsoft.Network/virtualNetworks', concat(parameters('deploymentId'), '-vnet/subnets/subnet-0'))]"
+                          //"id": "/subscriptions/13ad2c84-84fa-4798-ad71-e70c07af873f/resourceGroups/chrpap251352-group/providers/Microsoft.Network/virtualNetworks/chrpap251352-vnet/subnets/Subnet-0"
+                        }
+                      }
+                    }
+                  ],
+                  "primary": true
+                }
+              }
+            ]
+          },
+          "osProfile": {
+            "adminPassword": "[parameters('adminPassword')]",
+            "adminUsername": "[parameters('adminUsername')]",
+            "computernamePrefix": "[parameters('vmNodeType0Name')]",
+            "secrets": [
+              {
+                "sourceVault": {
+                  "id": "[parameters('sourceVaultValue')]"
+                },
+                "vaultCertificates": [
+                  {
+                    "certificateStore": "[parameters('certificateStoreValue')]",
+                    "certificateUrl": "[parameters('certificateUrlValue')]"
+                  },
+                  {
+                    "certificateStore": "[parameters('certificateStoreValue')]",
+                    "certificateUrl": "[parameters('secCertificateUrlValue')]"
+                  }
+                ]
+              }
+            ]
+          },
+          "storageProfile": {
+            "imageReference": {
+              "publisher": "[parameters('vmImagePublisher')]",
+              "offer": "[parameters('vmImageOffer')]",
+              "sku": "[parameters('vmImageSku')]",
+              "version": "[parameters('vmImageVersion')]"
+            },
+            "osDisk": {
+              "caching": "ReadOnly",
+              "createOption": "FromImage",
+              "managedDisk": {
+                "storageAccountType": "[parameters('storageAccountType')]"
+              }
+            }
+          }
+        }
+      },
+      "sku": {
+        "name": "[parameters('vmNodeType0Size')]",
+        "capacity": "[parameters('nt0InstanceCount')]",
+        "tier": "Standard"
+      },
+      "tags": {
+        "resourceType": "Service Fabric",
+        "clusterName": "[parameters('clusterName')]"
+      }
+    },
+    {
+      "apiVersion": "[variables('sfrpApiVersion')]",
+      "type": "Microsoft.ServiceFabric/clusters",
+      "name": "[parameters('clusterName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "addonFeatures": [
+          "RepairManager"
+        ],
+        "certificate": {
+          "thumbprint": "[parameters('secCertificateThumbprint')]",
+          "thumbprintSecondary": "[parameters('certificateThumbprint')]",          
+          "x509StoreName": "[parameters('certificateStoreValue')]"
+        },
+        "clientCertificateCommonNames": [
+        ],
+        "clientCertificateThumbprints": [
+        ],
+        "clusterCodeVersion": "[parameters('clusterVersion')]",
+        "clusterState": "Default",
+        "diagnosticsStorageAccountConfig": {
+          "blobEndpoint": "[reference(concat('Microsoft.Storage/storageAccounts/', variables('sfstorageName')), variables('storageApiVersion')).primaryEndpoints.blob]",
+          "protectedAccountKeyName": "StorageAccountKey1",
+          "queueEndpoint": "[reference(concat('Microsoft.Storage/storageAccounts/', variables('sfstorageName')), variables('storageApiVersion')).primaryEndpoints.queue]",
+          "storageAccountName": "[variables('sfstorageName')]",
+          "tableEndpoint": "[reference(concat('Microsoft.Storage/storageAccounts/', variables('sfstorageName')), variables('storageApiVersion')).primaryEndpoints.table]"
+        },
+        "fabricSettings": [
+          {
+            "parameters": [
+              {
+                "name": "ClusterProtectionLevel",
+                "value": "[parameters('clusterProtectionLevel')]"
+              }
+            ],
+            "name": "Security"
+          }
+        ],
+        "managementEndpoint": "[concat('https://',parameters('clusterDNSname'),':',parameters('nt0fabricHttpGatewayPort'))]",
+        "nodeTypes": [
+          {
+            "name": "[parameters('vmNodeType0Name')]",
+            "applicationPorts": {
+              "endPort": "[parameters('nt0applicationEndPort')]",
+              "startPort": "[parameters('nt0applicationStartPort')]"
+            },
+            "clientConnectionEndpointPort": "[parameters('nt0fabricTcpGatewayPort')]",
+            "durabilityLevel": "Silver",
+            "ephemeralPorts": {
+              "endPort": "[parameters('nt0ephemeralEndPort')]",
+              "startPort": "[parameters('nt0ephemeralStartPort')]"
+            },
+            "httpGatewayEndpointPort": "[parameters('nt0fabricHttpGatewayPort')]",
+            "isPrimary": true,
+            "vmInstanceCount": "[parameters('nt0InstanceCount')]"
+          }
+        ],
+        "provisioningState": "Default",
+        "reliabilityLevel": "Silver",
+        "upgradeDescription": {
+          "forceRestart": false,
+          "upgradeReplicaSetCheckTimeout": "10675199.02:48:05.4775807",
+          "healthCheckWaitDuration": "00:02:00",
+          "healthCheckStableDuration": "00:02:00",
+          "healthCheckRetryTimeout": "00:05:00",
+          "upgradeTimeout": "00:30:00",
+          "upgradeDomainTimeout": "00:10:00",
+          "healthPolicy": {
+            "maxPercentUnhealthyNodes": 20,
+            "maxPercentUnhealthyApplications": 20
+          },
+          "deltaHealthPolicy": {
+            "maxPercentDeltaUnhealthyNodes": 0,
+            "maxPercentUpgradeDomainDeltaUnhealthyNodes": 0,
+            "maxPercentDeltaUnhealthyApplications": 0,
+            "applicationDeltaHealthPolicies": {
+              "fabric:/System": {
+                "defaultServiceTypeDeltaHealthPolicy": {
+                  "maxPercentDeltaUnhealthyServices": 0
+                }
+              }
+            }
+          }
+        },
+        "upgradeMode": "Manual",
+        "vmImage": "Windows"
+      },
+      "tags": {
+        "resourceType": "Service Fabric",
+        "clusterName": "[parameters('clusterName')]"
+      }
+    }
+  ],
+  "outputs": {
+    "clusterProperties": {
+      "value": "[reference(parameters('clusterName'))]",
+      "type": "object"
+    }
+  }
+}

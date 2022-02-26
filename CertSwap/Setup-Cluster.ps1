@@ -1,9 +1,7 @@
 ﻿## Declare parameters
-$armTemplate = ".\Template2022.json" 
-$currentExecutionPath = "D:\Code\FabricMonkey\FabricScripts\SOTA22"
-$azureRegion = "eastus"
-$localCertificatePath = "D:\Certificates\"
-$generalPassword = "nZ549Ux2MnW6srTvOZsq"
+$armTemplate = ".\Cluster_VMSS1.json" 
+$currentExecutionPath = "D:\Code\FabricMonkey\FabricScripts\CertSwap"
+$clusterVersion = "8.2.1486.9590"
 
 ## COPR subscription
 $subscriptionId = "13ad2c84-84fa-4798-ad71-e70c07af873f" 
@@ -25,6 +23,10 @@ Connect-AzAccount -Tenant $tenantId
 Select-AzSubscription -SubscriptionId $subscriptionId -Tenant $tenantId -ErrorAction Stop
 Set-AzContext -SubscriptionId $subscriptionId
 #>
+
+$azureRegion = "eastus"
+$localCertificatePath = "D:\Certificates\"
+$generalPassword = "nZ549Ux2MnW6srTvOZsq"
 
 cd $currentExecutionPath
 Enable-AzureRmAlias
@@ -59,38 +61,25 @@ $clusterCertificate.CertificateThumbprint
 $clusterCertificate.SourceVault
 $clusterCertificate.CertificateURL
 
+## Create secondary cert
+$secondaryCertificateName = $deploymentName + "-new-cert"
+$secondaryClusterCertificate = Invoke-AddCertToKeyVaultAsSecret -SubscriptionId $subscriptionId -ResourceGroupName $resourceGroup -Location $azureRegion -VaultName $keyVaultName -CertificateName $secondaryCertificateName -CreateSelfSignedCertificate -DnsName $serviceFabricClusterDns -OutputPath $localCertificatePath -Password $generalPassword
+$secondaryClusterCertificate.CertificateThumbprint
+$secondaryClusterCertificate.SourceVault
+$secondaryClusterCertificate.CertificateURL
+
 ## Deploy Azure Service Fabric Cluster
 $armParameter = @{}
 $armParameter.Add("deploymentId", $deploymentName)
+$armParameter.Add("clusterDNSname", $serviceFabricClusterDns)
+$armParameter.Add("clusterVersion", $clusterVersion)
 $armParameter.Add("clusterName", $serviceFabricClusterName)
 $armParameter.Add("adminPassword", $generalPassword)
 $armParameter.Add("sourceVaultValue", $clusterCertificate.SourceVault)
 $armParameter.Add("certificateUrlValue", $clusterCertificate.CertificateURL)
 $armParameter.Add("certificateThumbprint", $clusterCertificate.CertificateThumbprint)
-##$armParameter.Add("omsWorkspaceName", $omsName)
-##$armParameter.Add("clusterLocation", $azureRegion)
-##$armParameter.Add("dnsName", $serviceFabricClusterName)
-
+$armParameter.Add("secondaryCertificateUrlValue", $secondaryClusterCertificate.CertificateURL)
+$armParameter.Add("secondaryCertificateThumbprint", $secondaryClusterCertificate.CertificateThumbprint)
 
 Test-AzResourceGroupDeployment -ResourceGroupName $resourceGroup -TemplateFile $armTemplate -TemplateParameterObject $armParameter -Verbose -ErrorAction Stop
-
 New-AzResourceGroupDeployment -ResourceGroupName $resourceGroup -TemplateFile $armTemplate -TemplateParameterObject $armParameter -Verbose -Mode Incremental
-
-## Import certificate in local store
-$certificateFile = $localCertificatePath + $certificateName + ".pfx"
-$certificatePassword = ConvertTo-SecureString $generalPassword -AsPlainText -Force
-Import-PfxCertificate -Exportable -CertStoreLocation Cert:\CurrentUser\My -FilePath $certificateFile -Password $certificatePassword
-Import-PfxCertificate -Exportable -CertStoreLocation Cert:\CurrentUser\TrustedPeople -FilePath $certificateFile -Password $certificatePassword
-
-## Output
-$output = "Deployment Name: $deploymentName; Thumbprint: " + $clusterCertificate.CertificateThumbprint
-Write-Host $output
-$output | Out-File -FilePath "C:\Temp\$deploymentName.txt"
-
-
-
-#Update-AzServiceFabricDurability -ResourceGroupName chrpap241050-group -Name chrpap241050-servicefabric -DurabilityLevel Silver -NodeType mngmt
-
-# Start-AzVmssRollingOSUpgrade -ResourceGroupName "chrpap111911-group" -VMScaleSetName "mngmt"
-
-

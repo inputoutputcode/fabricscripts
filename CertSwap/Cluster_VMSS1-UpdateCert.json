@@ -310,8 +310,8 @@
           "RepairManager"
         ],
         "certificate": {
-          "thumbprint": "[parameters('secondaryCertificateThumbprint')]",
-          "thumbprintSecondary": "[parameters('certificateThumbprint')]",          
+          "thumbprint": "[parameters('certificateThumbprint')]",
+          "thumbprintSecondary": "[parameters('secondaryCertificateThumbprint')]",          
           "x509StoreName": "[parameters('certificateStoreValue')]"
         },
         "clientCertificateCommonNames": [

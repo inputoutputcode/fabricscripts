@@ -1,21 +1,27 @@
 ﻿## Declare parameters
 $armTemplate = ".\Templates\5-VM-Ubuntu-1-NodeTypes-Secure.json"
-$currentExecutionPath = "D:\Code\inputoutputcode\FabricMonkey\Create-GenericCluster"
-$clusterVersion = "6.5.676.9590"
+$currentExecutionPath = "D:\Code\FabricMonkey\FabricScripts\GenericCluster"
+
+## https://docs.microsoft.com/en-us/windows-server/administration/openssh/openssh_keymanagement
+##ssh-keygen -t ed25519 
+##C:\Users\chrpap\.ssh\id_rsa
+$sshPubKey = "ssh-rsa XXX"
 
 ## Fixed parameters
-$subscriptionId = "7e07ba72-cff7-49e5-9099-9ba281f2fea5"
 $azureRegion = "centralus"
 $localCertificatePath = "D:\Certificates\"
 $generalPassword = "nZ549Ux2MnW6srTvOZsq"
 
-## Set environment
+## COPR subscription
+$subscriptionId = "13ad2c84-84fa-4798-ad71-e70c07af873f" 
+# Set environment 
 Try {
   Select-AzSubscription -SubscriptionId $subscriptionId -ErrorAction Stop
 } Catch {
     Login-AzAccount
     Set-AzContext -SubscriptionId $subscriptionId
 }
+
 cd $currentExecutionPath
 Enable-AzureRmAlias
 
@@ -35,6 +41,7 @@ $serviceFabricClusterDns = $serviceFabricClusterName + "." + $azureRegion + ".cl
 $tag = New-AzTag -Name "alias"
 $group = New-AzResourceGroup -Name $resourceGroup -Location $azureRegion -Tag @{"alias"="chrpap"}
 Write-Host "Created the resource group" $group.ResourceGroupName
+Set-Item Env:\SuppressAzurePowerShellBreakingChangeWarnings "true" 
 $keyVault = New-AzKeyVault -VaultName $keyVaultName -ResourceGroupName $resourceGroup -Location $azureRegion -EnabledForDeployment
 Write-Host "Created the resource group" $keyVault.VaultName
 Import-Module ".\ServiceFabricRPHelpers\ServiceFabricRPHelpers.psm1"
@@ -46,7 +53,7 @@ $clusterCertificate.CertificateURL
 
 ## Deploy Azure Service Fabric Cluster
 $armParameter = @{}
-$armParameter.Add("clusterLocation", $azureRegion)
+$armParameter.Add("adminPublicKey", $sshPubKey)
 $armParameter.Add("clusterName", $serviceFabricClusterName)
 $armParameter.Add("adminUserName", $generalPassword)
 $armParameter.Add("adminPassword", $generalPassword)
@@ -63,6 +70,15 @@ $certificateFile = $localCertificatePath + $certificateName + ".pfx"
 $certificatePassword = ConvertTo-SecureString $generalPassword -AsPlainText -Force
 Import-PfxCertificate -Exportable -CertStoreLocation Cert:\CurrentUser\My -FilePath $certificateFile -Password $certificatePassword
 Import-PfxCertificate -Exportable -CertStoreLocation Cert:\CurrentUser\TrustedPeople -FilePath $certificateFile -Password $certificatePassword
+
+## Create pem file
+$certStorePath = "Cert:\CurrentUser\My\" + $clusterCertificate.CertificateThumbprint
+$derCertFilePath = $localCertificatePath + $certificateName + ".der"
+Export-Certificate -Cert $certStorePath -FilePath $derCertFilePath -type CERT –noclobber | Out-Null
+$pemCertFilePath = $localCertificatePath + $certificateName + ".pem"
+certutil -encode $derCertFilePath $pemCertFilePath | Out-Null
+
+
 
 ## Output
 $output = "Deployment Name: $deploymentName; Thumbprint: " + $clusterCertificate.CertificateThumbprint

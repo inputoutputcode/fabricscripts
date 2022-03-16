@@ -48,22 +48,23 @@ $resourceGroup = $deploymentName + "-group"
 $keyVaultName = $deploymentName + "-keyvault"
 $serviceFabricClusterName = $deploymentName + "-servicefabric"
 $serviceFabricClusterDns = $serviceFabricClusterName + "." + $azureRegion + ".cloudapp.azure.com"
-$omsName = $deploymentName + "-oms"
 
-## Deploy Azure Key Vault
+## Prepare Resource Group and Azure Key Vault
 New-AzResourceGroup -Name $resourceGroup -Location $azureRegion -Force
 Set-Item Env:\SuppressAzurePowerShellBreakingChangeWarnings "true" 
 New-AzKeyVault -VaultName $keyVaultName -ResourceGroupName $resourceGroup -Location $azureRegion -EnabledForDeployment 
 Import-Module ".\ServiceFabricRPHelpers.psm1"
 New-Item -ItemType Directory -Path $localCertificatePath -ErrorAction Ignore
-$clusterCertificate = Invoke-AddCertToKeyVaultAsSecret -SubscriptionId $subscriptionId -ResourceGroupName $resourceGroup -Location $azureRegion -VaultName $keyVaultName -CertificateName $certificateName -CreateSelfSignedCertificate -DnsName $serviceFabricClusterDns -OutputPath $localCertificatePath -Password $generalPassword
+
+## Create primary cert
+$clusterCertificate = Invoke-AddCertToKeyVaultAsSecret -ResourceGroupName $resourceGroup -VaultName $keyVaultName -CertificateName $certificateName -DnsName $serviceFabricClusterDns -OutputPath $localCertificatePath -Password $generalPassword -NotBeforeInDays $(-1)
 $clusterCertificate.CertificateThumbprint
 $clusterCertificate.SourceVault
 $clusterCertificate.CertificateURL
 
 ## Create secondary cert
 $secondaryCertificateName = $deploymentName + "-new-cert"
-$secondaryClusterCertificate = Invoke-AddCertToKeyVaultAsSecret -SubscriptionId $subscriptionId -ResourceGroupName $resourceGroup -Location $azureRegion -VaultName $keyVaultName -CertificateName $secondaryCertificateName -CreateSelfSignedCertificate -DnsName $serviceFabricClusterDns -OutputPath $localCertificatePath -Password $generalPassword
+$secondaryClusterCertificate = Invoke-AddCertToKeyVaultAsSecret -ResourceGroupName $resourceGroup -VaultName $keyVaultName -CertificateName $secondaryCertificateName -DnsName $serviceFabricClusterDns -OutputPath $localCertificatePath -Password $generalPassword -NotAfterInDays 4
 $secondaryClusterCertificate.CertificateThumbprint
 $secondaryClusterCertificate.SourceVault
 $secondaryClusterCertificate.CertificateURL

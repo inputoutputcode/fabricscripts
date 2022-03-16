@@ -2,11 +2,10 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "clusterLocation": {
+    "adminPublicKey": {
       "type": "string",
-      "defaultValue": "westus",
       "metadata": {
-        "description": "Location of the Cluster"
+        "description": "Specifies the SSH rsa public key file as a string. Use \"ssh-keygen -t rsa -b 2048\" to generate your SSH key pairs."
       }
     },
     "clusterName": {
@@ -126,7 +125,15 @@
     }
   },
   "variables": {
-    "computeLocation": "[parameters('clusterLocation')]",
+    
+    "vmssApiVersion": "2021-07-01",
+    "sfApiVersion": "2021-06-01",
+    "lbApiVersion": "2021-05-01",
+    "vNetApiVersion": "2021-03-01",
+    "storageApiVersion": "2019-06-01",
+    "publicIPApiVersion": "2021-03-01",
+    "nsgApiVersion": "2021-03-01",
+
     "dnsName": "[parameters('clusterName')]",
     "vmName": "vm",
     "virtualNetworkName": "VNet",
@@ -135,7 +142,6 @@
     "lbIPName": "PublicIP-LB-FE",
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
     "overProvision": "false",
-    "storageApiVersion": "2016-01-01",
     "nt0applicationStartPort": "20000",
     "nt0applicationEndPort": "30000",
     "nt0ephemeralStartPort": "49152",
@@ -163,10 +169,10 @@
   },
   "resources": [
     {
-      "apiVersion": "2018-07-01",
+      "apiVersion": "[variables('storageApiVersion')]",
       "type": "Microsoft.Storage/storageAccounts",
       "name": "[variables('supportLogStorageAccountName')]",
-      "location": "[variables('computeLocation')]",
+      "location": "[resourceGroup().location]",
       "dependsOn": [],
       "properties": {},
       "kind": "Storage",
@@ -179,10 +185,10 @@
       }
     },
     {
-      "apiVersion": "2018-07-01",
+      "apiVersion": "[variables('storageApiVersion')]",
       "type": "Microsoft.Storage/storageAccounts",
       "name": "[variables('applicationDiagnosticsStorageAccountName')]",
-      "location": "[variables('computeLocation')]",
+      "location": "[resourceGroup().location]",
       "dependsOn": [],
       "properties": {},
       "kind": "Storage",
@@ -195,10 +201,10 @@
       }
     },
     {
-      "apiVersion": "2018-08-01",
+      "apiVersion": "[variables('vNetApiVersion')]",
       "type": "Microsoft.Network/virtualNetworks",
       "name": "[variables('virtualNetworkName')]",
-      "location": "[variables('computeLocation')]",
+      "location": "[resourceGroup().location]",
       "dependsOn": [],
       "properties": {
         "addressSpace": {
@@ -221,10 +227,10 @@
       }
     },
     {
-      "apiVersion": "2018-08-01",
+      "apiVersion": "[variables('publicIPApiVersion')]",
       "type": "Microsoft.Network/publicIPAddresses",
       "name": "[concat(variables('lbIPName'),'-',variables('vmNodeType0Name'))]",
-      "location": "[variables('computeLocation')]",
+      "location": "[resourceGroup().location]",
       "properties": {
         "dnsSettings": {
           "domainNameLabel": "[variables('dnsName')]"
@@ -237,10 +243,10 @@
       }
     },
     {
-      "apiVersion": "2018-08-01",
+      "apiVersion": "[variables('lbApiVersion')]",
       "type": "Microsoft.Network/loadBalancers",
       "name": "[concat('LB','-', parameters('clusterName'),'-',variables('vmNodeType0Name'))]",
-      "location": "[variables('computeLocation')]",
+      "location": "[resourceGroup().location]",
       "dependsOn": [
         "[concat('Microsoft.Network/publicIPAddresses/',concat(variables('lbIPName'),'-',variables('vmNodeType0Name')))]"
       ],
@@ -257,8 +263,7 @@
         ],
         "backendAddressPools": [
           {
-            "name": "LoadBalancerBEAddressPool",
-            "properties": {}
+            "name": "LoadBalancerBEAddressPool"
           }
         ],
         "loadBalancingRules": [
@@ -370,17 +375,17 @@
       }
     },
     {
-      "apiVersion": "2018-08-01",
+      "apiVersion": "[variables('nsgApiVersion')]",
       "type": "Microsoft.Network/networkSecurityGroups",
       "name": "[concat('nsg', variables('subnet0Name'))]",
       "location": "[resourceGroup().location]",
       "properties": {
         "securityRules": [
           {
-            "name": "AzurePortal",
+            "name": "Azure Portal",
             "properties": {
               "access": "Allow",
-              "sourceAddressPrefix": "Internet",
+              "sourceAddressPrefix": "ServiceFabric",
               "sourcePortRange": "*",
               "sourcePortRanges": [],
               "destinationAddressPrefix": "*",
@@ -393,9 +398,9 @@
             }
           },
           {
-            "name": "Deny",
+            "name": "Client API",
             "properties": {
-              "access": "Allow",
+              "access": "Deny",
               "sourceAddressPrefix": "Internet",
               "sourcePortRange": "*",
               "sourcePortRanges": [],
@@ -404,6 +409,22 @@
               "destinationPortRanges": [],
               "direction": "Inbound",
               "priority": 3910,
+              "protocol": "Tcp",
+              "description": ""
+            }
+          },
+          {
+            "name": "SFX + Client API",
+            "properties": {
+              "access": "Deny",
+              "sourceAddressPrefix": "Internet",
+              "sourcePortRange": "*",
+              "sourcePortRanges": [],
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "19080",
+              "destinationPortRanges": [],
+              "direction": "Inbound",
+              "priority": 3920,
               "protocol": "Tcp",
               "description": ""
             }
@@ -419,7 +440,7 @@
               "destinationPortRange": "1025-1027",
               "destinationPortRanges": [],
               "direction": "Inbound",
-              "priority": 3920,
+              "priority": 3930,
               "protocol": "Tcp",
               "description": ""
             }
@@ -435,7 +456,7 @@
               "destinationPortRange": "49152-65534",
               "destinationPortRanges": [],
               "direction": "Inbound",
-              "priority": 3930,
+              "priority": 3940,
               "protocol": "Tcp",
               "description": ""
             }
@@ -451,39 +472,7 @@
               "destinationPortRange": "2000-3000",
               "destinationPortRanges": [],
               "direction": "Inbound",
-              "priority": 3940,
-              "protocol": "Tcp",
-              "description": ""
-            }
-          },
-          {
-            "name": "SMB",
-            "properties": {
-              "access": "Allow",
-              "sourceAddressPrefix": "VirtualNetwork",
-              "sourcePortRange": "*",
-              "sourcePortRanges": [],
-              "destinationAddressPrefix": "*",
-              "destinationPortRange": "445",
-              "destinationPortRanges": [],
-              "direction": "Inbound",
               "priority": 3950,
-              "protocol": "Tcp",
-              "description": ""
-            }
-          },
-          {
-            "name": "RDP",
-            "properties": {
-              "access": "Deny",
-              "sourceAddressPrefix": "Internet",
-              "sourcePortRange": "*",
-              "sourcePortRanges": [],
-              "destinationAddressPrefix": "*",
-              "destinationPortRange": "3389-3488",
-              "destinationPortRanges": [],
-              "direction": "Inbound",
-              "priority": 3960,
               "protocol": "Tcp",
               "description": ""
             }
@@ -491,7 +480,7 @@
           {
             "name": "SSH",
             "properties": {
-              "access": "Deny",
+              "access": "Allow",
               "sourceAddressPrefix": "Internet",
               "sourcePortRange": "*",
               "sourcePortRanges": [],
@@ -505,7 +494,7 @@
             }
           },
           {
-            "name": "CustomEndpoint",
+            "name": "Custom Endpoint",
             "properties": {
               "access": "Deny",
               "sourceAddressPrefix": "Internet",
@@ -521,39 +510,7 @@
             }
           },
           {
-            "name": "BlockInbound",
-            "properties": {
-              "access": "Deny",
-              "sourceAddressPrefix": "*",
-              "sourcePortRange": "*",
-              "sourcePortRanges": [],
-              "destinationAddressPrefix": "*",
-              "destinationPortRange": "*",
-              "destinationPortRanges": [],
-              "direction": "Inbound",
-              "priority": 4000,
-              "protocol": "*",
-              "description": ""
-            }
-          },
-          {
-            "name": "Network",
-            "properties": {
-              "access": "Allow",
-              "sourceAddressPrefix": "*",
-              "sourcePortRange": "*",
-              "sourcePortRanges": [],
-              "destinationAddressPrefix": "VirtualNetwork",
-              "destinationPortRange": "*",
-              "destinationPortRanges": [],
-              "direction": "Outbound",
-              "priority": 3900,
-              "protocol": "Tcp",
-              "description": ""
-            }
-          },
-          {
-            "name": "ResourceProvider",
+            "name": "Resource Provider",
             "properties": {
               "access": "Allow",
               "sourceAddressPrefix": "*",
@@ -563,40 +520,24 @@
               "destinationPortRange": "443",
               "destinationPortRanges": [],
               "direction": "Outbound",
-              "priority": 3910,
+              "priority": 4000,
               "protocol": "Tcp",
               "description": ""
             }
           },
           {
-            "name": "Upgrade",
+            "name": "Download Binaries",
             "properties": {
-              "access": "Deny",
+              "access": "Allow",
               "sourceAddressPrefix": "*",
               "sourcePortRange": "*",
               "sourcePortRanges": [],
-              "destinationAddressPrefix": "Internet",
-              "destinationPortRange": "80",
-              "destinationPortRanges": [],
+              "destinationAddressPrefix": "AzureFrontDoor.FirstParty",
+              "destinationPortRange": "",
+              "destinationPortRanges": ["443"], 
               "direction": "Outbound",
-              "priority": 3920,
+              "priority": 4010,
               "protocol": "Tcp",
-              "description": ""
-            }
-          },
-          {
-            "name": "BlockOutbound",
-            "properties": {
-              "access": "Deny",
-              "sourceAddressPrefix": "*",
-              "sourcePortRange": "*",
-              "sourcePortRanges": [],
-              "destinationAddressPrefix": "*",
-              "destinationPortRange": "*",
-              "destinationPortRanges": [],
-              "direction": "Outbound",
-              "priority": 3950,
-              "protocol": "*",
               "description": ""
             }
           }
@@ -608,10 +549,10 @@
       }
     },
     {
-      "apiVersion": "2018-10-01",
+      "apiVersion": "[variables('vmssApiVersion')]",
       "type": "Microsoft.Compute/virtualMachineScaleSets",
       "name": "[variables('vmNodeType0Name')]",
-      "location": "[variables('computeLocation')]",
+      "location": "[resourceGroup().location]",
       "dependsOn": [
         "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
         "[concat('Microsoft.Network/loadBalancers/', concat('LB','-', parameters('clusterName'),'-',variables('vmNodeType0Name')))]",
@@ -703,6 +644,17 @@
           "osProfile": {
             "adminPassword": "[parameters('adminPassword')]",
             "adminUsername": "[parameters('adminUsername')]",
+            "linuxConfiguration": {
+              "disablePasswordAuthentication": true,
+              "ssh": {
+                "publicKeys": [
+                  {
+                    "path": "[concat('/home/', parameters('adminUsername'), '/.ssh/authorized_keys')]",
+                    "keyData": "[parameters('adminPublicKey')]"
+                  }
+                ]
+              }
+            },
             "computernamePrefix": "[variables('vmNodeType0Name')]",
             "secrets": [
               {
@@ -745,10 +697,10 @@
       }
     },
     {
-      "apiVersion": "2018-02-01",
+      "apiVersion": "[variables('sfApiVersion')]",
       "type": "Microsoft.ServiceFabric/clusters",
       "name": "[parameters('clusterName')]",
-      "location": "[parameters('clusterLocation')]",
+      "location": "[resourceGroup().location]",
       "dependsOn": [
         "[concat('Microsoft.Storage/storageAccounts/', variables('supportLogStorageAccountName'))]"
       ],

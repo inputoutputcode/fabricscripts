@@ -13,13 +13,7 @@ through portal or for adding new certificates on VMs provisioned by Compute Reso
 [CmdletBinding()]
 param(
   [Parameter(Mandatory=$true)]
-  [string] $SubscriptionId,
-
-  [Parameter(Mandatory=$true)]
   [string] $ResourceGroupName,
-
-  [Parameter(Mandatory=$true)]
-  [string] $Location,
 
   [Parameter(Mandatory=$true)]
   [string] $VaultName,
@@ -30,20 +24,18 @@ param(
   [Parameter(Mandatory=$true)]
   [string] $Password,   
 
-  [Parameter(Mandatory=$true, ParameterSetName="CreateNewCertificate")]
-  [switch] $CreateSelfSignedCertificate,
-
-  [Parameter(Mandatory=$true, ParameterSetName="CreateNewCertificate")]
+  [Parameter(Mandatory=$true)]
   [string] $DnsName,
 
-  [Parameter(Mandatory=$true, ParameterSetName="CreateNewCertificate")]
+  [Parameter(Mandatory=$true)]
   [string] $OutputPath,
 
-  [Parameter(Mandatory=$true, ParameterSetName="UseExistingCertificate")]
-  [switch] $UseExistingCertificate,
+  [Parameter(Mandatory=$false)]
+  [int] $NotAfterInDays = 2,
 
-  [Parameter(Mandatory=$true, ParameterSetName="UseExistingCertificate")] 
-  [string] $ExistingPfxFilePath
+  [Parameter(Mandatory=$false)]
+  [int] $NotBeforeInDays = 0
+
 )
 
 $ErrorActionPreference = 'Stop'
@@ -53,20 +45,16 @@ $existingKeyVault = Get-AzKeyVault -VaultName $VaultName -ResourceGroupName $Res
 $resourceId = $existingKeyVault.ResourceId
 
 Write-Host "Using existing vault $VaultName in $($existingKeyVault.Location)"
+Write-Host "Creating new self signed certificate at $NewPfxFilePath"
 
-if($CreateSelfSignedCertificate)
-{
-  Write-Host "Creating new self signed certificate at $NewPfxFilePath"
-
-  $securePassword = ConvertTo-SecureString -String $password -AsPlainText -Force
-  $NewPfxFilePath = Join-Path $OutputPath $($CertificateName+".pfx")
-  $provider = "Microsoft Enhanced RSA and AES Cryptographic Provider"
-  $certPath = "Cert:\CurrentUser\My"
-  $notBeforeDate = Get-Date -Format "yyyy-MM-dd"
-  $notAfterDate = (Get-Date).AddDays(2).ToString("yyyy-MM-dd")
-  New-SelfSignedCertificate -NotBefore $notBeforeDate -NotAfter $notAfterDate -DnsName $DnsName -CertStoreLocation $certPath -Provider $provider -KeyExportPolicy ExportableEncrypted | Export-PfxCertificate -FilePath $NewPfxFilePath -Password $securePassword | Out-Null
-  $ExistingPfxFilePath = $NewPfxFilePath
-}
+$securePassword = ConvertTo-SecureString -String $password -AsPlainText -Force
+$NewPfxFilePath = Join-Path $OutputPath $($CertificateName+".pfx")
+$provider = "Microsoft Enhanced RSA and AES Cryptographic Provider"
+$certPath = "Cert:\CurrentUser\My"
+$notBeforeDate = (Get-Date).AddDays($NotBeforeInDays).ToString("yyyy-MM-dd")
+$notAfterDate = (Get-Date).AddDays($NotAfterInDays).ToString("yyyy-MM-dd")
+New-SelfSignedCertificate -NotBefore $notBeforeDate -NotAfter $notAfterDate -DnsName $DnsName -CertStoreLocation $certPath -Provider $provider -KeyExportPolicy ExportableEncrypted | Export-PfxCertificate -FilePath $NewPfxFilePath -Password $securePassword | Out-Null
+$ExistingPfxFilePath = $NewPfxFilePath
 
 Write-Host "Reading pfx file from $ExistingPfxFilePath"
 $cert = new-object System.Security.Cryptography.X509Certificates.X509Certificate2 $ExistingPfxFilePath, $Password

@@ -1,8 +1,8 @@
 ﻿## Declare parameters
 $armTemplate = ".\SimpleFiveNode.json" 
-$currentExecutionPath = "D:\Code\FabricMonkey\FabricScripts\LoadTesting"
+$currentExecutionPath = "C:\Code\FabricScripts\LoadTesting"
 $azureRegion = "eastus"
-$localCertificatePath = "D:\Certificates\"
+$localCertificatePath = "C:\Certificates\"
 $generalPassword = "nZ549Ux2MnW6srTvOZsq"
 
 ## COPR subscription

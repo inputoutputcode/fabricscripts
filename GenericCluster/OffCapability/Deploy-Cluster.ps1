@@ -1,13 +1,13 @@
 ## Declare parameters
 $armTemplate = ".\Cluster-ExternalRoot.json"
-$currentExecutionPath = "D:\Code\FabricMonkey\FabricScripts\Create-GenericCluster\OffCapability"
+$currentExecutionPath = "C:\Code\FabricScripts\GenericCluster\OffCapability"
 
 ## Fixed parameters
 $subscriptionId = "13ad2c84-84fa-4798-ad71-e70c07af873f" 
 # MSDN 7e07ba72-cff7-49e5-9099-9ba281f2fea5
 # SF 13ad2c84-84fa-4798-ad71-e70c07af873f
 $azureRegion = "southcentralus"
-$localCertificatePath = "D:\Certificates\"
+$localCertificatePath = "C:\Certificates\"
 $machineAdminUser = "Christian"
 $machineAdminPass = "nZ549Ux2MnW6srTvOZsq"
 $clusterVersion = "8.0.514.9590"

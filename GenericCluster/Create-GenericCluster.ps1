@@ -1,6 +1,6 @@
 ﻿## Declare parameters
 $armTemplate = ".\Templates\Vortex-LoadTest-Cluster_VMSS1.json" # 
-$currentExecutionPath = "D:\Code\FabricMonkey\FabricScripts\GenericCluster"
+$currentExecutionPath = "C:\Code\FabricScripts\GenericCluster"
 $clusterVersion = "8.2.1486.9590"
 
 ## COPR subscription
@@ -25,7 +25,7 @@ Set-AzContext -SubscriptionId $subscriptionId
 #>
 
 $azureRegion = "eastus"
-$localCertificatePath = "D:\Certificates\"
+$localCertificatePath = "C:\Certificates\"
 $generalPassword = "nZ549Ux2MnW6srTvOZsq"
 
 cd $currentExecutionPath

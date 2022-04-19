@@ -6,6 +6,7 @@ $currentExecutionPath = "D:\Code\FabricMonkey\FabricScripts\GenericCluster"
 ##ssh-keygen -t ed25519 
 ##C:\Users\chrpap\.ssh\id_rsa
 $sshPubKey = "ssh-rsa XXX"
+## https://docs.microsoft.com/en-us/azure/virtual-machines/linux/use-remote-desktop
 
 ## Fixed parameters
 $azureRegion = "centralus"

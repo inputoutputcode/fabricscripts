@@ -43,3 +43,7 @@ $clusterCertificate.SourceVault
 $clusterCertificate.CertificateURL
 
 New-AzResourceGroupDeployment -Name $deploymentName -ResourceGroupName $resourceGroupName -TemplateFile $templateFileName -deploymentId $deploymentName -certificateThumbprint $clusterCertificate.CertificateThumbprint -sourceVaultValue $clusterCertificate.SourceVault -certificateUrlValue $clusterCertificate.CertificateURL -adminPassword $generalPassword -Verbose -Mode Incremental
+
+
+$templateFileNameAppUpdate = "UpdateFabricObserver.bicep"
+New-AzResourceGroupDeployment -Name fabricObserverUpgrade -ResourceGroupName $resourceGroupName -TemplateFile $templateFileNameAppUpdate -deploymentId $deploymentName -Verbose -Mode Incremental

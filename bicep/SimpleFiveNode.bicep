@@ -11,7 +11,7 @@ param adminPassword string
 var clusterName = '${deploymentId}-servicefabric'
 var virtualNetworkName = 'virtualnetwork'
 var networkSecurityRulesName = 'networksecurityrules'
-var subnet1Reference = '${virtualNetworkName}/subnets/${subnet1Name}'
+var subnet1Reference = '/subscriptions/${subscription().subscriptionId}/resourcegroups/${deploymentId}-group/providers/Microsoft.Network/virtualNetworks/${virtualNetworkName}/subnets/${subnet1Name}'
 var networkInterfaceName = 'networkinterface'
 var publicIpAddressName = 'publicipaddress'
 var serviceFabricStorageAccountName = '${deploymentId}sfstorage'
@@ -37,7 +37,7 @@ var gatewayHttpPublicHealthProbeName = 'gatewayHttpPublicHealthProbe'
 var customWebAppPort = 80
 
 // node type
-var virtualMachineScaleSetName = 'virtualmachinescaleset1'
+var virtualMachineScaleSetName = 'scaleset1'
 var virtualMachineScaleSetReferenceName = 'management'
 var nodeType1InstanceCount = 5
 var nodeType1Size = 'Standard_D2_v2'
@@ -55,13 +55,13 @@ var fabricHttpGatewayPort = 19080
 
 // applications
 var packageUrlFabricObserver = 'https://github.com/microsoft/service-fabric-observer/releases/download/51751968/Microsoft.ServiceFabricApps.FabricObserver.Windows.SelfContained.3.1.24.sfpkg'
-var applicationTypeVersionFabricObserver = '3.1.24'
+var applicationTypeVersionFabricObserverName = '3.1.24'
+var applicationTypeNameFabricObserverName = 'FabricObserverType'
+var applicationNameFabricObserverName = 'FabricObserverApplication'
+var serviceNameFabricObserverName = '${applicationNameFabricObserverName}~FabricObserverService'
+var serviceTypeNameFabricObserver = 'FabricObserverType'
 var packageUrlClusterObserver = 'https://github.com/microsoft/service-fabric-observer/releases/download/51751968/Microsoft.ServiceFabricApps.ClusterObserver.Windows.SelfContained.2.1.13.sfpkg'
 var applicationTypeVersionClusterObserver = '2.1.13'
-var applicationTypeNameFabricObserver = 'FabricObserverType'
-var applicationNameFabricObserver = 'FabricObserverApplication'
-var serviceNameFabricObserver = '${applicationNameFabricObserver}~FabricObserverService'
-var serviceTypeNameFabricObserver = 'FabricObserverType'
 var applicationTypeNameClusterObserver = 'ClusterObserverType'
 var applicationNameClusterObserver = 'ClusterObserverApplication'
 var serviceNameClusterObserver = '${applicationNameClusterObserver}~ClusterObserverService'
@@ -73,13 +73,9 @@ resource serviceFabricStorage 'Microsoft.Storage/storageAccounts@2019-06-01' = {
   location: azureregion
   kind: 'StorageV2'
   properties: {
-    networkAcls: {
-      bypass: 'AzureServices'
-      defaultAction: 'Allow'
-    }
-    allowBlobPublicAccess: false
+    allowBlobPublicAccess: true
     minimumTlsVersion: 'TLS1_2'
-    allowSharedKeyAccess: false
+    allowSharedKeyAccess: true
   }
   sku: {
     name: storageAccountType
@@ -92,13 +88,9 @@ resource diagnosticStorage 'Microsoft.Storage/storageAccounts@2019-06-01' = {
   location: azureregion
   kind: 'StorageV2'
   properties: {
-    networkAcls: {
-      bypass: 'AzureServices'
-      defaultAction: 'Allow'
-    }
-    allowBlobPublicAccess: false
+    allowBlobPublicAccess: true
     minimumTlsVersion: 'TLS1_2'
-    allowSharedKeyAccess: false
+    allowSharedKeyAccess: true
   }
   sku: {
     name: storageAccountType
@@ -759,65 +751,81 @@ resource serviceFabricCluster 'Microsoft.ServiceFabric/clusters@2021-06-01' = {
     vmImage: 'Windows'
   }
   tags: resourceTags
+}
 
-  resource cluster_applicationTypeNameFabricObserver 'applicationTypes@2021-06-01' = {
-    name: applicationTypeNameFabricObserver
-    location: azureregion
+resource applicationTypeNameFabricObserver 'Microsoft.ServiceFabric/clusters/applicationTypes@2021-06-01' = {
+  name: '${clusterName}/${applicationTypeNameFabricObserverName}'
+  location: azureregion
+  dependsOn: [
+    serviceFabricCluster
+  ]
+}
 
-    resource cluster_applicationTypeVersionFabricObserver 'versions@2021-06-01' = {
-      name: applicationTypeVersionFabricObserver
-      location: azureregion
-      properties: {
-        appPackageUrl: packageUrlFabricObserver
-      }
-    }
+resource applicationTypeVersionFabricObserver 'Microsoft.ServiceFabric/clusters/applicationTypes/versions@2021-06-01' = {
+  name: applicationTypeVersionFabricObserverName
+  parent: applicationTypeNameFabricObserver
+  location: azureregion
+  properties: {
+    appPackageUrl: packageUrlFabricObserver
   }
+}
 
-  resource cluster_applicationNameFabricObserver 'applications@2021-06-01' = {
-    name: applicationNameFabricObserver
-    location: azureregion
-    properties: {
-      typeName: applicationTypeNameFabricObserver
-      typeVersion: applicationTypeVersionFabricObserver
-      parameters: {
-        FabricSystemObserverEnabled: 'true'
-      }
-      upgradePolicy: {
-        upgradeReplicaSetCheckTimeout: '01:00:00.0'
-        forceRestart: false
-        rollingUpgradeMonitoringPolicy: {
-          healthCheckWaitDuration: '00:02:00.0'
-          healthCheckStableDuration: '00:05:00.0'
-          healthCheckRetryTimeout: '00:10:00.0'
-          upgradeTimeout: '01:00:00.0'
-          upgradeDomainTimeout: '00:20:00.0'
-        }
-        applicationHealthPolicy: {
-          considerWarningAsError: false
-          maxPercentUnhealthyDeployedApplications: 50
-          defaultServiceTypeHealthPolicy: {
-            maxPercentUnhealthyServices: 50
-            maxPercentUnhealthyPartitionsPerService: 50
-            maxPercentUnhealthyReplicasPerPartition: 50
-          }
-        }
-      }
+resource applicationNameFabricObserver 'Microsoft.ServiceFabric/clusters/applications@2021-06-01' = {
+  name: '${clusterName}/${applicationNameFabricObserverName}'
+  location: azureregion
+  properties: {
+    typeName: applicationTypeNameFabricObserverName
+    typeVersion: applicationTypeVersionFabricObserverName
+    parameters: {
+      FabricSystemObserverEnabled: 'true'
     }
+    maximumNodes: 3
+    minimumNodes: 1
+    removeApplicationCapacity: false
 
-    resource cluster_serviceNameFabricObserver 'services@2021-06-01' = {
-      name: serviceNameFabricObserver
-      location: azureregion
-      properties: {
-        serviceKind: 'Stateless'
-        serviceTypeName: serviceTypeNameFabricObserver
-        instanceCount: -1
-        partitionDescription: {
-          partitionScheme: 'Singleton'
+    upgradePolicy: {
+      upgradeMode: 'Monitored'
+      upgradeReplicaSetCheckTimeout: '01:00:00.0'
+      forceRestart: false
+      rollingUpgradeMonitoringPolicy: {
+        failureAction: 'Rollback'
+        healthCheckWaitDuration: '00:02:00.0'
+        healthCheckStableDuration: '00:05:00.0'
+        healthCheckRetryTimeout: '00:10:00.0'
+        upgradeTimeout: '01:00:00.0'
+        upgradeDomainTimeout: '00:20:00.0'
+      }
+      applicationHealthPolicy: {
+        considerWarningAsError: false
+        maxPercentUnhealthyDeployedApplications: 50
+        defaultServiceTypeHealthPolicy: {
+          maxPercentUnhealthyServices: 50
+          maxPercentUnhealthyPartitionsPerService: 50
+          maxPercentUnhealthyReplicasPerPartition: 50
         }
       }
     }
   }
+  dependsOn: [
+    applicationTypeVersionFabricObserver
+  ]
+}
 
+resource serviceNameFabricObserver 'Microsoft.ServiceFabric/clusters/applications/services@2021-06-01' = {
+  name: '${applicationNameFabricObserverName}~${serviceNameFabricObserverName}'
+  parent: applicationNameFabricObserver
+  location: azureregion
+  properties: {
+    serviceKind: 'Stateless'
+    serviceTypeName: serviceTypeNameFabricObserver
+    instanceCount: -1
+    partitionDescription: {
+      partitionScheme: 'Singleton'
+    }
+  }
+}
+
+  /*
   resource cluster_applicationTypeNameClusterObserver 'applicationTypes@2021-06-01' = {
     name: applicationTypeNameClusterObserver
     location: azureregion
@@ -872,8 +880,8 @@ resource serviceFabricCluster 'Microsoft.ServiceFabric/clusters@2021-06-01' = {
         }
       }
     }
-  }  
-}
+    */
+
 
 /*
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2020-08-01' = {

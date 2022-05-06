@@ -441,7 +441,7 @@
           {
             "name": "Azure Portal",
             "properties": {
-              "access": "Deny",
+              "access": "Allow",
               "sourceAddressPrefix": "ServiceFabric",
               "sourcePortRange": "*",
               "sourcePortRanges": [],
@@ -466,22 +466,6 @@
               "destinationPortRanges": [],
               "direction": "Inbound",
               "priority": 3910,
-              "protocol": "Tcp",
-              "description": ""
-            }
-          },
-          {
-            "name": "NodeToNode",
-            "properties": {
-              "access": "Allow",
-              "sourceAddressPrefix": "VirtualNetwork",
-              "sourcePortRange": "*",
-              "sourcePortRanges": [],
-              "destinationAddressPrefix": "*",
-              "destinationPortRange": "19000",
-              "destinationPortRanges": [],
-              "direction": "Inbound",
-              "priority": 3990,
               "protocol": "Tcp",
               "description": ""
             }
@@ -553,7 +537,7 @@
           {
             "name": "RDP",
             "properties": {
-              "access": "Allow",
+              "access": "Deny",
               "sourceAddressPrefix": "Internet",
               "sourcePortRange": "*",
               "sourcePortRanges": [],
@@ -623,7 +607,7 @@
               "sourcePortRanges": [],
               "destinationAddressPrefix": "AzureFrontDoor.FirstParty",
               "destinationPortRange": "",
-              "destinationPortRanges": [ "443" ], //, "80"
+              "destinationPortRanges": ["443"], 
               "direction": "Outbound",
               "priority": 4010,
               "protocol": "Tcp",
@@ -675,11 +659,11 @@
                     "enableParallelJobs": true,
                     "nicPrefixOverride": "[parameters('subnet0Prefix')]",
                     "certificate": {
-                      "thumbprint": "[parameters('secondaryCertificateThumbprint')]",
+                      "thumbprint": "[parameters('certificateThumbprint')]",
                       "x509StoreName": "[parameters('certificateStoreValue')]"
                     },
                     "certificateSecondary": {
-                      "thumbprint": "[parameters('certificateThumbprint')]",
+                      "thumbprint": "[parameters('secondaryCertificateThumbprint')]",
                       "x509StoreName": "[parameters('certificateStoreValue')]"
                     }
                   },
@@ -719,6 +703,9 @@
             ]
           },
           "osProfile": {
+             "windowsConfiguration": { 
+                "enableAutomaticUpdates": false 
+            },            
             "adminPassword": "[parameters('adminPassword')]",
             "adminUsername": "[parameters('adminUsername')]",
             "computernamePrefix": "[parameters('vmNodeType0Name')]",

@@ -1,0 +1,1 @@
+Invoke-WebRequest -Method Get -Uri https://download.microsoft.com/download/3/1/F/31F3FEEB-F073-4E27-A98B-8E691FF74F40/ServiceFabric.7.0.466.9590.cab -OutFile .\ServiceFabric.7.0.466.9590.cab

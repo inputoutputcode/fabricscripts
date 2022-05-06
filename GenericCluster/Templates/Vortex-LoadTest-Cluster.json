@@ -669,7 +669,7 @@
           {
             "name": "Azure Portal",
             "properties": {
-              "access": "Deny",
+              "access": "Allow",
               "sourceAddressPrefix": "ServiceFabric",
               "sourcePortRange": "*",
               "sourcePortRanges": [],
@@ -694,22 +694,6 @@
               "destinationPortRanges": [],
               "direction": "Inbound",
               "priority": 3910,
-              "protocol": "Tcp",
-              "description": ""
-            }
-          },
-          {
-            "name": "NodeToNode",
-            "properties": {
-              "access": "Allow",
-              "sourceAddressPrefix": "VirtualNetwork",
-              "sourcePortRange": "*",
-              "sourcePortRanges": [],
-              "destinationAddressPrefix": "*",
-              "destinationPortRange": "19000",
-              "destinationPortRanges": [],
-              "direction": "Inbound",
-              "priority": 3990,
               "protocol": "Tcp",
               "description": ""
             }
@@ -781,7 +765,7 @@
           {
             "name": "RDP",
             "properties": {
-              "access": "Allow",
+              "access": "Deny",
               "sourceAddressPrefix": "Internet",
               "sourcePortRange": "*",
               "sourcePortRanges": [],
@@ -851,7 +835,7 @@
               "sourcePortRanges": [],
               "destinationAddressPrefix": "AzureFrontDoor.FirstParty",
               "destinationPortRange": "",
-              "destinationPortRanges": ["443"], //, "80"
+              "destinationPortRanges": ["443"], 
               "direction": "Outbound",
               "priority": 4010,
               "protocol": "Tcp",

@@ -1,6 +1,9 @@
 ﻿## Declare parameters
-$armTemplate = ".\Templates\Vortex-LoadTest-Cluster_VMSS1_Vanilla.json" # 
-$currentExecutionPath = "C:\Code\FabricScripts\GenericCluster"
+$armTemplate = ".\SimpleFiveNodeMirantis.json" 
+$currentExecutionPath = "C:\Code\FabricScripts\Mirantis"
+$azureRegion = "eastus"
+$localCertificatePath = "C:\Certificates\"
+$generalPassword = "nZ549Ux2MnW6srTvOZsq"
 
 ## COPR subscription
 $subscriptionId = "13ad2c84-84fa-4798-ad71-e70c07af873f" 
@@ -22,10 +25,6 @@ Connect-AzAccount -Tenant $tenantId
 Select-AzSubscription -SubscriptionId $subscriptionId -Tenant $tenantId -ErrorAction Stop
 Set-AzContext -SubscriptionId $subscriptionId
 #>
-
-$azureRegion = "eastus"
-$localCertificatePath = "C:\Certificates\"
-$generalPassword = "nZ549Ux2MnW6srTvOZsq"
 
 cd $currentExecutionPath
 Enable-AzureRmAlias
@@ -53,7 +52,7 @@ $omsName = $deploymentName + "-oms"
 New-AzResourceGroup -Name $resourceGroup -Location $azureRegion -Force
 Set-Item Env:\SuppressAzurePowerShellBreakingChangeWarnings "true" 
 New-AzKeyVault -VaultName $keyVaultName -ResourceGroupName $resourceGroup -Location $azureRegion -EnabledForDeployment 
-Import-Module ".\ServiceFabricRPHelpers\ServiceFabricRPHelpers.psm1"
+Import-Module ".\ServiceFabricRPHelpers.psm1"
 New-Item -ItemType Directory -Path $localCertificatePath -ErrorAction Ignore
 $clusterCertificate = Invoke-AddCertToKeyVaultAsSecret -SubscriptionId $subscriptionId -ResourceGroupName $resourceGroup -Location $azureRegion -VaultName $keyVaultName -CertificateName $certificateName -CreateSelfSignedCertificate -DnsName $serviceFabricClusterDns -OutputPath $localCertificatePath -Password $generalPassword
 $clusterCertificate.CertificateThumbprint
@@ -63,8 +62,6 @@ $clusterCertificate.CertificateURL
 ## Deploy Azure Service Fabric Cluster
 $armParameter = @{}
 $armParameter.Add("deploymentId", $deploymentName)
-$armParameter.Add("clusterDNSname", $serviceFabricClusterDns)
-$armParameter.Add("computeLocation", $azureRegion)
 $armParameter.Add("clusterName", $serviceFabricClusterName)
 $armParameter.Add("adminPassword", $generalPassword)
 $armParameter.Add("sourceVaultValue", $clusterCertificate.SourceVault)

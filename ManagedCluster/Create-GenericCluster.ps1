@@ -1,13 +1,12 @@
 ﻿## Declare parameters
 $armTemplate = ".\101-managed-service-fabric-cluster-standard-2-nt\azuredeploy.json"
 $armParameters = ".\101-managed-service-fabric-cluster-standard-2-nt\azuredeploy.parameters.json"
-$currentExecutionPath = "D:\Code\FabricMonkey\FabricScripts\ManagedCluster"
-$clusterVersion = "7.1.409.9590"
+$currentExecutionPath = "C:\Code\FabricScripts\ManagedCluster"
 
 ## Fixed parameters
 $subscriptionId = "13ad2c84-84fa-4798-ad71-e70c07af873f"
 $azureRegion = "eastus2"
-$localCertificatePath = "D:\Certificates\"
+$localCertificatePath = "C:\Certificates\"
 $generalPassword = "nZ549Ux2MnW6srTvOZsq"
 
 ## Set environment
@@ -34,7 +33,7 @@ $serviceFabricClusterDns = $serviceFabricClusterName + "." + $azureRegion + ".cl
 ## Deploy Azure Key Vault
 New-AzResourceGroup -Name $resourceGroup -Location $azureRegion -Force 
 New-AzKeyVault -VaultName $keyVaultName -ResourceGroupName $resourceGroup -Location $azureRegion -EnabledForDeployment
-Import-Module "..\Create-GenericCluster\ServiceFabricRPHelpers\ServiceFabricRPHelpers.psm1"
+Import-Module "..\GenericCluster\ServiceFabricRPHelpers\ServiceFabricRPHelpers.psm1"
 New-Item -ItemType Directory -Path $localCertificatePath -ErrorAction Ignore
 $clusterCertificate = Invoke-AddCertToKeyVaultAsSecret -SubscriptionId $subscriptionId -ResourceGroupName $resourceGroup -Location $azureRegion -VaultName $keyVaultName -CertificateName $certificateName -CreateSelfSignedCertificate -DnsName $serviceFabricClusterDns -OutputPath $localCertificatePath -Password $generalPassword
 $clusterCertificate.CertificateThumbprint

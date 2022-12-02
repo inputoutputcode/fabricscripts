@@ -1,6 +1,6 @@
-﻿cd D:\Code\FabricMonkey\FabricScripts\ManagedCluster
+﻿cd C:\Code\FabricScripts\ManagedCluster
 
-New-Item -ItemType Directory sfmcClients
+New-Item -ItemType Directory sfmcClients | Out-Null
 cd sfmcClients
 Invoke-WebRequest -Uri "https://github.com/a-santamaria/ServiceFabricManagedClustersClients/blob/master/AzPowershellClient/LoadModules.ps1?raw=true" -OutFile LoadModules.ps1
 .\LoadModules.ps1

@@ -633,7 +633,7 @@
                     "clusterEndpoint": "[reference(parameters('clusterName')).clusterEndpoint]",
                     "nodeTypeRef": "[parameters('nodeType1Name')]",
                     "dataPath": "D:\\\\SvcFab",
-                    "durabilityLevel": "Silver",
+                    "durabilityLevel": "Bronze",
                     "enableParallelJobs": true,
                     "nicPrefixOverride": "[parameters('subnet1Prefix')]",
                     "certificate": {
@@ -905,7 +905,7 @@
               "startPort": "[parameters('applicationStartPort')]"
             },
             "clientConnectionEndpointPort": "[parameters('fabricTcpGatewayPort')]",
-            "durabilityLevel": "Silver",
+            "durabilityLevel": "Bronze",
             "ephemeralPorts": {
               "endPort": "[parameters('ephemeralEndPort')]",
               "startPort": "[parameters('ephemeralStartPort')]"

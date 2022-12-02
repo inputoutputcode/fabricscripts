@@ -6,6 +6,7 @@ $localCertificatePath = "D:\Certificates\"
 $generalPassword = "nZ549Ux2MnW6srTvOZsq"
 
 ## COPR subscription
+<#
 $subscriptionId = "13ad2c84-84fa-4798-ad71-e70c07af873f" 
 # Set environment 
 Try {
@@ -14,9 +15,10 @@ Try {
     Login-AzAccount
     Set-AzContext -SubscriptionId $subscriptionId
 }
+#>
 
 # MSDN (Disconnect-AzAccount, Connect-AzAccount with christian@poststev.onmicrosoft.com)
-<#
+
 $subscriptionId = "d715466f-2653-406f-be2f-495f7fd4e1b7"
 $tenantId = "7459bed2-8ead-4b9b-84ff-38402c19a97d"
 Disconnect-AzAccount
@@ -24,7 +26,7 @@ Login-AzAccount -Tenant $tenantId
 Connect-AzAccount -Tenant $tenantId
 Select-AzSubscription -SubscriptionId $subscriptionId -Tenant $tenantId -ErrorAction Stop
 Set-AzContext -SubscriptionId $subscriptionId
-#>
+
 
 cd $currentExecutionPath
 Enable-AzureRmAlias

@@ -456,7 +456,7 @@
           {
             "name": "Client API",
             "properties": {
-              "access": "Deny",
+              "access": "Allow",
               "sourceAddressPrefix": "Internet",
               "sourcePortRange": "*",
               "sourcePortRanges": [],

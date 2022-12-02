@@ -1,5 +1,5 @@
 ﻿## Declare parameters
-$armTemplate = ".\SimpleFiveNode-AZspanning.json" 
+$armTemplate = ".\SimpleFiveNode.json" 
 $currentExecutionPath = "D:\Code\FabricMonkey\FabricScripts\LoadTesting"
 $azureRegion = "eastus"
 $localCertificatePath = "D:\Certificates\"

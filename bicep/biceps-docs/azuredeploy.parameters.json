@@ -1,0 +1,25 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "clusterName": {
+      "value": "chrpapbicepquickstart"
+    },
+    "adminUsername": {
+      "value": "Christian"
+    },
+    "adminPassword": {
+      "value": "Corp123!Corp123!"
+    },
+    "certificateThumbprint": {
+      "value": "54BBB4585DC1871BAF61BEA93DBCA5610B332CE3"
+    },
+    "sourceVaultResourceId": {
+      "value": "/subscriptions/13ad2c84-84fa-4798-ad71-e70c07af873f/resourceGroups/chrpap-bicep-group/providers/Microsoft.KeyVault/vaults/chrpapbicepkeyvault"
+    },
+    "certificateUrlValue": {
+      "value": "https://chrpapbicepkeyvault.vault.azure.net:443/secrets/chrpapbicepsecretname/af62eb422ca04fbbbc8782d413936cf2"
+    }
+
+  }
+}

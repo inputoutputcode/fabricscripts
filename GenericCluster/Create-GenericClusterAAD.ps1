@@ -1,9 +1,9 @@
 ﻿## Declare parameters
 $armTemplate = ".\Templates\Vortex-LoadTest-Cluster.json" # 
 $currentExecutionPath = "D:\Code\FabricMonkey\FabricScripts\Create-GenericCluster"
-$clusterVersion = "8.2.1235.9590"
+#$clusterVersion = "8.2.1235.9590"
 $azureRegion = "eastus"
-$localCertificatePath = "D:\Certificates\"
+$localCertificatePath = "C:\Certificates\"
 $generalPassword = "nZ549Ux2MnW6srTvOZsq"
 
 ## Auth
@@ -18,9 +18,7 @@ Try {
 #>
 # MSDN 
 $subscriptionId = "d715466f-2653-406f-be2f-495f7fd4e1b7"
-Connect-AzAccount -Tenant "7459bed2-8ead-4b9b-84ff-38402c19a97d"
-Select-AzSubscription -SubscriptionId $subscriptionId -ErrorAction Stop
-Set-AzContext -SubscriptionId $subscriptionId
+Login-AzAccount -Tenant "7459bed2-8ead-4b9b-84ff-38402c19a97d" -Subscription $subscriptionId
 
 
 cd $currentExecutionPath
@@ -47,7 +45,7 @@ $webapplicationReplyUrl = "https://" + $serviceFabricClusterDns + ":19080/Explor
 $omsName = $deploymentName + "-oms"
 
 # AAD tenant id from the portal
-$tenantId = 'f1c9b125-e2bf-48c0-b025-23e47c410293'
+$tenantId = '7459bed2-8ead-4b9b-84ff-38402c19a97d' #'f1c9b125-e2bf-48c0-b025-23e47c410293'
 
 ## Deploy Azure Key Vault
 New-AzResourceGroup -Name $resourceGroup -Location $azureRegion -Force
@@ -67,7 +65,7 @@ $Configobj = .\SetupApplications.ps1 -TenantId $tenantId -ClusterName $clusterNa
 .\SetupUser.ps1 -ConfigObj $Configobj -UserName 'DemoLocalAdmin' -Password $generalPassword -IsAdmin
 
 <#
-TenantId                       f1c9b125-e2bf-48c0-b025-23e47c410293                                                                                                                                                                                              
+TenantId                       f1c9b125-e2bf-48c0-b025-23e47c410293   /7459bed2-8ead-4b9b-84ff-38402c19a97d                                                                                                                                                                                           
 WebAppId                       9e776163-2766-4ea7-ae77-c74653b5e9b5                                                                                                                                                                                              
 NativeClientAppId              248ccd52-abb1-403e-a53a-86711e151f31                                                                                                                                                                                              
 ServicePrincipalId             2b84b565-f530-4143-a075-c2dbb291cfc2                                                                                                                                                                                              
@@ -85,7 +83,7 @@ cd $currentExecutionPath
 ## Deploy Azure Service Fabric Cluster
 $armParameter = @{}
 $armParameter.Add("deploymentId", $deploymentName)
-$armParameter.Add("clusterVersion", $clusterVersion)
+#$armParameter.Add("clusterVersion", $clusterVersion)
 $armParameter.Add("computeLocation", $azureRegion)
 $armParameter.Add("clusterName", $serviceFabricClusterName)
 $armParameter.Add("adminPassword", $generalPassword)

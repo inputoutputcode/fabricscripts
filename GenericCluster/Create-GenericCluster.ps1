@@ -11,6 +11,10 @@ Try {
     Login-AzAccount
     Set-AzContext -SubscriptionId $subscriptionId
 }
+# Update-AzConfig -DefaultSubscriptionForLogin $subscriptionId
+# Install-Module Az.Resources
+# Import-Module Az.Resources
+# Import-Module Az.KeyVault
 
 # MSDN (Disconnect-AzAccount, Connect-AzAccount with christian@poststev.onmicrosoft.com)
 <#
@@ -28,7 +32,7 @@ $localCertificatePath = "C:\Certificates\"
 $generalPassword = "nZ549Ux2MnW6srTvOZsq"
 
 cd $currentExecutionPath
-Enable-AzureRmAlias
+#Enable-AzureRmAlias
 
 $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
 if (!$currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
@@ -51,7 +55,7 @@ $omsName = $deploymentName + "-oms"
 
 ## Deploy Azure Key Vault
 New-AzResourceGroup -Name $resourceGroup -Location $azureRegion -Force
-Set-Item Env:\SuppressAzurePowerShellBreakingChangeWarnings "true" 
+#Set-Item Env:\SuppressAzurePowerShellBreakingChangeWarnings "true" 
 New-AzKeyVault -VaultName $keyVaultName -ResourceGroupName $resourceGroup -Location $azureRegion -EnabledForDeployment 
 Import-Module ".\ServiceFabricRPHelpers\ServiceFabricRPHelpers.psm1"
 New-Item -ItemType Directory -Path $localCertificatePath -ErrorAction Ignore

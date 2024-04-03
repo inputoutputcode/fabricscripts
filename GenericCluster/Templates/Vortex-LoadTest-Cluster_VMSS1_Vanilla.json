@@ -71,7 +71,7 @@
     },
     "vmImageSku": {
       "type": "string",
-      "defaultValue": "2016-Datacenter-with-Containers"
+      "defaultValue": "2022-Datacenter"
     },
     "vmImageVersion": {
       "type": "string",
@@ -175,8 +175,11 @@
     "storageApiVersion": "2019-06-01",
     "publicIPApiVersion": "2020-07-01",
     "nsgApiVersion": "2021-03-01",    
+    "aiApiVersion": "2020-02-02",
 
     "customWebAppPort": "8947",
+
+    "aiName": "[concat(parameters('deploymentId'),'-ai')]",
 
     "vnetName": "[concat(parameters('deploymentId'),'-','vnet')]",
     "vnetId": "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]",
@@ -407,7 +410,7 @@
       "properties": {
         "securityRules": [
           {
-            "name": "Azure Portal",
+            "name": "AzurePortal",
             "properties": {
               "access": "Deny",
               "sourceAddressPrefix": "ServiceFabric",
@@ -423,7 +426,7 @@
             }
           },
           {
-            "name": "Client API",
+            "name": "ClientAPI",
             "properties": {
               "access": "Deny",
               "sourceAddressPrefix": "Internet",
@@ -455,7 +458,7 @@
             }
           },
           {
-            "name": "SFX + Client API",
+            "name": "SFXClientAPI",
             "properties": {
               "access": "Deny",
               "sourceAddressPrefix": "Internet",
@@ -551,7 +554,7 @@
             }
           },
           {
-            "name": "Custom Endpoint",
+            "name": "CustomEndpoint",
             "properties": {
               "access": "Deny",
               "sourceAddressPrefix": "Internet",
@@ -567,7 +570,7 @@
             }
           },
           {
-            "name": "Resource Provider",
+            "name": "ResourceProvider",
             "properties": {
               "access": "Allow",
               "sourceAddressPrefix": "*",
@@ -583,7 +586,7 @@
             }
           },
           {
-            "name": "Download Binaries",
+            "name": "DownloadBinaries",
             "properties": {
               "access": "Allow",
               "sourceAddressPrefix": "*",
@@ -591,7 +594,7 @@
               "sourcePortRanges": [],
               "destinationAddressPrefix": "AzureFrontDoor.FirstParty",
               "destinationPortRange": "",
-              "destinationPortRanges": [ "443" ], //, "80"
+              "destinationPortRanges": [ "443" ], 
               "direction": "Outbound",
               "priority": 4010,
               "protocol": "Tcp",
@@ -647,6 +650,155 @@
                     }
                   },
                   "typeHandlerVersion": "1.1"
+                }
+              },
+              {
+                "name": "[concat('VMDiagnosticsVmExt','_vmNodeType0Name')]",
+                "properties": {
+                  "type": "IaaSDiagnostics",
+                  "autoUpgradeMinorVersion": true,
+                  "protectedSettings": {
+                    "storageAccountName": "[variables('dgstorageName')]",
+                    "storageAccountKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('dgstorageName')), variables('storageApiVersion')).keys[0].value]",
+                    "storageAccountEndPoint": "https://core.windows.net/"
+                  },
+                  "publisher": "Microsoft.Azure.Diagnostics",
+                  "settings": {
+                    "WadCfg": {
+                      "DiagnosticMonitorConfiguration": {
+                        "PerformanceCounters": {
+                          "PerformanceCounterConfiguration": [
+                            {
+                              "annotation": [
+                              ],
+                              "counterSpecifier": "\\Processor(_Total)\\% Processor Time",
+                              "sampleRate": "PT10S"
+                            },
+                            {
+                              "annotation": [
+                              ],
+                              "counterSpecifier": "\\Memory\\Available MBytes",
+                              "sampleRate": "PT10S"
+                            },
+                            {
+                              "annotation": [
+                              ],
+                              "counterSpecifier": "\\LogicalDisk(_Total)\\Disk Read Bytes/sec",
+                              "sampleRate": "PT10S"
+                            },
+                            {
+                              "annotation": [
+                              ],
+                              "counterSpecifier": "\\LogicalDisk(C:)\\Disk Write Bytes/sec",
+                              "sampleRate": "PT10S"
+                            },
+                            {
+                              "annotation": [
+                              ],
+                              "counterSpecifier": "\\LogicalDisk(C:)\\Disk Read Bytes/sec",
+                              "sampleRate": "PT10S"
+                            },
+                            {
+                              "annotation": [
+                              ],
+                              "counterSpecifier": "\\LogicalDisk(D:)\\Disk Write Bytes/sec",
+                              "sampleRate": "PT10S"
+                            },
+                            {
+                              "annotation": [
+                              ],
+                              "counterSpecifier": "\\LogicalDisk(D:)\\Disk Read Bytes/sec",
+                              "sampleRate": "PT10S"
+                            }
+                          ]
+                        },
+                        "WindowsEventLog": {
+                          "DataSource": [
+                            {
+                              "name": "System!*[System[(Level=1 or Level=2)]]"
+                            }
+                          ]
+                        },
+                        "EtwProviders": {
+                          "EtwEventSourceProviderConfiguration": [
+                            {
+                              "provider": "Microsoft-ServiceFabric-Actors",
+                              "scheduledTransferKeywordFilter": "1",
+                              "scheduledTransferPeriod": "PT1M",
+                              "DefaultEvents": {
+                                "eventDestination": "ServiceFabricReliableActorEventTable"
+                              }
+                            },
+                            {
+                              "provider": "Microsoft-ServiceFabric-Services",
+                              "scheduledTransferPeriod": "PT1M",
+                              "DefaultEvents": {
+                                "eventDestination": "ServiceFabricReliableServiceEventTable"
+                              }
+                            },
+                            {
+                              "provider": "Contoso-CustomProvider",
+                              "scheduledTransferPeriod": "PT1M",
+                              "DefaultEvents": {
+                                "eventDestination": "ETWEventTable"
+                              }
+                            },
+                            {
+                              "provider": "e39b723c-590c-4090-abb0-11e3e6616346",
+                              "scheduledTransferPeriod": "PT5M",
+                              "DefaultEvents": {
+                                "eventDestination": "ServiceFabricPatchOrchestrationAppEventTable"
+                              }
+                            },
+                            {
+                              "provider": "fc0028ff-bfdc-499f-80dc-ed922c52c5e9",
+                              "scheduledTransferPeriod": "PT5M",
+                              "DefaultEvents": {
+                                "eventDestination": "ServiceFabricPatchOrchestrationAppEventTable"
+                              }
+                            },
+                            {
+                              "provider": "24afa313-0d3b-4c7c-b485-1047fd964b60",
+                              "scheduledTransferPeriod": "PT5M",
+                              "DefaultEvents": {
+                                "eventDestination": "ServiceFabricPatchOrchestrationAppEventTable"
+                              }
+                            },
+                            {
+                              "provider": "05dc046c-60e9-4ef7-965e-91660adffa68",
+                              "scheduledTransferPeriod": "PT5M",
+                              "DefaultEvents": {
+                                "eventDestination": "ServiceFabricPatchOrchestrationAppEventTable"
+                              }
+                            }
+                          ],
+                          "EtwManifestProviderConfiguration": [
+                            {
+                              "provider": "cbd93bc2-71e5-4566-b3a7-595d8eeca6e8",
+                              "scheduledTransferLogLevelFilter": "Information",
+                              "scheduledTransferKeywordFilter": "4611686018427387936",
+                              "scheduledTransferPeriod": "PT1M",
+                              "DefaultEvents": {
+                                "eventDestination": "ServiceFabricSystemEventTable"
+                              }
+                            }
+                          ]
+                        },
+                        "overallQuotaInMB": "50000",
+                        "sinks": "applicationInsights"
+                      },
+                      "SinksConfig": {
+                        "Sink": [
+                          {
+                            "name": "applicationInsights",
+                            "ApplicationInsights": "[reference(resourceId('Microsoft.Insights/components', variables('aiName')), '2014-04-01').InstrumentationKey]"
+                          }
+                        ]
+                      }
+                    },
+                    "StorageAccount": "[variables('dgstorageName')]"
+                  },
+                  "typeHandlerVersion": "1.5"
                 }
               }
             ]
@@ -817,6 +969,15 @@
       "tags": {
         "resourceType": "Service Fabric",
         "clusterName": "[parameters('clusterName')]"
+      }
+    },
+    {
+      "apiVersion": "[variables('aiApiVersion')]",
+      "name": "[variables('aiName')]",
+      "type": "Microsoft.Insights/components",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "applicationId": "[variables('aiName')]"
       }
     }
   ],

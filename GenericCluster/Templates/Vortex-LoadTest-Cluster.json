@@ -1538,7 +1538,6 @@
         ],
         "clientCertificateThumbprints": [
         ],
-        "clusterCodeVersion": "[parameters('clusterVersion')]",
         "clusterState": "Default",
         "diagnosticsStorageAccountConfig": {
           "blobEndpoint": "[reference(concat('Microsoft.Storage/storageAccounts/', variables('sfstorageName')), variables('storageApiVersion')).primaryEndpoints.blob]",

@@ -1,7 +1,8 @@
+$deploymentName = "chrpaptest"
 
 ##Create and deploy resource group for network.json file
-##New-AzResourceGroup -Name "ArmTemplateTest" -Location "East US"
-##New-AzResourceGroupDeployment -ResourceGroupName "ArmTemplateTest" -TemplateFile "../../fork/service-fabric-api-management/network.json" -TemplateParameterFile "../../fork/service-fabric-api-management/network.parameters.json" -Force
+New-AzResourceGroup -Name $deploymentName -Location "East US"
+New-AzResourceGroupDeployment -ResourceGroupName $deploymentName -TemplateFile "C:\Code\service-fabric-api-management/network.json" -TemplateParameterFile "C:\Code\service-fabric-api-management/network.parameters.json" -Force
 
 
 ##Do the same for the cluster.json file. 
@@ -13,9 +14,9 @@
 $azureRegion = "eastus"
 $localCertificatePath = "C:\Certificates\"
 $generalPassword = "nZsa74xcvWX2Zsq"
-$currentExecutionPath = "C:\FabricScripts\GenericCluster"
-$armTemplate = "../../fork/service-fabric-api-management/cluster.json"
-$armParameter = "../../fork/service-fabric-api-management/cluster.parameters.json"
+$currentExecutionPath = "C:\Code\FabricScripts\GenericCluster"
+$armTemplate = "C:\Code\service-fabric-api-management/cluster.json"
+$armParameter = "C:\Code\service-fabric-api-management/cluster.parameters.json"
 
 ## COPR subscription (Service Fabric - Temporary Testing)
 $subscriptionId = "13ad2c84-84fa-4798-ad71-e70c07af873f" 
@@ -27,7 +28,7 @@ Try {
 }
 
 ## Generate unique id strings
-$deploymentName = "millieo" + (Get-Date).ToString("ddHHmm")
+#$deploymentName = "millieo" + (Get-Date).ToString("ddHHmm")
 
 # Define dynamic parameters
 $certificateName = $deploymentName + "-cert"
@@ -39,6 +40,7 @@ $serviceFabricClusterDns = $serviceFabricClusterName + "." + $azureRegion + ".cl
 $omsName = $deploymentName + "-oms"
 
 
+cd $currentExecutionPath
 New-AzResourceGroup -Name $resourceGroup -Location $azureRegion
 
 New-AzKeyVault -VaultName $keyVaultName -ResourceGroupName $resourceGroup -Location $azureRegion -EnabledForDeployment 

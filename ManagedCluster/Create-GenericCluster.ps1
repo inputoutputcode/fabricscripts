@@ -4,18 +4,24 @@ $armParameters = ".\101-managed-service-fabric-cluster-standard-2-nt\azuredeploy
 $currentExecutionPath = "C:\Code\FabricScripts\ManagedCluster"
 
 ## Fixed parameters
-$subscriptionId = "13ad2c84-84fa-4798-ad71-e70c07af873f"
 $azureRegion = "eastus2"
 $localCertificatePath = "C:\Certificates\"
 $generalPassword = "nZ549Ux2MnW6srTvOZsq"
 
-## Set environment
+## Set Corp sub
+$subscriptionId = "13ad2c84-84fa-4798-ad71-e70c07af873f"
 Try {
   Select-AzSubscription -SubscriptionId $subscriptionId -ErrorAction Stop
 } Catch {
     Login-AzAccount
     Set-AzContext -SubscriptionId $subscriptionId
 }
+## OR
+## Set MSDN sub
+$subscriptionId = "d715466f-2653-406f-be2f-495f7fd4e1b7" 
+$tenant = "7459bed2-8ead-4b9b-84ff-38402c19a97d"
+Connect-AzAccount -Tenant $tenant -SubscriptionId $subscriptionId 
+
 cd $currentExecutionPath
 Enable-AzureRmAlias
 

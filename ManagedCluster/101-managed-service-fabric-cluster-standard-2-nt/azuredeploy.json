@@ -1,5 +1,5 @@
 {
-    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json",
     "contentVersion": "1.0.0.0",
     "parameters": {
         "clusterName": {
@@ -80,12 +80,12 @@
         }
     },
     "variables": {
-        "sfApiVersion": "2020-01-01-preview"
+        "sfApiVersion": "2021-05-01"
     },
     "resources": [
         {
             "apiVersion": "[variables('sfApiVersion')]",
-            "type": "Microsoft.ServiceFabric/managedclusters",
+            "type": "Microsoft.ServiceFabric/managedClusters",
             "name": "[parameters('clusterName')]",
             "location": "[resourcegroup().location]",
             "sku": {
@@ -102,16 +102,248 @@
                         "isAdmin" : true,
                         "thumbprint" : "[parameters('clientCertificateThumbprint')]"
                     }
+                ],
+                "networkSecurityRules": [
+                    {
+                        "name": "NRMS-Rule-101",
+                        "description": "Created by Azure Core Security managed policy, rule can be deleted but do not change source ips, please see aka.ms/cainsgpolicy",
+                        "protocol": "Tcp",
+                        "sourcePortRanges": ["*"],
+                        "destinationPortRanges": ["22"],
+                        "destinationAddressPrefixes": ["*"],
+                        "access": "Allow",
+                        "priority": 1101,
+                        "direction": "Inbound",
+                        "sourceAddressPrefixes": [
+                        "13.70.105.50",
+                        "13.71.184.74",
+                        "13.75.218.172",
+                        "13.78.19.235",
+                        "23.100.0.135",
+                        "23.101.152.95",
+                        "40.70.58.221",
+                        "40.83.178.242",
+                        "40.85.223.25",
+                        "40.118.174.12",
+                        "51.140.203.27",
+                        "51.140.204.4",
+                        "52.187.0.85",
+                        "52.187.145.107",
+                        "52.232.19.246",
+                        "52.246.160.72",
+                        "104.211.89.81",
+                        "104.211.101.14"
+                        ]
+                      },
+                      {
+                        "name": "NRMS-Rule-103",
+                        "description": "Created by Azure Core Security managed policy, rule can be deleted but do not change source ips, please see aka.ms/cainsgpolicy",
+                        "access": "Allow",
+                        "destinationAddressPrefixes": ["*"],
+                        "destinationPortRanges": [],
+                        "direction": "Inbound",
+                        "priority": 1103,
+                        "protocol": "*",
+                        "sourceAddressPrefixes": ["CorpNetPublic"],
+                        "sourcePortRanges": ["*"]
+                      },
+                      {
+                        "name": "NRMS-Rule-104",
+                        "description": "Created by Azure Core Security managed policy, rule can be deleted but do not change source ips, please see aka.ms/cainsgpolicy",
+                        "protocol": "*",
+                        "sourcePortRanges": ["*"],
+                        "destinationPortRanges": ["*"],
+                        "sourceAddressPrefixes": ["CorpNetSaw"],
+                        "destinationAddressPrefixes": ["*"],
+                        "access": "Allow",
+                        "priority": 1104,
+                        "direction": "Inbound"
+                      },
+                      {
+                        "name": "NRMS-Rule-105",
+                        "description": "DO NOT DELETE - Will result in ICM Sev 2 - Azure Core Security, see aka.ms/cainsgpolicy",
+                        "protocol": "*",
+                        "sourcePortRanges": ["*"],
+                        "sourceAddressPrefixes": ["Internet"],
+                        "destinationAddressPrefixes": ["*"],
+                        "access": "Deny",
+                        "priority": 1105,
+                        "direction": "Inbound",
+                        "destinationPortRanges": [
+                        "1433",
+                        "1434",
+                        "3306",
+                        "4333",
+                        "5432",
+                        "6379",
+                        "7000",
+                        "7001",
+                        "7199",
+                        "9042",
+                        "9160",
+                        "9300",
+                        "16379",
+                        "26379",
+                        "27017"
+                        ]
+                      },
+                      {
+                        "name": "NRMS-Rule-106",
+                        "description": "DO NOT DELETE - Will result in ICM Sev 2 - Azure Core Security, see aka.ms/cainsgpolicy",
+                        "protocol": "Tcp",
+                        "sourcePortRanges": ["*"],
+                        "sourceAddressPrefixes": ["Internet"],
+                        "destinationAddressPrefixes": ["*"],
+                        "access": "Deny",
+                        "priority": 1106,
+                        "direction": "Inbound",
+                        "destinationPortRanges": [
+                        "22",
+                        "3389"
+                        ]
+                      },
+                      {
+                        "name": "NRMS-Rule-107",
+                        "description": "DO NOT DELETE - Will result in ICM Sev 2 - Azure Core Security, see aka.ms/cainsgpolicy",
+                        "protocol": "Tcp",
+                        "sourcePortRanges": ["*"],
+                        "sourceAddressPrefixes": ["Internet"],
+                        "destinationAddressPrefixes": ["*"],
+                        "access": "Deny",
+                        "priority": 1107,
+                        "direction": "Inbound",
+                        "destinationPortRanges": [
+                        "23",
+                        "135",
+                        "445",
+                        "5985",
+                        "5986"
+                        ]
+                      },
+                      {
+                        "name": "NRMS-Rule-108",
+                        "description": "DO NOT DELETE - Will result in ICM Sev 2 - Azure Core Security, see aka.ms/cainsgpolicy",
+                        "protocol": "*",
+                        "sourcePortRanges": ["*"],
+                        "sourceAddressPrefixes": ["Internet"],
+                        "destinationAddressPrefixes": ["*"],
+                        "access": "Deny",
+                        "priority": 1108,
+                        "direction": "Inbound",
+                        "destinationPortRanges": [
+                        "13",
+                        "17",
+                        "19",
+                        "53",
+                        "69",
+                        "111",
+                        "123",
+                        "512",
+                        "514",
+                        "593",
+                        "873",
+                        "1900",
+                        "5353",
+                        "11211"
+                        ]
+                      },
+                      {
+                        "name": "NRMS-Rule-109",
+                        "description": "DO NOT DELETE - Will result in ICM Sev 2 - Azure Core Security, see aka.ms/cainsgpolicy",
+                        "protocol": "*",
+                        "sourcePortRanges": ["*"],
+                        "sourceAddressPrefixes": ["Internet"],
+                        "destinationAddressPrefixes": ["*"],
+                        "access": "Deny",
+                        "priority": 1109,
+                        "direction": "Inbound",
+                        "destinationPortRanges": [
+                        "119",
+                        "137",
+                        "138",
+                        "139",
+                        "161",
+                        "162",
+                        "389",
+                        "636",
+                        "2049",
+                        "2301",
+                        "2381",
+                        "3268",
+                        "5800",
+                        "5900"
+                        ]
+                      },
+                      {
+                        "name": "AllowAzureLoadBalancerProbe",
+                        "description": "Allow Traffic from LB",
+                        "protocol": "*",
+                        "sourcePortRanges": ["*"],
+                        "sourceAddressPrefixes": ["AzureLoadBalancer"],
+                        "destinationAddressPrefixes": ["*"],
+                        "destinationPortRanges": [ "19000", "19080", "19081" ],
+                        "access": "Allow",
+                        "priority": 2000,
+                        "direction": "Inbound"
+                      },
+                      {
+                        "name": "SF-MGMT-PORT-BLOCK",
+                        "description": "Block SF management ports from the Internet",
+                        "protocol": "*",
+                        "sourcePortRanges": ["*"],
+                        "sourceAddressPrefixes": ["Internet"],
+                        "destinationAddressPrefixes": ["*"],
+                        "destinationPortRanges": [ "19000", "19080", "19081" ],
+                        "access": "Deny",
+                        "priority": 2010,
+                        "direction": "Inbound"
+                      },
+                      {
+                        "name": "AzurePortal",
+                        "access": "Allow",
+                        "sourceAddressPrefixes": ["ServiceFabric"],
+                        "sourcePortRanges": ["*"],
+                        "destinationAddressPrefixes": ["*"],
+                        "destinationPortRanges": ["19080"],
+                        "direction": "Inbound",
+                        "priority": 2020,
+                        "protocol": "Tcp",
+                        "description": ""
+                      },
+                      {
+                        "name": "ResourceProvider",
+                        "access": "Allow",
+                        "sourceAddressPrefixes": ["*"],
+                        "sourcePortRanges": ["*"],
+                        "destinationAddressPrefixes": ["ServiceFabric"],
+                        "destinationPortRanges": ["443"],
+                        "direction": "Outbound",
+                        "priority": 2030,
+                        "protocol": "Tcp",
+                        "description": ""
+                      },
+                      {
+                        "name": "DownloadBinaries",
+                        "access": "Allow",
+                        "sourceAddressPrefixes": ["*"],
+                        "sourcePortRanges": ["*"],
+                        "destinationAddressPrefixes": ["AzureFrontDoor.FirstParty"],
+                        "destinationPortRanges": [ "443" ],
+                        "direction": "Outbound",
+                        "priority": 2040,
+                        "protocol": "Tcp",
+                        "description": ""
+                      }
                 ]
             }
         },
         {
             "apiVersion": "[variables('sfApiVersion')]",
-            "type": "Microsoft.ServiceFabric/managedclusters/nodetypes",
+            "type": "Microsoft.ServiceFabric/managedClusters/nodetypes",
             "name": "[concat(parameters('clusterName'), '/', parameters('nodeType1Name'))]",
             "location": "[resourcegroup().location]",
             "dependsOn": [
-              "[concat('Microsoft.ServiceFabric/managedclusters/', parameters('clusterName'))]"
+              "[concat('Microsoft.ServiceFabric/managedClusters/', parameters('clusterName'))]"
             ],
             "properties": {
                 "isPrimary": true,
@@ -126,11 +358,11 @@
         },
         {
             "apiVersion": "[variables('sfApiVersion')]",
-            "type": "Microsoft.ServiceFabric/managedclusters/nodetypes",
+            "type": "Microsoft.ServiceFabric/managedClusters/nodetypes",
             "name": "[concat(parameters('clusterName'), '/', parameters('nodeType2Name'))]",
             "location": "[resourcegroup().location]",
             "dependsOn": [
-              "[concat('Microsoft.ServiceFabric/managedclusters/', parameters('clusterName'))]"
+              "[concat('Microsoft.ServiceFabric/managedClusters/', parameters('clusterName'))]"
             ],
             "properties": {
                 "isPrimary": false,

@@ -490,7 +490,7 @@
               }
           },
           {
-              "name": "SF-POLICY-ALLOW-MGMT-LB",
+              "name": "SF-POLICY-ALLOW-LB",
               "properties": {
                 "description": "",
                 "priority": 1030,

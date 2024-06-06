@@ -1,0 +1,273 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "clusterName": {
+            "type": "string",
+            "minLength": 4,
+            "maxLength": 23,
+            "metadata": {
+                "description": "Name of your cluster - Between 3 and 23 characters. Letters and numbers only"
+            }
+        },
+        "clusterSku": {
+            "type": "string",
+            "allowedValues": [
+                "Basic",
+                "Standard"
+            ],
+            "defaultValue": "Standard"
+        },
+        "adminUserName": {
+            "type": "string",
+            "defaultValue": "vmadmin"
+        },
+        "adminPassword": {
+            "type": "securestring"
+        },
+        "clientCertificateThumbprint": {
+            "type": "string"
+        },
+        "nodeType1Name": {
+            "type": "string",
+            "maxLength": 9,
+            "defaultValue": "NT1"
+        },
+        "nodeType1VmSize": {
+            "type": "string",
+            "defaultValue": "Standard_D2_v2"
+        },
+        "nodeType1VmInstanceCount": {
+            "type": "int",
+            "defaultValue": 5
+        },
+        "nodeType1DataDiskSizeGB": {
+            "type": "int",
+            "defaultValue": 120
+        },
+        "vmImagePublisher": {
+            "type": "string",
+            "defaultValue": "MicrosoftWindowsServer"
+        },
+        "vmImageOffer": {
+            "type": "string",
+            "defaultValue": "WindowsServer"
+        },
+        "vmImageSku": {
+            "type": "string",
+            "defaultValue": "2019-Datacenter"
+        },
+        "vmImageVersion": {
+            "type": "string",
+            "defaultValue": "latest"
+        }
+    },
+    "variables": {
+        "sfApiVersion": "2021-05-01"
+    },
+    "resources": [
+        {
+            "apiVersion": "[variables('sfApiVersion')]",
+            "type": "Microsoft.ServiceFabric/managedClusters",
+            "name": "[parameters('clusterName')]",
+            "location": "[resourcegroup().location]",
+            "sku": {
+                "name" : "[parameters('clusterSku')]"
+            },
+            "properties": {
+                "dnsName": "[toLower(parameters('clusterName'))]",
+                "adminUserName": "[parameters('adminUserName')]",
+                "adminPassword": "[parameters('adminPassword')]",
+                "clientConnectionPort": 19000,
+                "httpGatewayConnectionPort": 19080,
+                "allowRDPAccess": false,
+                "clients" : [
+                    {
+                        "isAdmin" : true,
+                        "thumbprint" : "[parameters('clientCertificateThumbprint')]"
+                    }
+                ],
+                "networkSecurityRules": [
+                    {
+                        "name": "SF-POLICY-ALLOW-TESTINFRA",
+                        "description": "",
+                        "priority": 1000,
+                        "access": "Allow",
+                        "direction": "Inbound",
+                        "protocol": "*",
+                        "sourcePortRange": "",
+                        "sourcePortRanges": ["*"],
+                        "sourceAddressPrefixes": ["SFTestInfraTag"],
+                        "destinationPortRanges": ["19000", "19080", "19081", "10000", "8081", "10086"],
+                        "destinationAddressPrefixes": ["*" ]
+                    },
+                    {
+                        "name": "SF-POLICY-ALLOW-CLOUDTEST",
+                        "description": "",
+                        "priority": 1005,
+                        "access": "Allow",
+                        "direction": "Inbound",
+                        "protocol": "*",
+                        "sourcePortRanges": ["*"],
+                        "sourceAddressPrefixes": ["1ESResourceManager"],
+                        "destinationPortRanges": ["19000", "19080", "19081", "10000", "8081", "10086"],
+                        "destinationAddressPrefixes": ["*" ]
+                    },
+                    {
+                        "name": "SF-POLICY-ALLOW-MGMT-CORPSAW",
+                        "description": "",
+                        "priority": 1010,
+                        "access": "Allow",
+                        "direction": "Inbound",
+                        "protocol": "tcp",
+                        "sourcePortRanges": ["*"],
+                        "sourceAddressPrefixes": ["CorpNetSaw"],
+                        "destinationPortRanges": ["19000", "19080"],
+                        "destinationAddressPrefixes": ["*" ]
+                    },
+                    {
+                        "name": "SF-POLICY-ALLOW-MGMT-CORPPUBLIC",
+                        "description": "",
+                        "priority": 1020,
+                        "access": "Allow",
+                        "direction": "Inbound",
+                        "protocol": "tcp",
+                        "sourcePortRanges": ["*"],
+                        "sourceAddressPrefixes": ["CorpNetPublic"],
+                        "destinationPortRanges": ["19000", "19080"],
+                        "destinationAddressPrefixes": ["*" ]
+                    },
+                    {
+                        "name": "SF-POLICY-ALLOW-LOADBALANCER",
+                        "description": "",
+                        "priority": 1030,
+                        "access": "Allow",
+                        "direction": "Inbound",
+                        "protocol": "tcp",
+                        "sourcePortRanges": ["*"],
+                        "sourceAddressPrefixes": ["AzureLoadBalancer"],
+                        "destinationPortRanges": ["19000", "19080", "19081", "10000", "8081", "10086"],
+                        "destinationAddressPrefixes": ["*" ]
+                    },
+                    {
+                        "name": "SF-POLICY-ALLOW-LEASE",
+                        "description": "",
+                        "priority": 1040,
+                        "access": "Allow",
+                        "direction": "Inbound",
+                        "protocol": "tcp",
+                        "sourcePortRanges": ["*"],
+                        "sourceAddressPrefixes": ["VirtualNetwork"],
+                        "destinationPortRanges": ["1025-1027"],
+                        "destinationAddressPrefixes": ["*" ]
+                    },
+                    {
+                        "name": "SF-POLICY-ALLOW-EPHEMERAL",
+                        "description": "",
+                        "priority": 1050,
+                        "access": "Allow",
+                        "direction": "Inbound",
+                        "protocol": "tcp",
+                        "sourcePortRanges": ["*"],
+                        "sourceAddressPrefixes": ["VirtualNetwork"],
+                        "destinationPortRanges": ["49152-65534"],
+                        "destinationAddressPrefixes": ["*" ]
+                    },
+                    {
+                        "name": "SF-POLICY-ALLOW-APPS",
+                        "description": "",
+                        "priority": 1060,
+                        "access": "Allow",
+                        "direction": "Inbound",
+                        "protocol": "tcp",
+                        "sourcePortRanges": ["*"],
+                        "sourceAddressPrefixes": ["VirtualNetwork"],
+                        "destinationPortRanges": ["2000-3000"],
+                        "destinationAddressPrefixes": ["*" ]
+                    },
+                    {
+                        "name": "SF-POLICY-ALLOW-PORTAL",
+                        "description": "",
+                        "priority": 1070,
+                        "access": "Allow",
+                        "direction": "Inbound",
+                        "protocol": "tcp",
+                        "sourcePortRanges": ["*"],
+                        "sourceAddressPrefixes": ["ServiceFabric"],
+                        "destinationPortRanges": ["19080"],
+                        "destinationAddressPrefixes": ["*"]
+                    },
+                    {
+                        "name": "SF-POLICY-ALLOW-RDP-CORPPUBLIC",
+                        "description": "",
+                        "priority": 1080,
+                        "access": "Allow",
+                        "direction": "Inbound",
+                        "protocol": "tcp",
+                        "sourcePortRanges": ["*"],
+                        "sourceAddressPrefixes": ["CorpNetPublic"],
+                        "destinationPortRanges": ["3389", "3390", "3391", "3392", "3393", "3394", "3395", "3396", "3397", "3398"],
+                        "destinationAddressPrefixes": ["*"]
+                    },
+                    {
+                        "name": "SF-POLICY-ALLOW-RDP-CORPSAW",
+                        "description": "",
+                        "priority": 1085,
+                        "access": "Allow",
+                        "direction": "Inbound",
+                        "protocol": "tcp",
+                        "sourcePortRanges": ["*"],
+                        "sourceAddressPrefixes": ["CorpNetSaw"],
+                        "destinationPortRanges": ["3389", "3390", "3391", "3392", "3393", "3394", "3395", "3396", "3397", "3398"],
+                        "destinationAddressPrefixes": ["*"]
+                    },
+                    {
+                        "name": "SF-POLICY-DENY-INBOUND-ANY",
+                        "description": "",
+                        "priority": 1090,
+                        "access": "Deny",
+                        "direction": "Inbound",
+                        "protocol": "tcp",
+                        "sourcePortRanges": ["*"],
+                        "sourceAddressPrefixes": ["*"],
+                        "destinationPortRanges": ["*"],
+                        "destinationAddressPrefixes": ["*"]
+                    }
+                ]
+            }
+        },
+        {
+            "apiVersion": "[variables('sfApiVersion')]",
+            "type": "Microsoft.ServiceFabric/managedClusters/nodetypes",
+            "name": "[concat(parameters('clusterName'), '/', parameters('nodeType1Name'))]",
+            "location": "[resourcegroup().location]",
+            "dependsOn": [
+              "[concat('Microsoft.ServiceFabric/managedClusters/', parameters('clusterName'))]"
+            ],
+            "properties": {
+                "isPrimary": true,
+                "vmImagePublisher": "[parameters('vmImagePublisher')]",
+                "vmImageOffer": "[parameters('vmImageOffer')]",
+                "vmImageSku": "[parameters('vmImageSku')]",
+                "vmImageVersion": "[parameters('vmImageVersion')]",
+                "vmSize": "[parameters('nodeType1VmSize')]",
+                "vmInstanceCount": "[parameters('nodeType1VmInstanceCount')]",
+                "dataDiskSizeGB": "[parameters('nodeType1DataDiskSizeGB')]"
+            }
+        }
+    ],
+    "outputs": {
+        "serviceFabricExplorer": {
+            "value": "[concat('https://', reference(parameters('clusterName')).fqdn, ':', reference(parameters('clusterName')).httpGatewayConnectionPort)]",
+            "type": "string"
+        },
+        "clientConnectionEndpoint": {
+            "value": "[concat(reference(parameters('clusterName')).fqdn, ':', reference(parameters('clusterName')).clientConnectionPort)]",
+            "type": "string"
+        },
+        "clusterProperties": {
+            "value": "[reference(parameters('clusterName'))]",
+            "type": "object"
+        }
+    }
+}

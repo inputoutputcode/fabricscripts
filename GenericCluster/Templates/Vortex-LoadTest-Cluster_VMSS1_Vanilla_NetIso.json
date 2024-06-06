@@ -429,7 +429,7 @@
               "name": "SF-POLICY-ALLOW-CLOUDTEST",
               "properties": {
                 "description": "Allow traffic from cloud test.",
-                "priority": 1015,
+                "priority": 1005,
                 "access": "Allow",
                 "direction": "Inbound",
                 "protocol": "*",
@@ -442,7 +442,7 @@
               }
           },
           {
-              "name": "SF-POLICY-ALLOW-MGMT-SAW",
+              "name": "SF-POLICY-ALLOW-MGMT-CORPSAW",
               "properties": {
                 "description": "",
                 "priority": 1010,
@@ -454,22 +454,6 @@
                 "sourceAddressPrefix": "CorpNetSaw",
                 "destinationPortRange": "",
                 "destinationPortRanges": ["19000", "19080" ],
-                "destinationAddressPrefix": "*"
-              }
-          },
-          {
-              "name": "SF-POLICY-ALLOW-RDP-SAW",
-              "properties": {
-                "description": "",
-                "priority": 1011,
-                "access": "Allow",
-                "direction": "Inbound",
-                "protocol": "Tcp",
-                "sourcePortRange": "*",
-                "sourcePortRanges": [],
-                "sourceAddressPrefix": "CorpNetSaw",
-                "destinationPortRange": "",
-                "destinationPortRanges": ["3389", "3390", "3391", "3392", "3393", "3394", "3395", "3396", "3397", "3398"],
                 "destinationAddressPrefix": "*"
               }
           },
@@ -490,7 +474,7 @@
               }
           },
           {
-              "name": "SF-POLICY-ALLOW-LB",
+              "name": "SF-POLICY-ALLOW-LOADBALANCER",
               "properties": {
                 "description": "",
                 "priority": 1030,
@@ -501,7 +485,7 @@
                 "sourcePortRanges": [],
                 "sourceAddressPrefix": "AzureLoadBalancer",
                 "destinationPortRange": "",
-                "destinationPortRanges": [ "19000", "19080", "19081", "10086" ],
+                "destinationPortRanges": [ "19000", "19080", "19081", "10000", "8081", "10086" ],
                 "destinationAddressPrefix": "*"
               }
           },
@@ -531,7 +515,7 @@
                 "protocol": "Tcp",
                 "sourcePortRange": "*",
                 "sourcePortRanges": [],
-                "sourceAddressPrefix": "*",
+                "sourceAddressPrefix": "VirtualNetwork",
                 "destinationPortRange": "",
                 "destinationPortRanges": [ "49152-65534" ],
                 "destinationAddressPrefix": "*"
@@ -566,6 +550,38 @@
                 "sourceAddressPrefix": "ServiceFabric",
                 "destinationPortRange": "",
                 "destinationPortRanges": [ "19080" ],
+                "destinationAddressPrefix": "*"
+              }
+          },
+          {
+              "name": "SF-POLICY-ALLOW-RDP-CORPPUBLIC",
+              "properties": {
+                "description": "",
+                "priority": 1080,
+                "access": "Allow",
+                "direction": "Inbound",
+                "protocol": "Tcp",
+                "sourcePortRange": "*",
+                "sourcePortRanges": [],
+                "sourceAddressPrefix": "CorpNetPublic",
+                "destinationPortRange": "",
+                "destinationPortRanges": [ "3389", "3390", "3391", "3392", "3393", "3394", "3395", "3396", "3397", "3398" ],
+                "destinationAddressPrefix": "*"
+              }
+          },
+          {
+              "name": "SF-POLICY-ALLOW-RDP-CORPSAW",
+              "properties": {
+                "description": "",
+                "priority": 1085,
+                "access": "Allow",
+                "direction": "Inbound",
+                "protocol": "Tcp",
+                "sourcePortRange": "*",
+                "sourcePortRanges": [],
+                "sourceAddressPrefix": "CorpNetSaw",
+                "destinationPortRange": "",
+                "destinationPortRanges": [ "3389", "3390", "3391", "3392", "3393", "3394", "3395", "3396", "3397", "3398" ],
                 "destinationAddressPrefix": "*"
               }
           },

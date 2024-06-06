@@ -1,6 +1,5 @@
 ﻿## Declare parameters
-$armTemplate = ".\101-managed-service-fabric-cluster-standard-2-nt\azuredeploy.json"
-$armParameters = ".\101-managed-service-fabric-cluster-standard-2-nt\azuredeploy.parameters.json"
+$armTemplate = ".\101-managed-service-fabric-cluster-standard-1-nt\azuredeploy.json"
 $currentExecutionPath = "C:\Code\FabricScripts\ManagedCluster"
 
 ## Fixed parameters
@@ -57,11 +56,6 @@ $armParameter.Add("nodeType1Name", "nt1")
 $armParameter.Add("nodeType1VmSize", "Standard_D2_v2")
 $armParameter.Add("nodeType1VmInstanceCount", 5)
 $armParameter.Add("nodeType1DataDiskSizeGB", 120)
-
-$armParameter.Add("nodeType2Name", "nt2")
-$armParameter.Add("nodeType2VmSize", "Standard_D2_v2")
-$armParameter.Add("nodeType2VmInstanceCount", 3)
-$armParameter.Add("nodeType2DataDiskSizeGB", 120)
 
 $armParameter.Add("vmImagePublisher", "MicrosoftWindowsServer")
 $armParameter.Add("vmImageOffer", "WindowsServer")

@@ -586,22 +586,6 @@
               }
           },
           {
-              "name": "SF-POLICY-DENY-INBOUND-ANY",
-              "properties": {
-                "description": "",
-                "priority": 1090,
-                "access": "Deny",
-                "direction": "Inbound",
-                "protocol": "Tcp",
-                "sourcePortRange": "*",
-                "sourcePortRanges": [],
-                "sourceAddressPrefix": "*",
-                "destinationPortRange": "*",
-                "destinationPortRanges": [],
-                "destinationAddressPrefix": "*"
-              }
-          },
-          {
               "name": "SF-POLICY-ALLOW-RESOURCEPROVIDER",
               "properties": {
                 "description": "",
@@ -622,22 +606,6 @@
               "properties": {
                 "description": "",
                 "priority": 1110,
-                "access": "Allow",
-                "direction": "Outbound",
-                "protocol": "Tcp",
-                "sourcePortRange": "*",
-                "sourcePortRanges": [],
-                "sourceAddressPrefix": "*",
-                "destinationPortRange": "",
-                "destinationPortRanges": [ "443" ],
-                "destinationAddressPrefix": "AzureFrontDoor.FirstParty"
-              }
-          },
-          {
-              "name": "SF-POLICY-ALLOW-TEST",
-              "properties": {
-                "description": "",
-                "priority": 1130,
                 "access": "Allow",
                 "direction": "Outbound",
                 "protocol": "Tcp",

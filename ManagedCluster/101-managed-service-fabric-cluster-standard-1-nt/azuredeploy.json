@@ -138,18 +138,6 @@
                         "destinationAddressPrefixes": ["*" ]
                     },
                     {
-                        "name": "SF-POLICY-ALLOW-LOADBALANCER",
-                        "description": "",
-                        "priority": 1030,
-                        "access": "Allow",
-                        "direction": "Inbound",
-                        "protocol": "tcp",
-                        "sourcePortRanges": ["*"],
-                        "sourceAddressPrefixes": ["AzureLoadBalancer"],
-                        "destinationPortRanges": ["19000", "19080", "19081", "10000", "8081", "10086"],
-                        "destinationAddressPrefixes": ["*" ]
-                    },
-                    {
                         "name": "SF-POLICY-ALLOW-LEASE",
                         "description": "",
                         "priority": 1040,
@@ -219,18 +207,6 @@
                         "sourcePortRanges": ["*"],
                         "sourceAddressPrefixes": ["CorpNetSaw"],
                         "destinationPortRanges": ["3389", "3390", "3391", "3392", "3393", "3394", "3395", "3396", "3397", "3398"],
-                        "destinationAddressPrefixes": ["*"]
-                    },
-                    {
-                        "name": "SF-POLICY-DENY-INBOUND-ANY",
-                        "description": "",
-                        "priority": 1090,
-                        "access": "Deny",
-                        "direction": "Inbound",
-                        "protocol": "tcp",
-                        "sourcePortRanges": ["*"],
-                        "sourceAddressPrefixes": ["*"],
-                        "destinationPortRanges": ["*"],
                         "destinationAddressPrefixes": ["*"]
                     }
                 ]

@@ -1,15 +1,15 @@
 ﻿## Declare parameters
 $armTemplate = ".\Templates\Vortex-LoadTest-Cluster_VMSS1_Vanilla_NetIso.json" # 
-$currentExecutionPath = "C:\Code\FabricScripts\GenericCluster"
+$currentExecutionPath = "D:\Code\inputoutputcode\fabricscripts\GenericCluster"
 
 ## COPR subscription
 $subscriptionId = "13ad2c84-84fa-4798-ad71-e70c07af873f" 
-$tenant = "72f988bf-86f1-41af-91ab-2d7cd011db47"
+$tenantId = "72f988bf-86f1-41af-91ab-2d7cd011db47"
 # Set environment 
 Try {
   Select-AzSubscription -SubscriptionId $subscriptionId -ErrorAction Stop
 } Catch {
-    Login-AzAccount -SubscriptionId $subscriptionId -Tenant $tenant
+    Connect-AzAccount -Tenant $tenantId -SubscriptionId $subscriptionId 
     Set-AzContext -SubscriptionId $subscriptionId
 }
 # Update-AzConfig -DefaultSubscriptionForLogin $subscriptionId

@@ -442,7 +442,7 @@
               }
           },
           {
-              "name": "SF-POLICY-ALLOW-MGMT-SAW",
+              "name": "SF-POLICY-ALLOW-MGMT-CORPSAW",
               "properties": {
                 "description": "",
                 "priority": 1010,
@@ -474,7 +474,7 @@
               }
           },
           {
-              "name": "SF-POLICY-ALLOW-LB",
+              "name": "SF-POLICY-ALLOW-LOADBALANCER",
               "properties": {
                 "description": "",
                 "priority": 1030,
@@ -562,8 +562,8 @@
                 "direction": "Inbound",
                 "protocol": "Tcp",
                 "sourcePortRange": "*",
-                "sourcePortRanges": ["CorpNetPublic"],
-                "sourceAddressPrefix": "",
+                "sourcePortRanges": [],
+                "sourceAddressPrefix": "CorpNetPublic",
                 "destinationPortRange": "",
                 "destinationPortRanges": [ "3389", "3390", "3391", "3392", "3393", "3394", "3395", "3396", "3397", "3398" ],
                 "destinationAddressPrefix": "*"
@@ -578,13 +578,13 @@
                 "direction": "Inbound",
                 "protocol": "Tcp",
                 "sourcePortRange": "*",
-                "sourcePortRanges": ["CorpNetSaw"],
-                "sourceAddressPrefix": "",
+                "sourcePortRanges": [],
+                "sourceAddressPrefix": "CorpNetSaw",
                 "destinationPortRange": "",
                 "destinationPortRanges": [ "3389", "3390", "3391", "3392", "3393", "3394", "3395", "3396", "3397", "3398" ],
                 "destinationAddressPrefix": "*"
               }
-          },          
+          },
           {
               "name": "SF-POLICY-DENY-INBOUND-ANY",
               "properties": {

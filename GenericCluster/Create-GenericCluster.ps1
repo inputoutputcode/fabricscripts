@@ -23,7 +23,7 @@ $subscriptionId = "d715466f-2653-406f-be2f-495f7fd4e1b7"
 $tenantId = "7459bed2-8ead-4b9b-84ff-38402c19a97d"
 Disconnect-AzAccount
 Login-AzAccount -Tenant $tenantId
-Connect-AzAccount -Tenant $tenantId
+Connect-AzAccount -Tenant $tenantId -SubscriptionId $subscriptionId
 Select-AzSubscription -SubscriptionId $subscriptionId -Tenant $tenantId -ErrorAction Stop
 Set-AzContext -SubscriptionId $subscriptionId
 #>
@@ -38,8 +38,7 @@ cd $currentExecutionPath
 $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
 if (!$currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
 {
-    Write-Host "Script must be executed as Administrator." -ForegroundColor Red -BackgroundColor Yellow
-    Exit;
+    Write-Error "Script must be executed as Administrator."
 }
 
 ## Generate unique id strings

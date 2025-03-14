@@ -1,25 +1,27 @@
 ﻿## Declare parameters
 $armTemplate = ".\Templates\Vortex-LoadTest-Cluster.json" # 
-$currentExecutionPath = "D:\Code\FabricMonkey\FabricScripts\Create-GenericCluster"
-#$clusterVersion = "8.2.1235.9590"
+$currentExecutionPath = "C:\Code\FabricScripts\GenericCluster"
 $azureRegion = "eastus"
 $localCertificatePath = "C:\Certificates\"
 $generalPassword = "nZ549Ux2MnW6srTvOZsq"
 
+
 ## Auth
 <#
-$subscriptionId = "13ad2c84-84fa-4798-ad71-e70c07af873f"
+$subscriptionId = "13ad2c84-84fa-4798-ad71-e70c07af873f" 
+$tenantId = "72f988bf-86f1-41af-91ab-2d7cd011db47"
+Connect-AzAccount -Tenant $tenantId -SubscriptionId $subscriptionId 
+# Set environment 
 Try {
-  Select-AzSubscription -SubscriptionId $subscriptionId -ErrorAction Stop
+    Select-AzSubscription -SubscriptionId $subscriptionId -ErrorAction Stop
 } Catch {
-    Login-AzAccount
-    Set-AzContext -SubscriptionId $subscriptionId
+    Connect-AzAccount -Tenant $tenantId -SubscriptionId $subscriptionId 
 }
 #>
 # MSDN 
+$tenantId = '7459bed2-8ead-4b9b-84ff-38402c19a97d' #'f1c9b125-e2bf-48c0-b025-23e47c410293'
 $subscriptionId = "d715466f-2653-406f-be2f-495f7fd4e1b7"
-Login-AzAccount -Tenant "7459bed2-8ead-4b9b-84ff-38402c19a97d" -Subscription $subscriptionId
-
+Connect-AzAccount -Tenant $tenantId -SubscriptionId $subscriptionId 
 
 cd $currentExecutionPath
 Enable-AzureRmAlias
@@ -44,23 +46,22 @@ $serviceFabricClusterDns = $serviceFabricClusterName + "." + $azureRegion + ".cl
 $webapplicationReplyUrl = "https://" + $serviceFabricClusterDns + ":19080/Explorer/index.html"
 $omsName = $deploymentName + "-oms"
 
-# AAD tenant id from the portal
-$tenantId = '7459bed2-8ead-4b9b-84ff-38402c19a97d' #'f1c9b125-e2bf-48c0-b025-23e47c410293'
+
 
 ## Deploy Azure Key Vault
 New-AzResourceGroup -Name $resourceGroup -Location $azureRegion -Force
-Set-Item Env:\SuppressAzurePowerShellBreakingChangeWarnings "true" 
-New-AzKeyVault -VaultName $keyVaultName -ResourceGroupName $resourceGroup -Location $azureRegion -EnabledForDeployment 
+New-AzKeyVault -VaultName $keyVaultName -ResourceGroupName $resourceGroup -Location $azureRegion -EnabledForDeployment -EnabledForTemplateDeployment
 Import-Module ".\ServiceFabricRPHelpers\ServiceFabricRPHelpers.psm1"
 New-Item -ItemType Directory -Path $localCertificatePath -ErrorAction Ignore
+#Start-Sleep -Seconds 120
 $clusterCertificate = Invoke-AddCertToKeyVaultAsSecret -SubscriptionId $subscriptionId -ResourceGroupName $resourceGroup -Location $azureRegion -VaultName $keyVaultName -CertificateName $certificateName -CreateSelfSignedCertificate -DnsName $serviceFabricClusterDns -OutputPath $localCertificatePath -Password $generalPassword
 $clusterCertificate.CertificateThumbprint
 $clusterCertificate.SourceVault
 $clusterCertificate.CertificateURL
 
 # AAD setup
-cd "C:\Code\MicrosoftAzureServiceFabric-AADHelpers"
-$Configobj = .\SetupApplications.ps1 -TenantId $tenantId -ClusterName $clusterName -WebApplicationReplyUrl $webapplicationReplyUrl
+cd "$currentExecutionPath\MicrosoftAzureServiceFabric-AADHelpers"
+$Configobj = .\SetupApplications.ps1 -TenantId $tenantId -ClusterName $serviceFabricClusterDns -WebApplicationReplyUrl $webapplicationReplyUrl
 .\SetupUser.ps1 -ConfigObj $Configobj -UserName 'DemoLocalUser' -Password $generalPassword
 .\SetupUser.ps1 -ConfigObj $Configobj -UserName 'DemoLocalAdmin' -Password $generalPassword -IsAdmin
 

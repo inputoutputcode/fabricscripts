@@ -95,11 +95,10 @@
                         "access": "Allow",
                         "direction": "Inbound",
                         "protocol": "*",
-                        "sourcePortRange": "",
-                        "sourcePortRanges": ["*"],
-                        "sourceAddressPrefixes": ["SFTestInfraTag"],
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "SFTestInfraTag",
                         "destinationPortRanges": ["19000", "19080", "19081", "10000", "8081", "10086"],
-                        "destinationAddressPrefixes": ["*" ]
+                        "destinationAddressPrefix": "*"
                     },
                     {
                         "name": "SF-POLICY-ALLOW-CLOUDTEST",
@@ -108,10 +107,10 @@
                         "access": "Allow",
                         "direction": "Inbound",
                         "protocol": "*",
-                        "sourcePortRanges": ["*"],
-                        "sourceAddressPrefixes": ["1ESResourceManager"],
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "1ESResourceManager",
                         "destinationPortRanges": ["19000", "19080", "19081", "10000", "8081", "10086"],
-                        "destinationAddressPrefixes": ["*" ]
+                        "destinationAddressPrefix": "*"
                     },
                     {
                         "name": "SF-POLICY-ALLOW-MGMT-CORPSAW",
@@ -120,10 +119,10 @@
                         "access": "Allow",
                         "direction": "Inbound",
                         "protocol": "tcp",
-                        "sourcePortRanges": ["*"],
-                        "sourceAddressPrefixes": ["CorpNetSaw"],
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "CorpNetSaw",
                         "destinationPortRanges": ["19000", "19080"],
-                        "destinationAddressPrefixes": ["*" ]
+                        "destinationAddressPrefix": "*"
                     },
                     {
                         "name": "SF-POLICY-ALLOW-MGMT-CORPPUBLIC",
@@ -132,10 +131,10 @@
                         "access": "Allow",
                         "direction": "Inbound",
                         "protocol": "tcp",
-                        "sourcePortRanges": ["*"],
-                        "sourceAddressPrefixes": ["CorpNetPublic"],
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "CorpNetPublic",
                         "destinationPortRanges": ["19000", "19080"],
-                        "destinationAddressPrefixes": ["*" ]
+                        "destinationAddressPrefix": "*"
                     },
                     {
                         "name": "SF-POLICY-ALLOW-LEASE",
@@ -144,10 +143,10 @@
                         "access": "Allow",
                         "direction": "Inbound",
                         "protocol": "tcp",
-                        "sourcePortRanges": ["*"],
-                        "sourceAddressPrefixes": ["VirtualNetwork"],
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "VirtualNetwork",
                         "destinationPortRanges": ["1025-1027"],
-                        "destinationAddressPrefixes": ["*" ]
+                        "destinationAddressPrefix": "*"
                     },
                     {
                         "name": "SF-POLICY-ALLOW-EPHEMERAL",
@@ -156,10 +155,10 @@
                         "access": "Allow",
                         "direction": "Inbound",
                         "protocol": "tcp",
-                        "sourcePortRanges": ["*"],
-                        "sourceAddressPrefixes": ["VirtualNetwork"],
-                        "destinationPortRanges": ["49152-65534"],
-                        "destinationAddressPrefixes": ["*" ]
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "VirtualNetwork",
+                        "destinationPortRange": "49152-65534",
+                        "destinationAddressPrefix": "*"
                     },
                     {
                         "name": "SF-POLICY-ALLOW-APPS",
@@ -168,10 +167,10 @@
                         "access": "Allow",
                         "direction": "Inbound",
                         "protocol": "tcp",
-                        "sourcePortRanges": ["*"],
-                        "sourceAddressPrefixes": ["VirtualNetwork"],
-                        "destinationPortRanges": ["2000-3000"],
-                        "destinationAddressPrefixes": ["*" ]
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "VirtualNetwork",
+                        "destinationPortRange": "2000-3000",
+                        "destinationAddressPrefix": "*"
                     },
                     {
                         "name": "SF-POLICY-ALLOW-PORTAL",
@@ -180,10 +179,10 @@
                         "access": "Allow",
                         "direction": "Inbound",
                         "protocol": "tcp",
-                        "sourcePortRanges": ["*"],
-                        "sourceAddressPrefixes": ["ServiceFabric"],
-                        "destinationPortRanges": ["19080"],
-                        "destinationAddressPrefixes": ["*"]
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "ServiceFabric",
+                        "destinationPortRange": "19080",
+                        "destinationAddressPrefix": "*"
                     },
                     {
                         "name": "SF-POLICY-ALLOW-RDP-CORPPUBLIC",
@@ -192,10 +191,10 @@
                         "access": "Allow",
                         "direction": "Inbound",
                         "protocol": "tcp",
-                        "sourcePortRanges": ["*"],
-                        "sourceAddressPrefixes": ["CorpNetPublic"],
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "CorpNetPublic",
                         "destinationPortRanges": ["3389", "3390", "3391", "3392", "3393", "3394", "3395", "3396", "3397", "3398"],
-                        "destinationAddressPrefixes": ["*"]
+                        "destinationAddressPrefix": "*"
                     },
                     {
                         "name": "SF-POLICY-ALLOW-RDP-CORPSAW",
@@ -204,10 +203,10 @@
                         "access": "Allow",
                         "direction": "Inbound",
                         "protocol": "tcp",
-                        "sourcePortRanges": ["*"],
-                        "sourceAddressPrefixes": ["CorpNetSaw"],
+                        "sourcePortRange": "*",
+                        "sourceAddressPrefix": "CorpNetSaw",
                         "destinationPortRanges": ["3389", "3390", "3391", "3392", "3393", "3394", "3395", "3396", "3397", "3398"],
-                        "destinationAddressPrefixes": ["*"]
+                        "destinationAddressPrefix": "*"
                     }
                 ]
             }

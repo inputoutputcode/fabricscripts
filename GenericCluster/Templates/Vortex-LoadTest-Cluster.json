@@ -15,7 +15,6 @@
       "type": "string",
       "defaultValue": "8.1.335.9590"
     },
-    
     "adminUserName": {
       "type": "string",
       "defaultValue": "Christian"
@@ -42,7 +41,7 @@
     },
     "vmImageSku": {
       "type": "string",
-      "defaultValue": "2019-Datacenter-with-Containers"
+      "defaultValue": "2022-datacenter"
     },
     //az vm image list --location "westus" --publisher "MicrosoftWindowsServer" --offer "WindowsServer" --sku "2019-Datacenter-GS" --all
     "vmImageVersion": {
@@ -666,6 +665,7 @@
       "location": "[resourceGroup().location]",
       "properties": {
         "securityRules": [
+          /*
           {
             "name": "Azure Portal",
             "properties": {
@@ -841,7 +841,7 @@
               "protocol": "Tcp",
               "description": ""
             }
-          }
+          }*/
         ]
       },
       "tags": {
@@ -1102,8 +1102,8 @@
             ]
           },
           "osProfile": {
-             "windowsConfiguration": { 
-                "enableAutomaticUpdates": false 
+             "windowsConfiguration": {
+                "enableAutomaticUpdates": false
             },
             "adminPassword": "[parameters('adminPassword')]",
             "adminUsername": "[parameters('adminUsername')]",

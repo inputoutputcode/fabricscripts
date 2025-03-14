@@ -128,17 +128,6 @@
         "description": "Replication option for the VM image storage account"
       }
     },
-    "supportLogStorageAccountType": {
-      "type": "string",
-      "allowedValues": [
-        "Standard_LRS",
-        "Standard_GRS"
-      ],
-      "defaultValue": "Standard_LRS",
-      "metadata": {
-        "description": "Replication option for the support log storage account"
-      }
-    },
     "applicationDiagnosticsStorageAccountType": {
       "type": "string",
       "allowedValues": [

@@ -1,10 +1,11 @@
 ﻿## Declare parameters
-$armTemplate = ".\Templates\Vortex-LoadTest-Cluster_VMSS1.json" # 
+$armTemplate = ".\Templates\Vortex-LoadTest-Cluster_VMSS1_Vanilla_LogAnalytics.json" # 
 $currentExecutionPath = "C:\Code\fabricscripts\GenericCluster"
 
 ## COPR subscription
 $subscriptionId = "13ad2c84-84fa-4798-ad71-e70c07af873f" 
 $tenantId = "72f988bf-86f1-41af-91ab-2d7cd011db47"
+$signinName = "chrpap@microsoft.com"
 Connect-AzAccount -Tenant $tenantId -SubscriptionId $subscriptionId 
 # Set environment 
 Try {
@@ -27,9 +28,11 @@ Login-AzAccount -Tenant $tenantId
 Connect-AzAccount -Tenant $tenantId -SubscriptionId $subscriptionId
 Select-AzSubscription -SubscriptionId $subscriptionId -Tenant $tenantId -ErrorAction Stop
 Set-AzContext -SubscriptionId $subscriptionId
+$signinName = "Christian@poststev.onmicrosoft.com"
+
 #>
 
-$azureRegion = "westus3"
+$azureRegion = "westus2"
 $localCertificatePath = "C:\Certificates\"
 $generalPassword = "nZ549Ux2MnW6srTvOZsq"
 
@@ -57,6 +60,11 @@ $omsName = $deploymentName + "-oms"
 ## Deploy Azure Key Vault
 New-AzResourceGroup -Name $resourceGroup -Location $azureRegion -Force
 New-AzKeyVault -VaultName $keyVaultName -ResourceGroupName $resourceGroup -Location $azureRegion -EnabledForDeployment 
+
+#Assign by User Principal Name
+$keyVaultResourceId = "/subscriptions/$subscriptionId/resourcegroups/$resourceGroup/providers/Microsoft.KeyVault/vaults/$keyVaultName"
+New-AzRoleAssignment -PrincipalId -RoleDefinitionName "Key Vault Secrets Officer" -SignInName $signinName -Scope $keyVaultResourceId
+
 Import-Module ".\ServiceFabricRPHelpers\ServiceFabricRPHelpers.psm1"
 New-Item -ItemType Directory -Path $localCertificatePath -ErrorAction Ignore
 $clusterCertificate = Invoke-AddCertToKeyVaultAsSecret -SubscriptionId $subscriptionId -ResourceGroupName $resourceGroup -Location $azureRegion -VaultName $keyVaultName -CertificateName $certificateName -CreateSelfSignedCertificate -DnsName $serviceFabricClusterDns -OutputPath $localCertificatePath -Password $generalPassword
@@ -74,10 +82,7 @@ $armParameter.Add("adminPassword", $generalPassword)
 $armParameter.Add("sourceVaultValue", $clusterCertificate.SourceVault)
 $armParameter.Add("certificateUrlValue", $clusterCertificate.CertificateURL)
 $armParameter.Add("certificateThumbprint", $clusterCertificate.CertificateThumbprint)
-##$armParameter.Add("omsWorkspaceName", $omsName)
-##$armParameter.Add("clusterLocation", $azureRegion)
-##$armParameter.Add("dnsName", $serviceFabricClusterName)
-
+$armParameter.Add("omsWorkspaceName", $omsName)
 
 Test-AzResourceGroupDeployment -ResourceGroupName $resourceGroup -TemplateFile $armTemplate -TemplateParameterObject $armParameter -Verbose -ErrorAction Stop
 

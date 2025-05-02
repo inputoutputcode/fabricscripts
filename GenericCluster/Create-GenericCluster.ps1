@@ -1,5 +1,5 @@
 ﻿## Declare parameters
-$armTemplate = ".\Templates\Vortex-LoadTest-Cluster_VMSS1.json" # 
+$armTemplate = ".\Templates\Vortex-LoadTest-Cluster_VMSS2.json" # 
 $currentExecutionPath = "C:\Code\fabricscripts\GenericCluster"
 
 ## COPR subscription
@@ -29,7 +29,7 @@ Select-AzSubscription -SubscriptionId $subscriptionId -Tenant $tenantId -ErrorAc
 Set-AzContext -SubscriptionId $subscriptionId
 #>
 
-$azureRegion = "westus3"
+$azureRegion = "westus2"
 $localCertificatePath = "C:\Certificates\"
 $generalPassword = "nZ549Ux2MnW6srTvOZsq"
 

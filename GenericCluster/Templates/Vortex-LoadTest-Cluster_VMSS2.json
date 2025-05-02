@@ -5,15 +5,14 @@
     "deploymentId": {
       "type": "string"
     },
+    "clusterDNSname": {
+      "type": "string"
+    },
     "computeLocation": {
       "type": "string"
     },
     "clusterName": {
       "type": "string"
-    },
-    "clusterVersion": {
-      "type": "string",
-      "defaultValue": "6.4.617.9590"
     },
     "nt0applicationStartPort": {
       "type": "int",
@@ -105,7 +104,7 @@
     },
     "vmImageSku": {
       "type": "string",
-      "defaultValue": "2016-Datacenter-with-Containers"
+      "defaultValue": "2022-Datacenter"
     },
     "vmImageVersion": {
       "type": "string",
@@ -198,7 +197,7 @@
     },
     "vmNodeType0Size": {
       "type": "string",
-      "defaultValue": "Standard_D3_v2"
+      "defaultValue": "Standard_D2_v2"
     },
     "nt1InstanceCount": {
       "type": "int",
@@ -218,12 +217,13 @@
     }
   },
   "variables": {
-    "vmssApiVersion": "2018-10-01",
-    "lbApiVersion": "2018-08-01",
-    "vNetApiVersion": "2018-08-01",
-    "storageApiVersion": "2018-07-01",
-    "publicIPApiVersion": "2018-08-01",
-
+    "vmssApiVersion": "2020-06-01",
+    "sfrpApiVersion": "2020-03-01",
+    "lbApiVersion": "2020-07-01",
+    "vNetApiVersion": "2020-07-01",
+    "storageApiVersion": "2019-06-01",
+    "publicIPApiVersion": "2020-07-01",
+    
     "customWebAppPort": "8947",
 
     "vnetName": "[concat(parameters('deploymentId'),'-','vnet')]",
@@ -486,7 +486,10 @@
         "overprovision": "[parameters('overProvision')]",
         "singlePlacementGroup": true,
         "upgradePolicy": {
-          "mode": "Automatic"
+          "mode": "Automatic",
+          "automaticOSUpgradePolicy": {
+            "enableAutomaticOSUpgrade": true
+          }
         },
         "virtualMachineProfile": {
           "extensionProfile": {
@@ -549,6 +552,9 @@
             ]
           },
           "osProfile": {
+            "windowsConfiguration": { 
+              "enableAutomaticUpdates": false 
+            },
             "adminPassword": "[parameters('adminPassword')]",
             "adminUsername": "[parameters('adminUsername')]",
             "computernamePrefix": "[parameters('vmNodeType0Name')]",
@@ -730,7 +736,10 @@
         "overprovision": "[parameters('overProvision')]",
         "singlePlacementGroup": true,
         "upgradePolicy": {
-          "mode": "Automatic"
+          "mode": "Automatic",
+          "automaticOSUpgradePolicy": {
+            "enableAutomaticOSUpgrade": true
+          }
         },
         "virtualMachineProfile": {
           "extensionProfile": {
@@ -793,6 +802,9 @@
             ]
           },
           "osProfile": {
+            "windowsConfiguration": { 
+              "enableAutomaticUpdates": false 
+            },
             "adminPassword": "[parameters('adminPassword')]",
             "adminUsername": "[parameters('adminUsername')]",
             "computernamePrefix": "[parameters('vmNodeType1Name')]",
@@ -805,10 +817,6 @@
                   {
                     "certificateStore": "[parameters('certificateStoreValue')]",
                     "certificateUrl": "[parameters('certificateUrlValue')]"
-                  },
-                  {
-                    "certificateStore": "[parameters('certificateStoreValue')]",
-                    "certificateUrl": "[parameters('secCertificateUrlValue')]"
                   }
                 ]
               }
@@ -842,7 +850,7 @@
       }
     },
     {
-      "apiVersion": "2018-02-01",
+      "apiVersion": "[variables('sfrpApiVersion')]",
       "type": "Microsoft.ServiceFabric/clusters",
       "name": "[parameters('clusterName')]",
       "location": "[parameters('computeLocation')]",
@@ -861,7 +869,6 @@
         ],
         "clientCertificateThumbprints": [
         ],
-        "clusterCodeVersion": "[parameters('clusterVersion')]",
         "clusterState": "Default",
         "diagnosticsStorageAccountConfig": {
           "blobEndpoint": "[reference(concat('Microsoft.Storage/storageAccounts/', variables('sfstorageName')), variables('storageApiVersion')).primaryEndpoints.blob]",
@@ -881,7 +888,7 @@
             "name": "Security"
           }
         ],
-        "managementEndpoint": "[concat('https://',reference(concat(variables('lbIpName'),'-','0')).dnsSettings.fqdn,':',parameters('nt0fabricHttpGatewayPort'))]",
+        "managementEndpoint": "[concat('https://',parameters('clusterDNSname'),':',parameters('nt0fabricHttpGatewayPort'))]",
         "nodeTypes": [
           {
             "name": "[parameters('vmNodeType0Name')]",
